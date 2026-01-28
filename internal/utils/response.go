@@ -12,6 +12,7 @@ var (
 	ErrForbidden    = errors.New("forbidden")
 	ErrNotFound     = errors.New("not found")
 	ErrBadRequest   = errors.New("bad request")
+	ErrEmailExists  = errors.New("email already exists")
 )
 
 func GraphQLError(ctx context.Context, message string, code string) *gqlerror.Error {

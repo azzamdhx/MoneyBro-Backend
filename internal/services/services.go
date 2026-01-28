@@ -7,10 +7,12 @@ import (
 )
 
 type Config struct {
-	Repos        *repository.Repositories
-	Redis        *redis.Client
-	JWTSecret    string
-	ResendAPIKey string
+	Repos             *repository.Repositories
+	Redis             *redis.Client
+	JWTSecret         string
+	ResendAPIKey      string
+	FrontendURL       string
+	EmailTemplatesDir string
 }
 
 type Services struct {
@@ -31,10 +33,10 @@ type Services struct {
 }
 
 func NewServices(cfg Config) *Services {
-	emailService := NewEmailService(cfg.ResendAPIKey)
+	emailService := NewEmailService(cfg.ResendAPIKey, cfg.EmailTemplatesDir)
 
 	return &Services{
-		Auth:            NewAuthService(cfg.Repos.User, cfg.JWTSecret),
+		Auth:            NewAuthService(cfg.Repos.User, cfg.Repos.PasswordResetToken, emailService, cfg.JWTSecret, cfg.FrontendURL),
 		User:            NewUserService(cfg.Repos.User),
 		Category:        NewCategoryService(cfg.Repos.Category),
 		Expense:         NewExpenseService(cfg.Repos.Expense, cfg.Repos.Category),

@@ -1,7 +1,12 @@
 package services
 
 import (
+	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
+	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -12,14 +17,26 @@ import (
 )
 
 type AuthService struct {
-	userRepo  repository.UserRepository
-	jwtSecret string
+	userRepo          repository.UserRepository
+	passwordResetRepo repository.PasswordResetTokenRepository
+	emailService      *EmailService
+	jwtSecret         string
+	frontendURL       string
 }
 
-func NewAuthService(userRepo repository.UserRepository, jwtSecret string) *AuthService {
+func NewAuthService(
+	userRepo repository.UserRepository,
+	passwordResetRepo repository.PasswordResetTokenRepository,
+	emailService *EmailService,
+	jwtSecret string,
+	frontendURL string,
+) *AuthService {
 	return &AuthService{
-		userRepo:  userRepo,
-		jwtSecret: jwtSecret,
+		userRepo:          userRepo,
+		passwordResetRepo: passwordResetRepo,
+		emailService:      emailService,
+		jwtSecret:         jwtSecret,
+		frontendURL:       frontendURL,
 	}
 }
 
@@ -96,4 +113,86 @@ func (s *AuthService) Login(email, password string) (*AuthPayload, error) {
 		Token: token,
 		User:  user,
 	}, nil
+}
+
+func (s *AuthService) ForgotPassword(ctx context.Context, email string) error {
+	if err := utils.ValidateEmail(email); err != nil {
+		return err
+	}
+
+	user, err := s.userRepo.GetByEmail(email)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// Don't reveal if email exists
+			return nil
+		}
+		return err
+	}
+
+	// Delete any existing tokens for this user
+	_ = s.passwordResetRepo.DeleteByUserID(user.ID)
+
+	// Generate secure random token
+	tokenBytes := make([]byte, 32)
+	if _, err := rand.Read(tokenBytes); err != nil {
+		return err
+	}
+	token := hex.EncodeToString(tokenBytes)
+
+	// Create password reset token (expires in 1 hour)
+	resetToken := &models.PasswordResetToken{
+		ID:        uuid.New(),
+		UserID:    user.ID,
+		Token:     token,
+		ExpiresAt: time.Now().Add(1 * time.Hour),
+	}
+
+	if err := s.passwordResetRepo.Create(resetToken); err != nil {
+		return err
+	}
+
+	// Send email with reset link
+	resetLink := fmt.Sprintf("%s/reset-password?token=%s", s.frontendURL, token)
+	if err := s.emailService.SendPasswordResetEmail(ctx, user.Email, user.Name, resetLink); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *AuthService) ResetPassword(token, newPassword string) error {
+	if err := utils.ValidatePassword(newPassword); err != nil {
+		return err
+	}
+
+	resetToken, err := s.passwordResetRepo.GetValidByToken(token)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("invalid or expired reset token")
+		}
+		return err
+	}
+
+	// Hash new password
+	hashedPassword, err := utils.HashPassword(newPassword)
+	if err != nil {
+		return err
+	}
+
+	// Update user password
+	user := &resetToken.User
+	user.PasswordHash = hashedPassword
+	now := time.Now()
+	user.UpdatedAt = &now
+
+	if err := s.userRepo.Update(user); err != nil {
+		return err
+	}
+
+	// Mark token as used
+	if err := s.passwordResetRepo.MarkAsUsed(resetToken.ID); err != nil {
+		return err
+	}
+
+	return nil
 }

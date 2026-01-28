@@ -24,5 +24,19 @@ input LoginInput {
 
 input UpdateProfileInput {
   name: String
+  email: String
   password: String
+}
+
+input DeleteAccountInput {
+  password: String!
+}
+
+input ForgotPasswordInput {
+  email: String!
+}
+
+input ResetPasswordInput {
+  token: String!
+  password: String!
 }

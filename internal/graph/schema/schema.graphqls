@@ -4,6 +4,7 @@ scalar Date
 
 type Query {
   me: User!
+  checkEmailAvailability(email: String!): Boolean!
   
   categories: [Category!]!
   category(id: UUID!): Category
@@ -35,6 +36,9 @@ type Mutation {
   register(input: RegisterInput!): AuthPayload!
   login(input: LoginInput!): AuthPayload!
   updateProfile(input: UpdateProfileInput!): User!
+  deleteAccount(input: DeleteAccountInput!): Boolean!
+  forgotPassword(input: ForgotPasswordInput!): Boolean!
+  resetPassword(input: ResetPasswordInput!): Boolean!
   
   createCategory(input: CreateCategoryInput!): Category!
   updateCategory(id: UUID!, input: UpdateCategoryInput!): Category!

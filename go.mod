@@ -13,7 +13,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
 	github.com/redis/go-redis/v9 v9.6.1
-	github.com/resend/resend-go/v2 v2.11.0
+	github.com/resend/resend-go/v3 v3.0.0
 	github.com/vektah/gqlparser/v2 v2.5.16
 	golang.org/x/crypto v0.47.0
 	gorm.io/driver/postgres v1.5.9

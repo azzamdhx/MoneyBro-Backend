@@ -37,6 +37,6 @@ logs/
 tmp/
 temp/
 
-# Project specific (not for public)
+# Project specific 
 TODO.md
 railway.toml

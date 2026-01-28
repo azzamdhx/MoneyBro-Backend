@@ -44,10 +44,12 @@ func main() {
 	repos := repository.NewRepositories(db)
 
 	svc := services.NewServices(services.Config{
-		Repos:        repos,
-		Redis:        rdb,
-		JWTSecret:    cfg.JWTSecret,
-		ResendAPIKey: cfg.ResendAPIKey,
+		Repos:             repos,
+		Redis:             rdb,
+		JWTSecret:         cfg.JWTSecret,
+		ResendAPIKey:      cfg.ResendAPIKey,
+		FrontendURL:       cfg.FrontendURL,
+		EmailTemplatesDir: cfg.EmailTemplatesDir,
 	})
 
 	cronScheduler := cron.NewScheduler(svc.Notification)

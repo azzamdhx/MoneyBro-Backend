@@ -20,6 +20,7 @@ type Repositories struct {
 	IncomeCategory     IncomeCategoryRepository
 	Income             IncomeRepository
 	RecurringIncome    RecurringIncomeRepository
+	PasswordResetToken PasswordResetTokenRepository
 }
 
 func NewRepositories(db *gorm.DB) *Repositories {
@@ -36,6 +37,7 @@ func NewRepositories(db *gorm.DB) *Repositories {
 		IncomeCategory:     NewIncomeCategoryRepository(db),
 		Income:             NewIncomeRepository(db),
 		RecurringIncome:    NewRecurringIncomeRepository(db),
+		PasswordResetToken: NewPasswordResetTokenRepository(db),
 	}
 }
 
@@ -44,6 +46,8 @@ type UserRepository interface {
 	GetByID(id uuid.UUID) (*models.User, error)
 	GetByEmail(email string) (*models.User, error)
 	Update(user *models.User) error
+	Delete(id uuid.UUID) error
+	DeleteAllUserData(userID uuid.UUID) error
 }
 
 type CategoryRepository interface {
@@ -143,4 +147,13 @@ type RecurringIncomeRepository interface {
 	GetByRecurringDay(day int, isActive bool) ([]models.RecurringIncome, error)
 	Update(recurringIncome *models.RecurringIncome) error
 	Delete(id uuid.UUID) error
+}
+
+type PasswordResetTokenRepository interface {
+	Create(token *models.PasswordResetToken) error
+	GetByToken(token string) (*models.PasswordResetToken, error)
+	GetValidByToken(token string) (*models.PasswordResetToken, error)
+	MarkAsUsed(id uuid.UUID) error
+	DeleteExpiredTokens() error
+	DeleteByUserID(userID uuid.UUID) error
 }

@@ -47,11 +47,39 @@ func (r *mutationResolver) UpdateProfile(ctx context.Context, input model.Update
 	if !ok {
 		return nil, utils.ErrUnauthorized
 	}
-	user, err := r.Services.User.UpdateProfile(userID, input.Name, input.Password)
+	user, err := r.Services.User.UpdateProfile(userID, input.Name, input.Email, input.Password)
 	if err != nil {
 		return nil, err
 	}
 	return userToModel(user), nil
+}
+
+// DeleteAccount is the resolver for the deleteAccount field.
+func (r *mutationResolver) DeleteAccount(ctx context.Context, input model.DeleteAccountInput) (bool, error) {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
+		return false, utils.ErrUnauthorized
+	}
+	if err := r.Services.User.DeleteAccount(userID, input.Password); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// ForgotPassword is the resolver for the forgotPassword field.
+func (r *mutationResolver) ForgotPassword(ctx context.Context, input model.ForgotPasswordInput) (bool, error) {
+	if err := r.Services.Auth.ForgotPassword(ctx, input.Email); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// ResetPassword is the resolver for the resetPassword field.
+func (r *mutationResolver) ResetPassword(ctx context.Context, input model.ResetPasswordInput) (bool, error) {
+	if err := r.Services.Auth.ResetPassword(input.Token, input.Password); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // CreateCategory is the resolver for the createCategory field.
@@ -563,6 +591,11 @@ func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
 		return nil, err
 	}
 	return userToModel(user), nil
+}
+
+// CheckEmailAvailability is the resolver for the checkEmailAvailability field.
+func (r *queryResolver) CheckEmailAvailability(ctx context.Context, email string) (bool, error) {
+	return r.Services.User.CheckEmailAvailability(email)
 }
 
 // Categories is the resolver for the categories field.

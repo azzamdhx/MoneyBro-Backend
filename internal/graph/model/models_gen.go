@@ -171,6 +171,10 @@ type DebtPayment struct {
 	Debt          *Debt     `json:"debt"`
 }
 
+type DeleteAccountInput struct {
+	Password string `json:"password"`
+}
+
 type Expense struct {
 	ID          uuid.UUID  `json:"id"`
 	ItemName    string     `json:"itemName"`
@@ -205,6 +209,10 @@ type ExpenseTemplate struct {
 	Notes        *string   `json:"notes,omitempty"`
 	CreatedAt    time.Time `json:"createdAt"`
 	Category     *Category `json:"category"`
+}
+
+type ForgotPasswordInput struct {
+	Email string `json:"email"`
 }
 
 type Income struct {
@@ -324,6 +332,11 @@ type RegisterInput struct {
 	Name     string `json:"name"`
 }
 
+type ResetPasswordInput struct {
+	Token    string `json:"token"`
+	Password string `json:"password"`
+}
+
 type UpdateCategoryInput struct {
 	Name string `json:"name"`
 }
@@ -386,6 +399,7 @@ type UpdateInstallmentInput struct {
 
 type UpdateProfileInput struct {
 	Name     *string `json:"name,omitempty"`
+	Email    *string `json:"email,omitempty"`
 	Password *string `json:"password,omitempty"`
 }
 
