@@ -36,3 +36,8 @@ logs/
 # Temp files
 tmp/
 temp/
+
+# Project specific (not for public)
+TODO.md
+railway.toml
+migrations/
