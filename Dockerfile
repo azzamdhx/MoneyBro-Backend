@@ -21,6 +21,7 @@ RUN apk --no-cache add ca-certificates tzdata
 COPY --from=builder /server /app/server
 COPY --from=builder /migrate /app/migrate
 COPY --from=builder /app/migrations /app/migrations
+COPY --from=builder /app/email-templates /app/email-templates
 
 ENV TZ=Asia/Jakarta
 
