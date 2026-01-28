@@ -40,6 +40,7 @@ type Mutation {
   enable2FA(password: String!): Boolean!
   disable2FA(password: String!): Boolean!
   updateProfile(input: UpdateProfileInput!): User!
+  updateNotificationSettings(input: UpdateNotificationSettingsInput!): User!
   deleteAccount(input: DeleteAccountInput!): Boolean!
   forgotPassword(input: ForgotPasswordInput!): Boolean!
   resetPassword(input: ResetPasswordInput!): Boolean!

@@ -98,3 +98,34 @@ func (s *UserService) UpdateProfile(userID uuid.UUID, name, email, currentPasswo
 
 	return user, nil
 }
+
+func (s *UserService) UpdateNotificationSettings(userID uuid.UUID, notifyInstallment, notifyDebt *bool, notifyDaysBefore *int) (*models.User, error) {
+	user, err := s.userRepo.GetByID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	if notifyInstallment != nil {
+		user.NotifyInstallment = *notifyInstallment
+	}
+
+	if notifyDebt != nil {
+		user.NotifyDebt = *notifyDebt
+	}
+
+	if notifyDaysBefore != nil {
+		if *notifyDaysBefore < 1 || *notifyDaysBefore > 30 {
+			return nil, utils.ErrBadRequest
+		}
+		user.NotifyDaysBefore = *notifyDaysBefore
+	}
+
+	now := time.Now()
+	user.UpdatedAt = &now
+
+	if err := s.userRepo.Update(user); err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}

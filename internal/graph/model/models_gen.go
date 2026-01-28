@@ -404,6 +404,12 @@ type UpdateInstallmentInput struct {
 	Notes          *string            `json:"notes,omitempty"`
 }
 
+type UpdateNotificationSettingsInput struct {
+	NotifyInstallment *bool `json:"notifyInstallment,omitempty"`
+	NotifyDebt        *bool `json:"notifyDebt,omitempty"`
+	NotifyDaysBefore  *int  `json:"notifyDaysBefore,omitempty"`
+}
+
 type UpdateProfileInput struct {
 	Name            *string `json:"name,omitempty"`
 	Email           *string `json:"email,omitempty"`
@@ -422,12 +428,15 @@ type UpdateRecurringIncomeInput struct {
 }
 
 type User struct {
-	ID           uuid.UUID  `json:"id"`
-	Email        string     `json:"email"`
-	Name         string     `json:"name"`
-	TwoFAEnabled bool       `json:"twoFAEnabled"`
-	CreatedAt    time.Time  `json:"createdAt"`
-	UpdatedAt    *time.Time `json:"updatedAt,omitempty"`
+	ID                uuid.UUID  `json:"id"`
+	Email             string     `json:"email"`
+	Name              string     `json:"name"`
+	TwoFAEnabled      bool       `json:"twoFAEnabled"`
+	NotifyInstallment bool       `json:"notifyInstallment"`
+	NotifyDebt        bool       `json:"notifyDebt"`
+	NotifyDaysBefore  int        `json:"notifyDaysBefore"`
+	CreatedAt         time.Time  `json:"createdAt"`
+	UpdatedAt         *time.Time `json:"updatedAt,omitempty"`
 }
 
 type Verify2FAInput struct {

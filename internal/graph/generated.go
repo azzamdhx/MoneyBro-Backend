@@ -238,44 +238,45 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateCategory            func(childComplexity int, input model.CreateCategoryInput) int
-		CreateDebt                func(childComplexity int, input model.CreateDebtInput) int
-		CreateExpense             func(childComplexity int, input model.CreateExpenseInput) int
-		CreateExpenseFromTemplate func(childComplexity int, templateID uuid.UUID, expenseDate *time.Time) int
-		CreateExpenseTemplate     func(childComplexity int, input model.CreateExpenseTemplateInput) int
-		CreateIncome              func(childComplexity int, input model.CreateIncomeInput) int
-		CreateIncomeCategory      func(childComplexity int, input model.CreateIncomeCategoryInput) int
-		CreateIncomeFromRecurring func(childComplexity int, recurringID uuid.UUID, incomeDate *time.Time) int
-		CreateInstallment         func(childComplexity int, input model.CreateInstallmentInput) int
-		CreateRecurringIncome     func(childComplexity int, input model.CreateRecurringIncomeInput) int
-		DeleteAccount             func(childComplexity int, input model.DeleteAccountInput) int
-		DeleteCategory            func(childComplexity int, id uuid.UUID) int
-		DeleteDebt                func(childComplexity int, id uuid.UUID) int
-		DeleteExpense             func(childComplexity int, id uuid.UUID) int
-		DeleteExpenseTemplate     func(childComplexity int, id uuid.UUID) int
-		DeleteIncome              func(childComplexity int, id uuid.UUID) int
-		DeleteIncomeCategory      func(childComplexity int, id uuid.UUID) int
-		DeleteInstallment         func(childComplexity int, id uuid.UUID) int
-		DeleteRecurringIncome     func(childComplexity int, id uuid.UUID) int
-		Disable2fa                func(childComplexity int, password string) int
-		Enable2fa                 func(childComplexity int, password string) int
-		ForgotPassword            func(childComplexity int, input model.ForgotPasswordInput) int
-		Login                     func(childComplexity int, input model.LoginInput) int
-		RecordDebtPayment         func(childComplexity int, input model.RecordDebtPaymentInput) int
-		RecordInstallmentPayment  func(childComplexity int, input model.RecordInstallmentPaymentInput) int
-		Register                  func(childComplexity int, input model.RegisterInput) int
-		Resend2FACode             func(childComplexity int, tempToken string) int
-		ResetPassword             func(childComplexity int, input model.ResetPasswordInput) int
-		UpdateCategory            func(childComplexity int, id uuid.UUID, input model.UpdateCategoryInput) int
-		UpdateDebt                func(childComplexity int, id uuid.UUID, input model.UpdateDebtInput) int
-		UpdateExpense             func(childComplexity int, id uuid.UUID, input model.UpdateExpenseInput) int
-		UpdateExpenseTemplate     func(childComplexity int, id uuid.UUID, input model.UpdateExpenseTemplateInput) int
-		UpdateIncome              func(childComplexity int, id uuid.UUID, input model.UpdateIncomeInput) int
-		UpdateIncomeCategory      func(childComplexity int, id uuid.UUID, input model.UpdateIncomeCategoryInput) int
-		UpdateInstallment         func(childComplexity int, id uuid.UUID, input model.UpdateInstallmentInput) int
-		UpdateProfile             func(childComplexity int, input model.UpdateProfileInput) int
-		UpdateRecurringIncome     func(childComplexity int, id uuid.UUID, input model.UpdateRecurringIncomeInput) int
-		Verify2fa                 func(childComplexity int, input model.Verify2FAInput) int
+		CreateCategory             func(childComplexity int, input model.CreateCategoryInput) int
+		CreateDebt                 func(childComplexity int, input model.CreateDebtInput) int
+		CreateExpense              func(childComplexity int, input model.CreateExpenseInput) int
+		CreateExpenseFromTemplate  func(childComplexity int, templateID uuid.UUID, expenseDate *time.Time) int
+		CreateExpenseTemplate      func(childComplexity int, input model.CreateExpenseTemplateInput) int
+		CreateIncome               func(childComplexity int, input model.CreateIncomeInput) int
+		CreateIncomeCategory       func(childComplexity int, input model.CreateIncomeCategoryInput) int
+		CreateIncomeFromRecurring  func(childComplexity int, recurringID uuid.UUID, incomeDate *time.Time) int
+		CreateInstallment          func(childComplexity int, input model.CreateInstallmentInput) int
+		CreateRecurringIncome      func(childComplexity int, input model.CreateRecurringIncomeInput) int
+		DeleteAccount              func(childComplexity int, input model.DeleteAccountInput) int
+		DeleteCategory             func(childComplexity int, id uuid.UUID) int
+		DeleteDebt                 func(childComplexity int, id uuid.UUID) int
+		DeleteExpense              func(childComplexity int, id uuid.UUID) int
+		DeleteExpenseTemplate      func(childComplexity int, id uuid.UUID) int
+		DeleteIncome               func(childComplexity int, id uuid.UUID) int
+		DeleteIncomeCategory       func(childComplexity int, id uuid.UUID) int
+		DeleteInstallment          func(childComplexity int, id uuid.UUID) int
+		DeleteRecurringIncome      func(childComplexity int, id uuid.UUID) int
+		Disable2fa                 func(childComplexity int, password string) int
+		Enable2fa                  func(childComplexity int, password string) int
+		ForgotPassword             func(childComplexity int, input model.ForgotPasswordInput) int
+		Login                      func(childComplexity int, input model.LoginInput) int
+		RecordDebtPayment          func(childComplexity int, input model.RecordDebtPaymentInput) int
+		RecordInstallmentPayment   func(childComplexity int, input model.RecordInstallmentPaymentInput) int
+		Register                   func(childComplexity int, input model.RegisterInput) int
+		Resend2FACode              func(childComplexity int, tempToken string) int
+		ResetPassword              func(childComplexity int, input model.ResetPasswordInput) int
+		UpdateCategory             func(childComplexity int, id uuid.UUID, input model.UpdateCategoryInput) int
+		UpdateDebt                 func(childComplexity int, id uuid.UUID, input model.UpdateDebtInput) int
+		UpdateExpense              func(childComplexity int, id uuid.UUID, input model.UpdateExpenseInput) int
+		UpdateExpenseTemplate      func(childComplexity int, id uuid.UUID, input model.UpdateExpenseTemplateInput) int
+		UpdateIncome               func(childComplexity int, id uuid.UUID, input model.UpdateIncomeInput) int
+		UpdateIncomeCategory       func(childComplexity int, id uuid.UUID, input model.UpdateIncomeCategoryInput) int
+		UpdateInstallment          func(childComplexity int, id uuid.UUID, input model.UpdateInstallmentInput) int
+		UpdateNotificationSettings func(childComplexity int, input model.UpdateNotificationSettingsInput) int
+		UpdateProfile              func(childComplexity int, input model.UpdateProfileInput) int
+		UpdateRecurringIncome      func(childComplexity int, id uuid.UUID, input model.UpdateRecurringIncomeInput) int
+		Verify2fa                  func(childComplexity int, input model.Verify2FAInput) int
 	}
 
 	Query struct {
@@ -319,12 +320,15 @@ type ComplexityRoot struct {
 	}
 
 	User struct {
-		CreatedAt    func(childComplexity int) int
-		Email        func(childComplexity int) int
-		ID           func(childComplexity int) int
-		Name         func(childComplexity int) int
-		TwoFAEnabled func(childComplexity int) int
-		UpdatedAt    func(childComplexity int) int
+		CreatedAt         func(childComplexity int) int
+		Email             func(childComplexity int) int
+		ID                func(childComplexity int) int
+		Name              func(childComplexity int) int
+		NotifyDaysBefore  func(childComplexity int) int
+		NotifyDebt        func(childComplexity int) int
+		NotifyInstallment func(childComplexity int) int
+		TwoFAEnabled      func(childComplexity int) int
+		UpdatedAt         func(childComplexity int) int
 	}
 }
 
@@ -336,6 +340,7 @@ type MutationResolver interface {
 	Enable2fa(ctx context.Context, password string) (bool, error)
 	Disable2fa(ctx context.Context, password string) (bool, error)
 	UpdateProfile(ctx context.Context, input model.UpdateProfileInput) (*model.User, error)
+	UpdateNotificationSettings(ctx context.Context, input model.UpdateNotificationSettingsInput) (*model.User, error)
 	DeleteAccount(ctx context.Context, input model.DeleteAccountInput) (bool, error)
 	ForgotPassword(ctx context.Context, input model.ForgotPasswordInput) (bool, error)
 	ResetPassword(ctx context.Context, input model.ResetPasswordInput) (bool, error)
@@ -1747,6 +1752,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UpdateInstallment(childComplexity, args["id"].(uuid.UUID), args["input"].(model.UpdateInstallmentInput)), true
 
+	case "Mutation.updateNotificationSettings":
+		if e.complexity.Mutation.UpdateNotificationSettings == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateNotificationSettings_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateNotificationSettings(childComplexity, args["input"].(model.UpdateNotificationSettingsInput)), true
+
 	case "Mutation.updateProfile":
 		if e.complexity.Mutation.UpdateProfile == nil {
 			break
@@ -2103,6 +2120,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.Name(childComplexity), true
 
+	case "User.notifyDaysBefore":
+		if e.complexity.User.NotifyDaysBefore == nil {
+			break
+		}
+
+		return e.complexity.User.NotifyDaysBefore(childComplexity), true
+
+	case "User.notifyDebt":
+		if e.complexity.User.NotifyDebt == nil {
+			break
+		}
+
+		return e.complexity.User.NotifyDebt(childComplexity), true
+
+	case "User.notifyInstallment":
+		if e.complexity.User.NotifyInstallment == nil {
+			break
+		}
+
+		return e.complexity.User.NotifyInstallment(childComplexity), true
+
 	case "User.twoFAEnabled":
 		if e.complexity.User.TwoFAEnabled == nil {
 			break
@@ -2150,6 +2188,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputUpdateIncomeCategoryInput,
 		ec.unmarshalInputUpdateIncomeInput,
 		ec.unmarshalInputUpdateInstallmentInput,
+		ec.unmarshalInputUpdateNotificationSettingsInput,
 		ec.unmarshalInputUpdateProfileInput,
 		ec.unmarshalInputUpdateRecurringIncomeInput,
 		ec.unmarshalInputVerify2FAInput,
@@ -2883,6 +2922,21 @@ func (ec *executionContext) field_Mutation_updateInstallment_args(ctx context.Co
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_updateNotificationSettings_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.UpdateNotificationSettingsInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNUpdateNotificationSettingsInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐUpdateNotificationSettingsInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_updateProfile_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -3300,6 +3354,12 @@ func (ec *executionContext) fieldContext_AuthPayload_user(_ context.Context, fie
 				return ec.fieldContext_User_name(ctx, field)
 			case "twoFAEnabled":
 				return ec.fieldContext_User_twoFAEnabled(ctx, field)
+			case "notifyInstallment":
+				return ec.fieldContext_User_notifyInstallment(ctx, field)
+			case "notifyDebt":
+				return ec.fieldContext_User_notifyDebt(ctx, field)
+			case "notifyDaysBefore":
+				return ec.fieldContext_User_notifyDaysBefore(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -9726,6 +9786,12 @@ func (ec *executionContext) fieldContext_Mutation_updateProfile(ctx context.Cont
 				return ec.fieldContext_User_name(ctx, field)
 			case "twoFAEnabled":
 				return ec.fieldContext_User_twoFAEnabled(ctx, field)
+			case "notifyInstallment":
+				return ec.fieldContext_User_notifyInstallment(ctx, field)
+			case "notifyDebt":
+				return ec.fieldContext_User_notifyDebt(ctx, field)
+			case "notifyDaysBefore":
+				return ec.fieldContext_User_notifyDaysBefore(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -9742,6 +9808,81 @@ func (ec *executionContext) fieldContext_Mutation_updateProfile(ctx context.Cont
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_updateProfile_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateNotificationSettings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateNotificationSettings(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateNotificationSettings(rctx, fc.Args["input"].(model.UpdateNotificationSettingsInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateNotificationSettings(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
+			case "twoFAEnabled":
+				return ec.fieldContext_User_twoFAEnabled(ctx, field)
+			case "notifyInstallment":
+				return ec.fieldContext_User_notifyInstallment(ctx, field)
+			case "notifyDebt":
+				return ec.fieldContext_User_notifyDebt(ctx, field)
+			case "notifyDaysBefore":
+				return ec.fieldContext_User_notifyDaysBefore(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateNotificationSettings_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -11928,6 +12069,12 @@ func (ec *executionContext) fieldContext_Query_me(_ context.Context, field graph
 				return ec.fieldContext_User_name(ctx, field)
 			case "twoFAEnabled":
 				return ec.fieldContext_User_twoFAEnabled(ctx, field)
+			case "notifyInstallment":
+				return ec.fieldContext_User_notifyInstallment(ctx, field)
+			case "notifyDebt":
+				return ec.fieldContext_User_notifyDebt(ctx, field)
+			case "notifyDaysBefore":
+				return ec.fieldContext_User_notifyDaysBefore(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -13943,6 +14090,12 @@ func (ec *executionContext) fieldContext_TwoFAPayload_user(_ context.Context, fi
 				return ec.fieldContext_User_name(ctx, field)
 			case "twoFAEnabled":
 				return ec.fieldContext_User_twoFAEnabled(ctx, field)
+			case "notifyInstallment":
+				return ec.fieldContext_User_notifyInstallment(ctx, field)
+			case "notifyDebt":
+				return ec.fieldContext_User_notifyDebt(ctx, field)
+			case "notifyDaysBefore":
+				return ec.fieldContext_User_notifyDaysBefore(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
@@ -14125,6 +14278,138 @@ func (ec *executionContext) fieldContext_User_twoFAEnabled(_ context.Context, fi
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_notifyInstallment(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_notifyInstallment(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NotifyInstallment, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_notifyInstallment(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_notifyDebt(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_notifyDebt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NotifyDebt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_notifyDebt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_notifyDaysBefore(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_notifyDaysBefore(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NotifyDaysBefore, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_notifyDaysBefore(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -17237,6 +17522,47 @@ func (ec *executionContext) unmarshalInputUpdateInstallmentInput(ctx context.Con
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputUpdateNotificationSettingsInput(ctx context.Context, obj interface{}) (model.UpdateNotificationSettingsInput, error) {
+	var it model.UpdateNotificationSettingsInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"notifyInstallment", "notifyDebt", "notifyDaysBefore"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "notifyInstallment":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notifyInstallment"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotifyInstallment = data
+		case "notifyDebt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notifyDebt"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotifyDebt = data
+		case "notifyDaysBefore":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notifyDaysBefore"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NotifyDaysBefore = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputUpdateProfileInput(ctx context.Context, obj interface{}) (model.UpdateProfileInput, error) {
 	var it model.UpdateProfileInput
 	asMap := map[string]interface{}{}
@@ -18717,6 +19043,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "updateNotificationSettings":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateNotificationSettings(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "deleteAccount":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_deleteAccount(ctx, field)
@@ -19571,6 +19904,21 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "twoFAEnabled":
 			out.Values[i] = ec._User_twoFAEnabled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "notifyInstallment":
+			out.Values[i] = ec._User_notifyInstallment(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "notifyDebt":
+			out.Values[i] = ec._User_notifyDebt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "notifyDaysBefore":
+			out.Values[i] = ec._User_notifyDaysBefore(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -21045,6 +21393,11 @@ func (ec *executionContext) unmarshalNUpdateIncomeInput2githubᚗcomᚋazzamdhx�
 
 func (ec *executionContext) unmarshalNUpdateInstallmentInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐUpdateInstallmentInput(ctx context.Context, v interface{}) (model.UpdateInstallmentInput, error) {
 	res, err := ec.unmarshalInputUpdateInstallmentInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpdateNotificationSettingsInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐUpdateNotificationSettingsInput(ctx context.Context, v interface{}) (model.UpdateNotificationSettingsInput, error) {
+	res, err := ec.unmarshalInputUpdateNotificationSettingsInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

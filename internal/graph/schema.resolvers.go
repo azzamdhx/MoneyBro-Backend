@@ -107,6 +107,19 @@ func (r *mutationResolver) UpdateProfile(ctx context.Context, input model.Update
 	return userToModel(user), nil
 }
 
+// UpdateNotificationSettings is the resolver for the updateNotificationSettings field.
+func (r *mutationResolver) UpdateNotificationSettings(ctx context.Context, input model.UpdateNotificationSettingsInput) (*model.User, error) {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
+		return nil, utils.ErrUnauthorized
+	}
+	user, err := r.Services.User.UpdateNotificationSettings(userID, input.NotifyInstallment, input.NotifyDebt, input.NotifyDaysBefore)
+	if err != nil {
+		return nil, err
+	}
+	return userToModel(user), nil
+}
+
 // DeleteAccount is the resolver for the deleteAccount field.
 func (r *mutationResolver) DeleteAccount(ctx context.Context, input model.DeleteAccountInput) (bool, error) {
 	userID, ok := middleware.GetUserID(ctx)

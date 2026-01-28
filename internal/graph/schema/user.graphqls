@@ -3,8 +3,17 @@ type User {
   email: String!
   name: String!
   twoFAEnabled: Boolean!
+  notifyInstallment: Boolean!
+  notifyDebt: Boolean!
+  notifyDaysBefore: Int!
   createdAt: Time!
   updatedAt: Time
+}
+
+input UpdateNotificationSettingsInput {
+  notifyInstallment: Boolean
+  notifyDebt: Boolean
+  notifyDaysBefore: Int
 }
 
 type AuthPayload {
