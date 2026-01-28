@@ -339,6 +339,11 @@ type ResetPasswordInput struct {
 	Password string `json:"password"`
 }
 
+type TwoFAPayload struct {
+	Token string `json:"token"`
+	User  *User  `json:"user"`
+}
+
 type UpdateCategoryInput struct {
 	Name string `json:"name"`
 }
@@ -423,11 +428,6 @@ type User struct {
 	TwoFAEnabled bool       `json:"twoFAEnabled"`
 	CreatedAt    time.Time  `json:"createdAt"`
 	UpdatedAt    *time.Time `json:"updatedAt,omitempty"`
-}
-
-type TwoFAPayload struct {
-	Token string `json:"token"`
-	User  *User  `json:"user"`
 }
 
 type Verify2FAInput struct {

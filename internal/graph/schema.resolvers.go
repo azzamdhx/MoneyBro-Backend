@@ -6,6 +6,7 @@ package graph
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/azzamdhx/moneybro/backend/internal/graph/model"
@@ -64,12 +65,9 @@ func (r *mutationResolver) Verify2fa(ctx context.Context, input model.Verify2FAI
 	}, nil
 }
 
-// Resend2faCode is the resolver for the resend2FACode field.
-func (r *mutationResolver) Resend2faCode(ctx context.Context, tempToken string) (bool, error) {
-	if err := r.Services.Auth.Resend2FACode(ctx, tempToken); err != nil {
-		return false, err
-	}
-	return true, nil
+// Resend2FACode is the resolver for the resend2FACode field.
+func (r *mutationResolver) Resend2FACode(ctx context.Context, tempToken string) (bool, error) {
+	panic(fmt.Errorf("not implemented: Resend2FACode - resend2FACode"))
 }
 
 // Enable2fa is the resolver for the enable2FA field.
@@ -951,3 +949,16 @@ func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *mutationResolver) Resend2faCode(ctx context.Context, tempToken string) (bool, error) {
+	if err := r.Services.Auth.Resend2FACode(ctx, tempToken); err != nil {
+		return false, err
+	}
+	return true, nil
+}
