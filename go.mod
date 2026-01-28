@@ -1,6 +1,8 @@
 module github.com/azzamdhx/moneybro/backend
 
-go 1.24.0
+go 1.23.0
+
+toolchain go1.23.0
 
 require (
 	github.com/99designs/gqlgen v0.17.49
