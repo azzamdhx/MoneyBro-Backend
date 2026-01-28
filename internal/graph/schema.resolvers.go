@@ -23,22 +23,77 @@ func (r *mutationResolver) Register(ctx context.Context, input model.RegisterInp
 	if err != nil {
 		return nil, err
 	}
+	token := result.Token
 	return &model.AuthPayload{
-		Token: result.Token,
+		Token: &token,
 		User:  userToModel(result.User),
 	}, nil
 }
 
 // Login is the resolver for the login field.
 func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*model.AuthPayload, error) {
-	result, err := r.Services.Auth.Login(input.Email, input.Password)
+	result, err := r.Services.Auth.Login(ctx, input.Email, input.Password)
 	if err != nil {
 		return nil, err
 	}
+
+	// If 2FA is required, return tempToken
+	if result.Requires2FA {
+		return &model.AuthPayload{
+			Requires2fa: true,
+			TempToken:   &result.TempToken,
+		}, nil
+	}
+
 	return &model.AuthPayload{
+		Token:       &result.Token,
+		User:        userToModel(result.User),
+		Requires2fa: false,
+	}, nil
+}
+
+// Verify2fa is the resolver for the verify2FA field.
+func (r *mutationResolver) Verify2fa(ctx context.Context, input model.Verify2FAInput) (*model.TwoFAPayload, error) {
+	result, err := r.Services.Auth.Verify2FA(ctx, input.TempToken, input.Code)
+	if err != nil {
+		return nil, err
+	}
+	return &model.TwoFAPayload{
 		Token: result.Token,
 		User:  userToModel(result.User),
 	}, nil
+}
+
+// Resend2faCode is the resolver for the resend2FACode field.
+func (r *mutationResolver) Resend2faCode(ctx context.Context, tempToken string) (bool, error) {
+	if err := r.Services.Auth.Resend2FACode(ctx, tempToken); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// Enable2fa is the resolver for the enable2FA field.
+func (r *mutationResolver) Enable2fa(ctx context.Context, password string) (bool, error) {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
+		return false, utils.ErrUnauthorized
+	}
+	if err := r.Services.Auth.Enable2FA(userID, password); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// Disable2fa is the resolver for the disable2FA field.
+func (r *mutationResolver) Disable2fa(ctx context.Context, password string) (bool, error) {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
+		return false, utils.ErrUnauthorized
+	}
+	if err := r.Services.Auth.Disable2FA(userID, password); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // UpdateProfile is the resolver for the updateProfile field.
@@ -47,7 +102,7 @@ func (r *mutationResolver) UpdateProfile(ctx context.Context, input model.Update
 	if !ok {
 		return nil, utils.ErrUnauthorized
 	}
-	user, err := r.Services.User.UpdateProfile(userID, input.Name, input.Email, input.Password)
+	user, err := r.Services.User.UpdateProfile(userID, input.Name, input.Email, input.CurrentPassword, input.Password)
 	if err != nil {
 		return nil, err
 	}

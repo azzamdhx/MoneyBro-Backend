@@ -8,11 +8,13 @@ import (
 )
 
 var (
-	ErrUnauthorized = errors.New("unauthorized")
-	ErrForbidden    = errors.New("forbidden")
-	ErrNotFound     = errors.New("not found")
-	ErrBadRequest   = errors.New("bad request")
-	ErrEmailExists  = errors.New("email already exists")
+	ErrUnauthorized            = errors.New("unauthorized")
+	ErrForbidden               = errors.New("forbidden")
+	ErrNotFound                = errors.New("not found")
+	ErrBadRequest              = errors.New("bad request")
+	ErrEmailExists             = errors.New("email already exists")
+	ErrCurrentPasswordRequired = errors.New("password saat ini harus diisi")
+	ErrInvalidCurrentPassword  = errors.New("password saat ini tidak valid")
 )
 
 func GraphQLError(ctx context.Context, message string, code string) *gqlerror.Error {

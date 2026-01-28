@@ -36,7 +36,7 @@ func NewServices(cfg Config) *Services {
 	emailService := NewEmailService(cfg.ResendAPIKey, cfg.EmailTemplatesDir)
 
 	return &Services{
-		Auth:            NewAuthService(cfg.Repos.User, cfg.Repos.PasswordResetToken, emailService, cfg.JWTSecret, cfg.FrontendURL),
+		Auth:            NewAuthService(cfg.Repos.User, cfg.Repos.PasswordResetToken, cfg.Repos.TwoFACode, emailService, cfg.JWTSecret, cfg.FrontendURL),
 		User:            NewUserService(cfg.Repos.User),
 		Category:        NewCategoryService(cfg.Repos.Category),
 		Expense:         NewExpenseService(cfg.Repos.Expense, cfg.Repos.Category),

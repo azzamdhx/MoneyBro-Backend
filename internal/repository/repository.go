@@ -21,6 +21,7 @@ type Repositories struct {
 	Income             IncomeRepository
 	RecurringIncome    RecurringIncomeRepository
 	PasswordResetToken PasswordResetTokenRepository
+	TwoFACode          TwoFACodeRepository
 }
 
 func NewRepositories(db *gorm.DB) *Repositories {
@@ -38,6 +39,7 @@ func NewRepositories(db *gorm.DB) *Repositories {
 		Income:             NewIncomeRepository(db),
 		RecurringIncome:    NewRecurringIncomeRepository(db),
 		PasswordResetToken: NewPasswordResetTokenRepository(db),
+		TwoFACode:          NewTwoFACodeRepository(db),
 	}
 }
 
@@ -156,4 +158,12 @@ type PasswordResetTokenRepository interface {
 	MarkAsUsed(id uuid.UUID) error
 	DeleteExpiredTokens() error
 	DeleteByUserID(userID uuid.UUID) error
+}
+
+type TwoFACodeRepository interface {
+	Create(code *models.TwoFACode) error
+	GetValidByUserIDAndCode(userID uuid.UUID, code string) (*models.TwoFACode, error)
+	MarkAsUsed(id uuid.UUID) error
+	DeleteByUserID(userID uuid.UUID) error
+	DeleteExpiredCodes() error
 }

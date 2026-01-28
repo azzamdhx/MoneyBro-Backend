@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	mathrand "math/rand"
 	"time"
 
 	"github.com/google/uuid"
@@ -19,6 +20,7 @@ import (
 type AuthService struct {
 	userRepo          repository.UserRepository
 	passwordResetRepo repository.PasswordResetTokenRepository
+	twoFACodeRepo     repository.TwoFACodeRepository
 	emailService      *EmailService
 	jwtSecret         string
 	frontendURL       string
@@ -27,6 +29,7 @@ type AuthService struct {
 func NewAuthService(
 	userRepo repository.UserRepository,
 	passwordResetRepo repository.PasswordResetTokenRepository,
+	twoFACodeRepo repository.TwoFACodeRepository,
 	emailService *EmailService,
 	jwtSecret string,
 	frontendURL string,
@@ -34,6 +37,7 @@ func NewAuthService(
 	return &AuthService{
 		userRepo:          userRepo,
 		passwordResetRepo: passwordResetRepo,
+		twoFACodeRepo:     twoFACodeRepo,
 		emailService:      emailService,
 		jwtSecret:         jwtSecret,
 		frontendURL:       frontendURL,
@@ -41,6 +45,13 @@ func NewAuthService(
 }
 
 type AuthPayload struct {
+	Token       string
+	User        *models.User
+	Requires2FA bool
+	TempToken   string
+}
+
+type TwoFAPayload struct {
 	Token string
 	User  *models.User
 }
@@ -91,7 +102,7 @@ func (s *AuthService) Register(email, password, name string) (*AuthPayload, erro
 	}, nil
 }
 
-func (s *AuthService) Login(email, password string) (*AuthPayload, error) {
+func (s *AuthService) Login(ctx context.Context, email, password string) (*AuthPayload, error) {
 	user, err := s.userRepo.GetByEmail(email)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -104,6 +115,25 @@ func (s *AuthService) Login(email, password string) (*AuthPayload, error) {
 		return nil, errors.New("invalid email or password")
 	}
 
+	// Check if 2FA is enabled
+	if user.TwoFAEnabled {
+		// Generate temp token for 2FA verification
+		tempToken, err := utils.GenerateTempToken(user.ID.String(), s.jwtSecret)
+		if err != nil {
+			return nil, err
+		}
+
+		// Generate and send 2FA code
+		if err := s.send2FACode(ctx, user); err != nil {
+			return nil, err
+		}
+
+		return &AuthPayload{
+			Requires2FA: true,
+			TempToken:   tempToken,
+		}, nil
+	}
+
 	token, err := utils.GenerateJWT(user.ID.String(), s.jwtSecret)
 	if err != nil {
 		return nil, err
@@ -113,6 +143,129 @@ func (s *AuthService) Login(email, password string) (*AuthPayload, error) {
 		Token: token,
 		User:  user,
 	}, nil
+}
+
+func (s *AuthService) send2FACode(ctx context.Context, user *models.User) error {
+	// Delete any existing codes for this user
+	_ = s.twoFACodeRepo.DeleteByUserID(user.ID)
+
+	// Generate 6-digit code
+	code := fmt.Sprintf("%06d", mathrand.Intn(1000000))
+
+	// Create 2FA code (expires in 10 minutes)
+	twoFACode := &models.TwoFACode{
+		ID:        uuid.New(),
+		UserID:    user.ID,
+		Code:      code,
+		ExpiresAt: time.Now().Add(10 * time.Minute),
+	}
+
+	if err := s.twoFACodeRepo.Create(twoFACode); err != nil {
+		return err
+	}
+
+	// Send email with code
+	return s.emailService.Send2FACodeEmail(ctx, user.Email, user.Name, code)
+}
+
+func (s *AuthService) Verify2FA(ctx context.Context, tempToken, code string) (*TwoFAPayload, error) {
+	// Verify temp token
+	userID, err := utils.VerifyTempToken(tempToken, s.jwtSecret)
+	if err != nil {
+		return nil, errors.New("invalid or expired token")
+	}
+
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, errors.New("invalid token")
+	}
+
+	// Verify 2FA code
+	twoFACode, err := s.twoFACodeRepo.GetValidByUserIDAndCode(userUUID, code)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("kode verifikasi tidak valid atau sudah kadaluarsa")
+		}
+		return nil, err
+	}
+
+	// Mark code as used
+	if err := s.twoFACodeRepo.MarkAsUsed(twoFACode.ID); err != nil {
+		return nil, err
+	}
+
+	// Get user
+	user, err := s.userRepo.GetByID(userUUID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Generate actual JWT token
+	token, err := utils.GenerateJWT(user.ID.String(), s.jwtSecret)
+	if err != nil {
+		return nil, err
+	}
+
+	return &TwoFAPayload{
+		Token: token,
+		User:  user,
+	}, nil
+}
+
+func (s *AuthService) Resend2FACode(ctx context.Context, tempToken string) error {
+	// Verify temp token
+	userID, err := utils.VerifyTempToken(tempToken, s.jwtSecret)
+	if err != nil {
+		return errors.New("invalid or expired token")
+	}
+
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		return errors.New("invalid token")
+	}
+
+	user, err := s.userRepo.GetByID(userUUID)
+	if err != nil {
+		return err
+	}
+
+	return s.send2FACode(ctx, user)
+}
+
+func (s *AuthService) Enable2FA(userID uuid.UUID, password string) error {
+	user, err := s.userRepo.GetByID(userID)
+	if err != nil {
+		return err
+	}
+
+	// Verify password
+	if !utils.CheckPassword(password, user.PasswordHash) {
+		return errors.New("password tidak valid")
+	}
+
+	user.TwoFAEnabled = true
+	now := time.Now()
+	user.UpdatedAt = &now
+
+	return s.userRepo.Update(user)
+}
+
+func (s *AuthService) Disable2FA(userID uuid.UUID, password string) error {
+	user, err := s.userRepo.GetByID(userID)
+	if err != nil {
+		return err
+	}
+
+	// Verify password
+	if !utils.CheckPassword(password, user.PasswordHash) {
+		return errors.New("password tidak valid")
+	}
+
+	user.TwoFAEnabled = false
+	now := time.Now()
+	user.UpdatedAt = &now
+
+	return s.userRepo.Update(user)
 }
 
 func (s *AuthService) ForgotPassword(ctx context.Context, email string) error {

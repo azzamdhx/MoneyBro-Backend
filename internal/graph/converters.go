@@ -8,11 +8,12 @@ import (
 
 func userToModel(u *models.User) *model.User {
 	return &model.User{
-		ID:        u.ID,
-		Email:     u.Email,
-		Name:      u.Name,
-		CreatedAt: u.CreatedAt,
-		UpdatedAt: u.UpdatedAt,
+		ID:           u.ID,
+		Email:        u.Email,
+		Name:         u.Name,
+		TwoFAEnabled: u.TwoFAEnabled,
+		CreatedAt:    u.CreatedAt,
+		UpdatedAt:    u.UpdatedAt,
 	}
 }
 

@@ -12,8 +12,10 @@ import (
 )
 
 type AuthPayload struct {
-	Token string `json:"token"`
-	User  *User  `json:"user"`
+	Token       *string `json:"token,omitempty"`
+	User        *User   `json:"user,omitempty"`
+	Requires2fa bool    `json:"requires2FA"`
+	TempToken   *string `json:"tempToken,omitempty"`
 }
 
 type BalanceBreakdown struct {
@@ -398,9 +400,10 @@ type UpdateInstallmentInput struct {
 }
 
 type UpdateProfileInput struct {
-	Name     *string `json:"name,omitempty"`
-	Email    *string `json:"email,omitempty"`
-	Password *string `json:"password,omitempty"`
+	Name            *string `json:"name,omitempty"`
+	Email           *string `json:"email,omitempty"`
+	CurrentPassword *string `json:"currentPassword,omitempty"`
+	Password        *string `json:"password,omitempty"`
 }
 
 type UpdateRecurringIncomeInput struct {
@@ -414,11 +417,22 @@ type UpdateRecurringIncomeInput struct {
 }
 
 type User struct {
-	ID        uuid.UUID  `json:"id"`
-	Email     string     `json:"email"`
-	Name      string     `json:"name"`
-	CreatedAt time.Time  `json:"createdAt"`
-	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
+	ID           uuid.UUID  `json:"id"`
+	Email        string     `json:"email"`
+	Name         string     `json:"name"`
+	TwoFAEnabled bool       `json:"twoFAEnabled"`
+	CreatedAt    time.Time  `json:"createdAt"`
+	UpdatedAt    *time.Time `json:"updatedAt,omitempty"`
+}
+
+type TwoFAPayload struct {
+	Token string `json:"token"`
+	User  *User  `json:"user"`
+}
+
+type Verify2FAInput struct {
+	TempToken string `json:"tempToken"`
+	Code      string `json:"code"`
 }
 
 type BalancePeriod string

@@ -45,7 +45,7 @@ func (s *UserService) DeleteAccount(userID uuid.UUID, password string) error {
 	return s.userRepo.DeleteAllUserData(userID)
 }
 
-func (s *UserService) UpdateProfile(userID uuid.UUID, name, email, password *string) (*models.User, error) {
+func (s *UserService) UpdateProfile(userID uuid.UUID, name, email, currentPassword, password *string) (*models.User, error) {
 	user, err := s.userRepo.GetByID(userID)
 	if err != nil {
 		return nil, err
@@ -71,6 +71,14 @@ func (s *UserService) UpdateProfile(userID uuid.UUID, name, email, password *str
 	}
 
 	if password != nil {
+		// Validate current password is required when changing password
+		if currentPassword == nil || *currentPassword == "" {
+			return nil, utils.ErrCurrentPasswordRequired
+		}
+		if !utils.CheckPassword(*currentPassword, user.PasswordHash) {
+			return nil, utils.ErrInvalidCurrentPassword
+		}
+
 		if err := utils.ValidatePassword(*password); err != nil {
 			return nil, err
 		}

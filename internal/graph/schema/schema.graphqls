@@ -35,6 +35,10 @@ type Query {
 type Mutation {
   register(input: RegisterInput!): AuthPayload!
   login(input: LoginInput!): AuthPayload!
+  verify2FA(input: Verify2FAInput!): TwoFAPayload!
+  resend2FACode(tempToken: String!): Boolean!
+  enable2FA(password: String!): Boolean!
+  disable2FA(password: String!): Boolean!
   updateProfile(input: UpdateProfileInput!): User!
   deleteAccount(input: DeleteAccountInput!): Boolean!
   forgotPassword(input: ForgotPasswordInput!): Boolean!

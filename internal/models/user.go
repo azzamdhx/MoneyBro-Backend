@@ -11,6 +11,7 @@ type User struct {
 	Email        string     `gorm:"type:varchar(255);uniqueIndex;not null" json:"email"`
 	PasswordHash string     `gorm:"type:varchar(255);not null" json:"-"`
 	Name         string     `gorm:"type:varchar(100);not null" json:"name"`
+	TwoFAEnabled bool       `gorm:"default:false" json:"two_fa_enabled"`
 	CreatedAt    time.Time  `gorm:"default:now()" json:"created_at"`
 	UpdatedAt    *time.Time `json:"updated_at,omitempty"`
 }

@@ -43,3 +43,26 @@ func ValidateJWT(tokenString string, secret string) (*JWTClaims, error) {
 
 	return nil, errors.New("invalid token")
 }
+
+// GenerateTempToken generates a short-lived token for 2FA verification (10 minutes)
+func GenerateTempToken(userID string, secret string) (string, error) {
+	claims := JWTClaims{
+		UserID: userID,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(10 * time.Minute)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(secret))
+}
+
+// VerifyTempToken verifies a temporary token and returns the user ID
+func VerifyTempToken(tokenString string, secret string) (string, error) {
+	claims, err := ValidateJWT(tokenString, secret)
+	if err != nil {
+		return "", err
+	}
+	return claims.UserID, nil
+}

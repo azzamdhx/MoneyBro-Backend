@@ -2,11 +2,19 @@ type User {
   id: UUID!
   email: String!
   name: String!
+  twoFAEnabled: Boolean!
   createdAt: Time!
   updatedAt: Time
 }
 
 type AuthPayload {
+  token: String
+  user: User
+  requires2FA: Boolean!
+  tempToken: String
+}
+
+type TwoFAPayload {
   token: String!
   user: User!
 }
@@ -25,6 +33,7 @@ input LoginInput {
 input UpdateProfileInput {
   name: String
   email: String
+  currentPassword: String
   password: String
 }
 
@@ -39,4 +48,9 @@ input ForgotPasswordInput {
 input ResetPasswordInput {
   token: String!
   password: String!
+}
+
+input Verify2FAInput {
+  tempToken: String!
+  code: String!
 }
