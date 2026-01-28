@@ -1,4 +1,4 @@
-FROM golang:1.21-alpine AS builder
+FROM golang:1.22-alpine AS builder
 
 WORKDIR /app
 
@@ -26,4 +26,4 @@ ENV TZ=Asia/Jakarta
 
 EXPOSE 8080
 
-CMD ["/app/server"]
+CMD ["/bin/sh", "-c", "/app/migrate up && /app/server"]
