@@ -133,3 +133,17 @@ func (s *DebtService) RecordPayment(debtID uuid.UUID, amount int64, paidAt time.
 
 	return payment, nil
 }
+
+func (s *DebtService) MarkComplete(id uuid.UUID) (*models.Debt, error) {
+	debt, err := s.debtRepo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	debt.Status = models.DebtStatusCompleted
+	if err := s.debtRepo.Update(debt); err != nil {
+		return nil, err
+	}
+
+	return s.debtRepo.GetByID(id)
+}

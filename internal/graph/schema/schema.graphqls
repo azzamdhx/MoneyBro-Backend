@@ -62,11 +62,13 @@ type Mutation {
   updateInstallment(id: UUID!, input: UpdateInstallmentInput!): Installment!
   deleteInstallment(id: UUID!): Boolean!
   recordInstallmentPayment(input: RecordInstallmentPaymentInput!): InstallmentPayment!
+  markInstallmentComplete(id: UUID!): Installment!
   
   createDebt(input: CreateDebtInput!): Debt!
   updateDebt(id: UUID!, input: UpdateDebtInput!): Debt!
   deleteDebt(id: UUID!): Boolean!
   recordDebtPayment(input: RecordDebtPaymentInput!): DebtPayment!
+  markDebtComplete(id: UUID!): Debt!
   
   createIncomeCategory(input: CreateIncomeCategoryInput!): IncomeCategory!
   updateIncomeCategory(id: UUID!, input: UpdateIncomeCategoryInput!): IncomeCategory!

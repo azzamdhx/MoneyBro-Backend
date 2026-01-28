@@ -144,3 +144,17 @@ func (s *InstallmentService) RecordPayment(installmentID uuid.UUID, amount int64
 
 	return payment, nil
 }
+
+func (s *InstallmentService) MarkComplete(id uuid.UUID) (*models.Installment, error) {
+	installment, err := s.installmentRepo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	installment.Status = models.InstallmentStatusCompleted
+	if err := s.installmentRepo.Update(installment); err != nil {
+		return nil, err
+	}
+
+	return s.installmentRepo.GetByID(id)
+}

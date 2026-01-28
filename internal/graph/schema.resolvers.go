@@ -390,6 +390,15 @@ func (r *mutationResolver) RecordInstallmentPayment(ctx context.Context, input m
 	return installmentPaymentToModel(payment), nil
 }
 
+// MarkInstallmentComplete is the resolver for the markInstallmentComplete field.
+func (r *mutationResolver) MarkInstallmentComplete(ctx context.Context, id uuid.UUID) (*model.Installment, error) {
+	installment, err := r.Services.Installment.MarkComplete(id)
+	if err != nil {
+		return nil, err
+	}
+	return installmentToModel(installment), nil
+}
+
 // CreateDebt is the resolver for the createDebt field.
 func (r *mutationResolver) CreateDebt(ctx context.Context, input model.CreateDebtInput) (*model.Debt, error) {
 	userID, ok := middleware.GetUserID(ctx)
@@ -492,6 +501,15 @@ func (r *mutationResolver) RecordDebtPayment(ctx context.Context, input model.Re
 		return nil, err
 	}
 	return debtPaymentToModel(payment), nil
+}
+
+// MarkDebtComplete is the resolver for the markDebtComplete field.
+func (r *mutationResolver) MarkDebtComplete(ctx context.Context, id uuid.UUID) (*model.Debt, error) {
+	debt, err := r.Services.Debt.MarkComplete(id)
+	if err != nil {
+		return nil, err
+	}
+	return debtToModel(debt), nil
 }
 
 // CreateIncomeCategory is the resolver for the createIncomeCategory field.

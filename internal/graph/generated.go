@@ -261,6 +261,8 @@ type ComplexityRoot struct {
 		Enable2fa                  func(childComplexity int, password string) int
 		ForgotPassword             func(childComplexity int, input model.ForgotPasswordInput) int
 		Login                      func(childComplexity int, input model.LoginInput) int
+		MarkDebtComplete           func(childComplexity int, id uuid.UUID) int
+		MarkInstallmentComplete    func(childComplexity int, id uuid.UUID) int
 		RecordDebtPayment          func(childComplexity int, input model.RecordDebtPaymentInput) int
 		RecordInstallmentPayment   func(childComplexity int, input model.RecordInstallmentPaymentInput) int
 		Register                   func(childComplexity int, input model.RegisterInput) int
@@ -358,10 +360,12 @@ type MutationResolver interface {
 	UpdateInstallment(ctx context.Context, id uuid.UUID, input model.UpdateInstallmentInput) (*model.Installment, error)
 	DeleteInstallment(ctx context.Context, id uuid.UUID) (bool, error)
 	RecordInstallmentPayment(ctx context.Context, input model.RecordInstallmentPaymentInput) (*model.InstallmentPayment, error)
+	MarkInstallmentComplete(ctx context.Context, id uuid.UUID) (*model.Installment, error)
 	CreateDebt(ctx context.Context, input model.CreateDebtInput) (*model.Debt, error)
 	UpdateDebt(ctx context.Context, id uuid.UUID, input model.UpdateDebtInput) (*model.Debt, error)
 	DeleteDebt(ctx context.Context, id uuid.UUID) (bool, error)
 	RecordDebtPayment(ctx context.Context, input model.RecordDebtPaymentInput) (*model.DebtPayment, error)
+	MarkDebtComplete(ctx context.Context, id uuid.UUID) (*model.Debt, error)
 	CreateIncomeCategory(ctx context.Context, input model.CreateIncomeCategoryInput) (*model.IncomeCategory, error)
 	UpdateIncomeCategory(ctx context.Context, id uuid.UUID, input model.UpdateIncomeCategoryInput) (*model.IncomeCategory, error)
 	DeleteIncomeCategory(ctx context.Context, id uuid.UUID) (bool, error)
@@ -1608,6 +1612,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.Login(childComplexity, args["input"].(model.LoginInput)), true
 
+	case "Mutation.markDebtComplete":
+		if e.complexity.Mutation.MarkDebtComplete == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_markDebtComplete_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.MarkDebtComplete(childComplexity, args["id"].(uuid.UUID)), true
+
+	case "Mutation.markInstallmentComplete":
+		if e.complexity.Mutation.MarkInstallmentComplete == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_markInstallmentComplete_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.MarkInstallmentComplete(childComplexity, args["id"].(uuid.UUID)), true
+
 	case "Mutation.recordDebtPayment":
 		if e.complexity.Mutation.RecordDebtPayment == nil {
 			break
@@ -2676,6 +2704,36 @@ func (ec *executionContext) field_Mutation_login_args(ctx context.Context, rawAr
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_markDebtComplete_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 uuid.UUID
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_markInstallmentComplete_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 uuid.UUID
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -11038,6 +11096,97 @@ func (ec *executionContext) fieldContext_Mutation_recordInstallmentPayment(ctx c
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_markInstallmentComplete(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_markInstallmentComplete(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().MarkInstallmentComplete(rctx, fc.Args["id"].(uuid.UUID))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Installment)
+	fc.Result = res
+	return ec.marshalNInstallment2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐInstallment(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_markInstallmentComplete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Installment_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Installment_name(ctx, field)
+			case "actualAmount":
+				return ec.fieldContext_Installment_actualAmount(ctx, field)
+			case "loanAmount":
+				return ec.fieldContext_Installment_loanAmount(ctx, field)
+			case "monthlyPayment":
+				return ec.fieldContext_Installment_monthlyPayment(ctx, field)
+			case "tenor":
+				return ec.fieldContext_Installment_tenor(ctx, field)
+			case "startDate":
+				return ec.fieldContext_Installment_startDate(ctx, field)
+			case "dueDay":
+				return ec.fieldContext_Installment_dueDay(ctx, field)
+			case "status":
+				return ec.fieldContext_Installment_status(ctx, field)
+			case "notes":
+				return ec.fieldContext_Installment_notes(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Installment_createdAt(ctx, field)
+			case "interestAmount":
+				return ec.fieldContext_Installment_interestAmount(ctx, field)
+			case "interestPercentage":
+				return ec.fieldContext_Installment_interestPercentage(ctx, field)
+			case "paidCount":
+				return ec.fieldContext_Installment_paidCount(ctx, field)
+			case "remainingPayments":
+				return ec.fieldContext_Installment_remainingPayments(ctx, field)
+			case "remainingAmount":
+				return ec.fieldContext_Installment_remainingAmount(ctx, field)
+			case "payments":
+				return ec.fieldContext_Installment_payments(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Installment", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_markInstallmentComplete_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_createDebt(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_createDebt(ctx, field)
 	if err != nil {
@@ -11338,6 +11487,97 @@ func (ec *executionContext) fieldContext_Mutation_recordDebtPayment(ctx context.
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_recordDebtPayment_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_markDebtComplete(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_markDebtComplete(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().MarkDebtComplete(rctx, fc.Args["id"].(uuid.UUID))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Debt)
+	fc.Result = res
+	return ec.marshalNDebt2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐDebt(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_markDebtComplete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Debt_id(ctx, field)
+			case "personName":
+				return ec.fieldContext_Debt_personName(ctx, field)
+			case "actualAmount":
+				return ec.fieldContext_Debt_actualAmount(ctx, field)
+			case "loanAmount":
+				return ec.fieldContext_Debt_loanAmount(ctx, field)
+			case "paymentType":
+				return ec.fieldContext_Debt_paymentType(ctx, field)
+			case "monthlyPayment":
+				return ec.fieldContext_Debt_monthlyPayment(ctx, field)
+			case "tenor":
+				return ec.fieldContext_Debt_tenor(ctx, field)
+			case "dueDate":
+				return ec.fieldContext_Debt_dueDate(ctx, field)
+			case "status":
+				return ec.fieldContext_Debt_status(ctx, field)
+			case "notes":
+				return ec.fieldContext_Debt_notes(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Debt_createdAt(ctx, field)
+			case "interestAmount":
+				return ec.fieldContext_Debt_interestAmount(ctx, field)
+			case "interestPercentage":
+				return ec.fieldContext_Debt_interestPercentage(ctx, field)
+			case "totalToPay":
+				return ec.fieldContext_Debt_totalToPay(ctx, field)
+			case "paidAmount":
+				return ec.fieldContext_Debt_paidAmount(ctx, field)
+			case "remainingAmount":
+				return ec.fieldContext_Debt_remainingAmount(ctx, field)
+			case "payments":
+				return ec.fieldContext_Debt_payments(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Debt", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_markDebtComplete_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -19169,6 +19409,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "markInstallmentComplete":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_markInstallmentComplete(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "createDebt":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createDebt(ctx, field)
@@ -19193,6 +19440,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "recordDebtPayment":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_recordDebtPayment(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "markDebtComplete":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_markDebtComplete(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
