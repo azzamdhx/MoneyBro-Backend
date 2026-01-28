@@ -7,8 +7,13 @@ import (
 )
 
 func CORS(frontendURL string) func(http.Handler) http.Handler {
+	allowedOrigins := []string{frontendURL}
+	if frontendURL != "http://localhost:3000" {
+		allowedOrigins = append(allowedOrigins, "http://localhost:3000")
+	}
+
 	return cors.Handler(cors.Options{
-		AllowedOrigins:   []string{frontendURL},
+		AllowedOrigins:   allowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
