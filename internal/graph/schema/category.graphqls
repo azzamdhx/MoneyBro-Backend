@@ -1,0 +1,17 @@
+type Category {
+  id: UUID!
+  name: String!
+  createdAt: Time!
+  
+  expenses: [Expense!]!
+  expenseCount: Int!
+  totalSpent: Int!
+}
+
+input CreateCategoryInput {
+  name: String!
+}
+
+input UpdateCategoryInput {
+  name: String!
+}

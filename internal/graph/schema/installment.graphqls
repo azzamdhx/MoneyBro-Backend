@@ -1,0 +1,65 @@
+enum InstallmentStatus {
+  ACTIVE
+  COMPLETED
+}
+
+type Installment {
+  id: UUID!
+  name: String!
+  actualAmount: Int!
+  loanAmount: Int!
+  monthlyPayment: Int!
+  tenor: Int!
+  startDate: Date!
+  dueDay: Int!
+  status: InstallmentStatus!
+  notes: String
+  createdAt: Time!
+  
+  interestAmount: Int!
+  interestPercentage: Float!
+  paidCount: Int!
+  remainingPayments: Int!
+  remainingAmount: Int!
+  
+  payments: [InstallmentPayment!]!
+}
+
+type InstallmentPayment {
+  id: UUID!
+  paymentNumber: Int!
+  amount: Int!
+  paidAt: Date!
+  createdAt: Time!
+  
+  installment: Installment!
+}
+
+input CreateInstallmentInput {
+  name: String!
+  actualAmount: Int!
+  loanAmount: Int!
+  monthlyPayment: Int!
+  tenor: Int!
+  startDate: Date!
+  dueDay: Int!
+  notes: String
+}
+
+input UpdateInstallmentInput {
+  name: String
+  actualAmount: Int
+  loanAmount: Int
+  monthlyPayment: Int
+  tenor: Int
+  startDate: Date
+  dueDay: Int
+  status: InstallmentStatus
+  notes: String
+}
+
+input RecordInstallmentPaymentInput {
+  installmentId: UUID!
+  amount: Int!
+  paidAt: Date!
+}

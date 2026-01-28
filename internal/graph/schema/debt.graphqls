@@ -1,0 +1,70 @@
+enum DebtStatus {
+  ACTIVE
+  COMPLETED
+}
+
+enum DebtPaymentType {
+  ONE_TIME
+  INSTALLMENT
+}
+
+type Debt {
+  id: UUID!
+  personName: String!
+  actualAmount: Int!
+  loanAmount: Int
+  paymentType: DebtPaymentType!
+  monthlyPayment: Int
+  tenor: Int
+  dueDate: Date
+  status: DebtStatus!
+  notes: String
+  createdAt: Time!
+  
+  interestAmount: Int
+  interestPercentage: Float
+  totalToPay: Int!
+  paidAmount: Int!
+  remainingAmount: Int!
+  
+  payments: [DebtPayment!]!
+}
+
+type DebtPayment {
+  id: UUID!
+  paymentNumber: Int!
+  amount: Int!
+  paidAt: Date!
+  createdAt: Time!
+  
+  debt: Debt!
+}
+
+input CreateDebtInput {
+  personName: String!
+  actualAmount: Int!
+  loanAmount: Int
+  paymentType: DebtPaymentType!
+  monthlyPayment: Int
+  tenor: Int
+  dueDate: Date
+  notes: String
+}
+
+input UpdateDebtInput {
+  personName: String
+  actualAmount: Int
+  loanAmount: Int
+  paymentType: DebtPaymentType
+  monthlyPayment: Int
+  tenor: Int
+  dueDate: Date
+  status: DebtStatus
+  notes: String
+}
+
+input RecordDebtPaymentInput {
+  debtId: UUID!
+  amount: Int!
+  paidAt: Date!
+}

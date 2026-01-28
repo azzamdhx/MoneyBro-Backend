@@ -1,0 +1,67 @@
+type Expense {
+  id: UUID!
+  itemName: String!
+  unitPrice: Int!
+  quantity: Int!
+  total: Int!
+  notes: String
+  expenseDate: Date
+  createdAt: Time!
+  
+  category: Category!
+}
+
+type ExpenseTemplate {
+  id: UUID!
+  itemName: String!
+  unitPrice: Int!
+  quantity: Int!
+  total: Int!
+  recurringDay: Int
+  notes: String
+  createdAt: Time!
+  
+  category: Category!
+}
+
+input ExpenseFilter {
+  categoryId: UUID
+  startDate: Date
+  endDate: Date
+}
+
+input CreateExpenseInput {
+  categoryId: UUID!
+  itemName: String!
+  unitPrice: Int!
+  quantity: Int!
+  notes: String
+  expenseDate: Date
+}
+
+input UpdateExpenseInput {
+  categoryId: UUID
+  itemName: String
+  unitPrice: Int
+  quantity: Int
+  notes: String
+  expenseDate: Date
+}
+
+input CreateExpenseTemplateInput {
+  categoryId: UUID!
+  itemName: String!
+  unitPrice: Int!
+  quantity: Int!
+  recurringDay: Int
+  notes: String
+}
+
+input UpdateExpenseTemplateInput {
+  categoryId: UUID
+  itemName: String
+  unitPrice: Int
+  quantity: Int
+  recurringDay: Int
+  notes: String
+}

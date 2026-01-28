@@ -1,0 +1,28 @@
+type User {
+  id: UUID!
+  email: String!
+  name: String!
+  createdAt: Time!
+  updatedAt: Time
+}
+
+type AuthPayload {
+  token: String!
+  user: User!
+}
+
+input RegisterInput {
+  email: String!
+  password: String!
+  name: String!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+input UpdateProfileInput {
+  name: String
+  password: String
+}

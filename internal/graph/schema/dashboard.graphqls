@@ -1,0 +1,17 @@
+type Dashboard {
+  totalActiveDebt: Int!
+  totalActiveInstallment: Int!
+  totalExpenseThisMonth: Int!
+  
+  upcomingInstallments: [Installment!]!
+  upcomingDebts: [Debt!]!
+  
+  expensesByCategory: [CategorySummary!]!
+  recentExpenses: [Expense!]!
+}
+
+type CategorySummary {
+  category: Category!
+  totalAmount: Int!
+  expenseCount: Int!
+}

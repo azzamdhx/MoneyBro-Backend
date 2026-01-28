@@ -1,0 +1,52 @@
+scalar UUID
+scalar Time
+scalar Date
+
+type Query {
+  me: User!
+  
+  categories: [Category!]!
+  category(id: UUID!): Category
+  
+  expenses(filter: ExpenseFilter): [Expense!]!
+  expense(id: UUID!): Expense
+  expenseTemplates: [ExpenseTemplate!]!
+  expenseTemplate(id: UUID!): ExpenseTemplate
+  
+  installments(status: InstallmentStatus): [Installment!]!
+  installment(id: UUID!): Installment
+  
+  debts(status: DebtStatus): [Debt!]!
+  debt(id: UUID!): Debt
+  
+  dashboard: Dashboard!
+}
+
+type Mutation {
+  register(input: RegisterInput!): AuthPayload!
+  login(input: LoginInput!): AuthPayload!
+  updateProfile(input: UpdateProfileInput!): User!
+  
+  createCategory(input: CreateCategoryInput!): Category!
+  updateCategory(id: UUID!, input: UpdateCategoryInput!): Category!
+  deleteCategory(id: UUID!): Boolean!
+  
+  createExpense(input: CreateExpenseInput!): Expense!
+  updateExpense(id: UUID!, input: UpdateExpenseInput!): Expense!
+  deleteExpense(id: UUID!): Boolean!
+  
+  createExpenseTemplate(input: CreateExpenseTemplateInput!): ExpenseTemplate!
+  updateExpenseTemplate(id: UUID!, input: UpdateExpenseTemplateInput!): ExpenseTemplate!
+  deleteExpenseTemplate(id: UUID!): Boolean!
+  createExpenseFromTemplate(templateId: UUID!, expenseDate: Date): Expense!
+  
+  createInstallment(input: CreateInstallmentInput!): Installment!
+  updateInstallment(id: UUID!, input: UpdateInstallmentInput!): Installment!
+  deleteInstallment(id: UUID!): Boolean!
+  recordInstallmentPayment(input: RecordInstallmentPaymentInput!): InstallmentPayment!
+  
+  createDebt(input: CreateDebtInput!): Debt!
+  updateDebt(id: UUID!, input: UpdateDebtInput!): Debt!
+  deleteDebt(id: UUID!): Boolean!
+  recordDebtPayment(input: RecordDebtPaymentInput!): DebtPayment!
+}
