@@ -2,6 +2,9 @@ type Dashboard {
   totalActiveDebt: Int!
   totalActiveInstallment: Int!
   totalExpenseThisMonth: Int!
+  totalIncomeThisMonth: Int!
+  
+  balanceSummary: BalanceSummary!
   
   upcomingInstallments: [Installment!]!
   upcomingDebts: [Debt!]!

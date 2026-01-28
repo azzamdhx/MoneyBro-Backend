@@ -1,0 +1,71 @@
+enum BalanceStatus {
+  SURPLUS
+  DEFICIT
+  BALANCED
+}
+
+enum BalancePeriod {
+  THIS_MONTH
+  LAST_MONTH
+  THIS_YEAR
+  CUSTOM
+}
+
+type BalanceSummary {
+  totalIncome: Int!
+  totalExpense: Int!
+  totalInstallmentPayment: Int!
+  totalDebtPayment: Int!
+  netBalance: Int!
+  status: BalanceStatus!
+}
+
+type BalanceBreakdown {
+  total: Int!
+  count: Int!
+}
+
+type IncomeBreakdown {
+  total: Int!
+  count: Int!
+  byCategory: [IncomeCategorySummary!]!
+  byType: [IncomeTypeSummary!]!
+}
+
+type IncomeCategorySummary {
+  category: IncomeCategory!
+  totalAmount: Int!
+  incomeCount: Int!
+}
+
+type IncomeTypeSummary {
+  incomeType: IncomeType!
+  totalAmount: Int!
+  incomeCount: Int!
+}
+
+type ExpenseBreakdown {
+  total: Int!
+  count: Int!
+  byCategory: [CategorySummary!]!
+}
+
+type BalanceReport {
+  periodLabel: String!
+  startDate: Date!
+  endDate: Date!
+  
+  income: IncomeBreakdown!
+  expense: ExpenseBreakdown!
+  installment: BalanceBreakdown!
+  debt: BalanceBreakdown!
+  
+  netBalance: Int!
+  status: BalanceStatus!
+}
+
+input BalanceFilterInput {
+  period: BalancePeriod!
+  startDate: Date
+  endDate: Date
+}

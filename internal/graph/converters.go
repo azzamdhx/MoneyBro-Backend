@@ -147,11 +147,133 @@ func debtPaymentToModel(p *models.DebtPayment) *model.DebtPayment {
 	}
 }
 
+func incomeCategoryToModel(c *models.IncomeCategory) *model.IncomeCategory {
+	return &model.IncomeCategory{
+		ID:        c.ID,
+		Name:      c.Name,
+		CreatedAt: c.CreatedAt,
+	}
+}
+
+func incomeToModel(i *models.Income) *model.Income {
+	inc := &model.Income{
+		ID:          i.ID,
+		SourceName:  i.SourceName,
+		Amount:      int(i.Amount),
+		IncomeType:  model.IncomeType(i.IncomeType),
+		IncomeDate:  i.IncomeDate,
+		IsRecurring: i.IsRecurring,
+		Notes:       i.Notes,
+		CreatedAt:   i.CreatedAt,
+	}
+	if i.Category != nil {
+		inc.Category = incomeCategoryToModel(i.Category)
+	}
+	return inc
+}
+
+func recurringIncomeToModel(r *models.RecurringIncome) *model.RecurringIncome {
+	ri := &model.RecurringIncome{
+		ID:           r.ID,
+		SourceName:   r.SourceName,
+		Amount:       int(r.Amount),
+		IncomeType:   model.IncomeType(r.IncomeType),
+		RecurringDay: r.RecurringDay,
+		IsActive:     r.IsActive,
+		Notes:        r.Notes,
+		CreatedAt:    r.CreatedAt,
+	}
+	if r.Category != nil {
+		ri.Category = incomeCategoryToModel(r.Category)
+	}
+	return ri
+}
+
+func balanceSummaryToModel(b *services.BalanceSummary) *model.BalanceSummary {
+	return &model.BalanceSummary{
+		TotalIncome:             int(b.TotalIncome),
+		TotalExpense:            int(b.TotalExpense),
+		TotalInstallmentPayment: int(b.TotalInstallmentPayment),
+		TotalDebtPayment:        int(b.TotalDebtPayment),
+		NetBalance:              int(b.NetBalance),
+		Status:                  model.BalanceStatus(b.Status),
+	}
+}
+
+func balanceReportToModel(r *services.BalanceReport) *model.BalanceReport {
+	report := &model.BalanceReport{
+		PeriodLabel: r.PeriodLabel,
+		StartDate:   r.StartDate,
+		EndDate:     r.EndDate,
+		NetBalance:  int(r.NetBalance),
+		Status:      model.BalanceStatus(r.Status),
+		Income: &model.IncomeBreakdown{
+			Total: int(r.Income.Total),
+			Count: r.Income.Count,
+		},
+		Expense: &model.ExpenseBreakdown{
+			Total: int(r.Expense.Total),
+			Count: r.Expense.Count,
+		},
+		Installment: &model.BalanceBreakdown{
+			Total: int(r.Installment.Total),
+			Count: r.Installment.Count,
+		},
+		Debt: &model.BalanceBreakdown{
+			Total: int(r.Debt.Total),
+			Count: r.Debt.Count,
+		},
+	}
+
+	// Income by category
+	if len(r.Income.ByCategory) > 0 {
+		cats := make([]*model.IncomeCategorySummary, len(r.Income.ByCategory))
+		for i, c := range r.Income.ByCategory {
+			cats[i] = &model.IncomeCategorySummary{
+				Category:    incomeCategoryToModel(&c.Category),
+				TotalAmount: int(c.TotalAmount),
+				IncomeCount: c.IncomeCount,
+			}
+		}
+		report.Income.ByCategory = cats
+	}
+
+	// Income by type
+	if len(r.Income.ByType) > 0 {
+		types := make([]*model.IncomeTypeSummary, len(r.Income.ByType))
+		for i, t := range r.Income.ByType {
+			types[i] = &model.IncomeTypeSummary{
+				IncomeType:  model.IncomeType(t.IncomeType),
+				TotalAmount: int(t.TotalAmount),
+				IncomeCount: t.IncomeCount,
+			}
+		}
+		report.Income.ByType = types
+	}
+
+	// Expense by category
+	if len(r.Expense.ByCategory) > 0 {
+		cats := make([]*model.CategorySummary, len(r.Expense.ByCategory))
+		for i, c := range r.Expense.ByCategory {
+			cats[i] = &model.CategorySummary{
+				Category:     categoryToModel(&c.Category),
+				TotalAmount:  int(c.TotalAmount),
+				ExpenseCount: c.ExpenseCount,
+			}
+		}
+		report.Expense.ByCategory = cats
+	}
+
+	return report
+}
+
 func dashboardToModel(d *services.Dashboard) *model.Dashboard {
 	dash := &model.Dashboard{
 		TotalActiveDebt:        int(d.TotalActiveDebt),
 		TotalActiveInstallment: int(d.TotalActiveInstallment),
 		TotalExpenseThisMonth:  int(d.TotalExpenseThisMonth),
+		TotalIncomeThisMonth:   int(d.TotalIncomeThisMonth),
+		BalanceSummary:         balanceSummaryToModel(&d.BalanceSummary),
 	}
 	if len(d.UpcomingInstallments) > 0 {
 		insts := make([]*model.Installment, len(d.UpcomingInstallments))

@@ -1,0 +1,100 @@
+enum IncomeType {
+  SALARY
+  FREELANCE
+  INVESTMENT
+  GIFT
+  BONUS
+  REFUND
+  BUSINESS
+  OTHER
+}
+
+type IncomeCategory {
+  id: UUID!
+  name: String!
+  createdAt: Time!
+  
+  incomes: [Income!]!
+  incomeCount: Int!
+  totalIncome: Int!
+}
+
+type Income {
+  id: UUID!
+  sourceName: String!
+  amount: Int!
+  incomeType: IncomeType!
+  incomeDate: Date!
+  isRecurring: Boolean!
+  notes: String
+  createdAt: Time!
+  
+  category: IncomeCategory!
+}
+
+type RecurringIncome {
+  id: UUID!
+  sourceName: String!
+  amount: Int!
+  incomeType: IncomeType!
+  recurringDay: Int!
+  isActive: Boolean!
+  notes: String
+  createdAt: Time!
+  
+  category: IncomeCategory!
+}
+
+input IncomeFilter {
+  categoryId: UUID
+  incomeType: IncomeType
+  startDate: Date
+  endDate: Date
+}
+
+input CreateIncomeCategoryInput {
+  name: String!
+}
+
+input UpdateIncomeCategoryInput {
+  name: String!
+}
+
+input CreateIncomeInput {
+  categoryId: UUID!
+  sourceName: String!
+  amount: Int!
+  incomeType: IncomeType!
+  incomeDate: Date
+  isRecurring: Boolean
+  notes: String
+}
+
+input UpdateIncomeInput {
+  categoryId: UUID
+  sourceName: String
+  amount: Int
+  incomeType: IncomeType
+  incomeDate: Date
+  isRecurring: Boolean
+  notes: String
+}
+
+input CreateRecurringIncomeInput {
+  categoryId: UUID!
+  sourceName: String!
+  amount: Int!
+  incomeType: IncomeType!
+  recurringDay: Int!
+  notes: String
+}
+
+input UpdateRecurringIncomeInput {
+  categoryId: UUID
+  sourceName: String
+  amount: Int
+  incomeType: IncomeType
+  recurringDay: Int
+  isActive: Boolean
+  notes: String
+}

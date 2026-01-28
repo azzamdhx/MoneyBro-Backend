@@ -17,6 +17,9 @@ type Repositories struct {
 	Debt               DebtRepository
 	DebtPayment        DebtPaymentRepository
 	NotificationLog    NotificationLogRepository
+	IncomeCategory     IncomeCategoryRepository
+	Income             IncomeRepository
+	RecurringIncome    RecurringIncomeRepository
 }
 
 func NewRepositories(db *gorm.DB) *Repositories {
@@ -30,6 +33,9 @@ func NewRepositories(db *gorm.DB) *Repositories {
 		Debt:               NewDebtRepository(db),
 		DebtPayment:        NewDebtPaymentRepository(db),
 		NotificationLog:    NewNotificationLogRepository(db),
+		IncomeCategory:     NewIncomeCategoryRepository(db),
+		Income:             NewIncomeRepository(db),
+		RecurringIncome:    NewRecurringIncomeRepository(db),
 	}
 }
 
@@ -104,4 +110,37 @@ type DebtPaymentRepository interface {
 type NotificationLogRepository interface {
 	Create(log *models.NotificationLog) error
 	ExistsForToday(userID, referenceID uuid.UUID, notificationType models.NotificationType) (bool, error)
+}
+
+type IncomeCategoryRepository interface {
+	Create(category *models.IncomeCategory) error
+	GetByID(id uuid.UUID) (*models.IncomeCategory, error)
+	GetByUserID(userID uuid.UUID) ([]models.IncomeCategory, error)
+	Update(category *models.IncomeCategory) error
+	Delete(id uuid.UUID) error
+}
+
+type IncomeFilter struct {
+	CategoryID *uuid.UUID
+	IncomeType *models.IncomeType
+	StartDate  *string
+	EndDate    *string
+}
+
+type IncomeRepository interface {
+	Create(income *models.Income) error
+	GetByID(id uuid.UUID) (*models.Income, error)
+	GetByUserID(userID uuid.UUID, filter *IncomeFilter) ([]models.Income, error)
+	GetByUserIDAndDateRange(userID uuid.UUID, startDate, endDate string) ([]models.Income, error)
+	Update(income *models.Income) error
+	Delete(id uuid.UUID) error
+}
+
+type RecurringIncomeRepository interface {
+	Create(recurringIncome *models.RecurringIncome) error
+	GetByID(id uuid.UUID) (*models.RecurringIncome, error)
+	GetByUserID(userID uuid.UUID, isActive *bool) ([]models.RecurringIncome, error)
+	GetByRecurringDay(day int, isActive bool) ([]models.RecurringIncome, error)
+	Update(recurringIncome *models.RecurringIncome) error
+	Delete(id uuid.UUID) error
 }

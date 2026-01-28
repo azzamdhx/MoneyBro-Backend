@@ -22,10 +22,29 @@ func NewDashboardService(repos *repository.Repositories, redis *redis.Client) *D
 	}
 }
 
+type BalanceStatus string
+
+const (
+	BalanceStatusSurplus  BalanceStatus = "SURPLUS"
+	BalanceStatusDeficit  BalanceStatus = "DEFICIT"
+	BalanceStatusBalanced BalanceStatus = "BALANCED"
+)
+
+type BalanceSummary struct {
+	TotalIncome             int64
+	TotalExpense            int64
+	TotalInstallmentPayment int64
+	TotalDebtPayment        int64
+	NetBalance              int64
+	Status                  BalanceStatus
+}
+
 type Dashboard struct {
 	TotalActiveDebt        int64
 	TotalActiveInstallment int64
 	TotalExpenseThisMonth  int64
+	TotalIncomeThisMonth   int64
+	BalanceSummary         BalanceSummary
 	UpcomingInstallments   []models.Installment
 	UpcomingDebts          []models.Debt
 	ExpensesByCategory     []CategorySummary
@@ -87,6 +106,53 @@ func (s *DashboardService) GetDashboard(userID uuid.UUID) (*Dashboard, error) {
 
 	for _, summary := range categoryMap {
 		dashboard.ExpensesByCategory = append(dashboard.ExpensesByCategory, *summary)
+	}
+
+	// Get income for this month
+	incomes, err := s.repos.Income.GetByUserIDAndDateRange(
+		userID,
+		startOfMonth.Format("2006-01-02"),
+		endOfMonth.Format("2006-01-02"),
+	)
+	if err != nil {
+		return nil, err
+	}
+	for _, inc := range incomes {
+		dashboard.TotalIncomeThisMonth += inc.Amount
+	}
+
+	// Calculate monthly installment payments (active installments * monthly payment)
+	var monthlyInstallmentPayment int64
+	for _, inst := range installments {
+		monthlyInstallmentPayment += inst.MonthlyPayment
+	}
+
+	// Calculate monthly debt payments (for installment-type debts)
+	var monthlyDebtPayment int64
+	for _, debt := range debts {
+		if debt.MonthlyPayment != nil {
+			monthlyDebtPayment += *debt.MonthlyPayment
+		}
+	}
+
+	// Calculate balance summary
+	netBalance := dashboard.TotalIncomeThisMonth - dashboard.TotalExpenseThisMonth - monthlyInstallmentPayment - monthlyDebtPayment
+	var status BalanceStatus
+	if netBalance > 0 {
+		status = BalanceStatusSurplus
+	} else if netBalance < 0 {
+		status = BalanceStatusDeficit
+	} else {
+		status = BalanceStatusBalanced
+	}
+
+	dashboard.BalanceSummary = BalanceSummary{
+		TotalIncome:             dashboard.TotalIncomeThisMonth,
+		TotalExpense:            dashboard.TotalExpenseThisMonth,
+		TotalInstallmentPayment: monthlyInstallmentPayment,
+		TotalDebtPayment:        monthlyDebtPayment,
+		NetBalance:              netBalance,
+		Status:                  status,
 	}
 
 	today := now.Day()

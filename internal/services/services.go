@@ -24,6 +24,10 @@ type Services struct {
 	Dashboard       *DashboardService
 	Email           *EmailService
 	Notification    *NotificationService
+	IncomeCategory  *IncomeCategoryService
+	Income          *IncomeService
+	RecurringIncome *RecurringIncomeService
+	Balance         *BalanceService
 }
 
 func NewServices(cfg Config) *Services {
@@ -40,5 +44,9 @@ func NewServices(cfg Config) *Services {
 		Dashboard:       NewDashboardService(cfg.Repos, cfg.Redis),
 		Email:           emailService,
 		Notification:    NewNotificationService(cfg.Repos, emailService),
+		IncomeCategory:  NewIncomeCategoryService(cfg.Repos.IncomeCategory),
+		Income:          NewIncomeService(cfg.Repos.Income, cfg.Repos.IncomeCategory),
+		RecurringIncome: NewRecurringIncomeService(cfg.Repos.RecurringIncome, cfg.Repos.Income, cfg.Repos.IncomeCategory),
+		Balance:         NewBalanceService(cfg.Repos),
 	}
 }

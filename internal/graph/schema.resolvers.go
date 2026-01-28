@@ -17,6 +17,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// Register is the resolver for the register field.
 func (r *mutationResolver) Register(ctx context.Context, input model.RegisterInput) (*model.AuthPayload, error) {
 	result, err := r.Services.Auth.Register(input.Email, input.Password, input.Name)
 	if err != nil {
@@ -28,6 +29,7 @@ func (r *mutationResolver) Register(ctx context.Context, input model.RegisterInp
 	}, nil
 }
 
+// Login is the resolver for the login field.
 func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*model.AuthPayload, error) {
 	result, err := r.Services.Auth.Login(input.Email, input.Password)
 	if err != nil {
@@ -39,6 +41,7 @@ func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*
 	}, nil
 }
 
+// UpdateProfile is the resolver for the updateProfile field.
 func (r *mutationResolver) UpdateProfile(ctx context.Context, input model.UpdateProfileInput) (*model.User, error) {
 	userID, ok := middleware.GetUserID(ctx)
 	if !ok {
@@ -51,6 +54,7 @@ func (r *mutationResolver) UpdateProfile(ctx context.Context, input model.Update
 	return userToModel(user), nil
 }
 
+// CreateCategory is the resolver for the createCategory field.
 func (r *mutationResolver) CreateCategory(ctx context.Context, input model.CreateCategoryInput) (*model.Category, error) {
 	userID, ok := middleware.GetUserID(ctx)
 	if !ok {
@@ -63,6 +67,7 @@ func (r *mutationResolver) CreateCategory(ctx context.Context, input model.Creat
 	return categoryToModel(cat), nil
 }
 
+// UpdateCategory is the resolver for the updateCategory field.
 func (r *mutationResolver) UpdateCategory(ctx context.Context, id uuid.UUID, input model.UpdateCategoryInput) (*model.Category, error) {
 	cat, err := r.Services.Category.Update(id, input.Name)
 	if err != nil {
@@ -71,11 +76,13 @@ func (r *mutationResolver) UpdateCategory(ctx context.Context, id uuid.UUID, inp
 	return categoryToModel(cat), nil
 }
 
+// DeleteCategory is the resolver for the deleteCategory field.
 func (r *mutationResolver) DeleteCategory(ctx context.Context, id uuid.UUID) (bool, error) {
 	err := r.Services.Category.Delete(id)
 	return err == nil, err
 }
 
+// CreateExpense is the resolver for the createExpense field.
 func (r *mutationResolver) CreateExpense(ctx context.Context, input model.CreateExpenseInput) (*model.Expense, error) {
 	userID, ok := middleware.GetUserID(ctx)
 	if !ok {
@@ -95,6 +102,7 @@ func (r *mutationResolver) CreateExpense(ctx context.Context, input model.Create
 	return expenseToModel(exp), nil
 }
 
+// UpdateExpense is the resolver for the updateExpense field.
 func (r *mutationResolver) UpdateExpense(ctx context.Context, id uuid.UUID, input model.UpdateExpenseInput) (*model.Expense, error) {
 	var unitPrice *int64
 	if input.UnitPrice != nil {
@@ -115,11 +123,13 @@ func (r *mutationResolver) UpdateExpense(ctx context.Context, id uuid.UUID, inpu
 	return expenseToModel(exp), nil
 }
 
+// DeleteExpense is the resolver for the deleteExpense field.
 func (r *mutationResolver) DeleteExpense(ctx context.Context, id uuid.UUID) (bool, error) {
 	err := r.Services.Expense.Delete(id)
 	return err == nil, err
 }
 
+// CreateExpenseTemplate is the resolver for the createExpenseTemplate field.
 func (r *mutationResolver) CreateExpenseTemplate(ctx context.Context, input model.CreateExpenseTemplateInput) (*model.ExpenseTemplate, error) {
 	userID, ok := middleware.GetUserID(ctx)
 	if !ok {
@@ -139,6 +149,7 @@ func (r *mutationResolver) CreateExpenseTemplate(ctx context.Context, input mode
 	return expenseTemplateToModel(tmpl), nil
 }
 
+// UpdateExpenseTemplate is the resolver for the updateExpenseTemplate field.
 func (r *mutationResolver) UpdateExpenseTemplate(ctx context.Context, id uuid.UUID, input model.UpdateExpenseTemplateInput) (*model.ExpenseTemplate, error) {
 	tmpl, err := r.Services.ExpenseTemplate.GetByID(id)
 	if err != nil {
@@ -174,11 +185,13 @@ func (r *mutationResolver) UpdateExpenseTemplate(ctx context.Context, id uuid.UU
 	return expenseTemplateToModel(updated), nil
 }
 
+// DeleteExpenseTemplate is the resolver for the deleteExpenseTemplate field.
 func (r *mutationResolver) DeleteExpenseTemplate(ctx context.Context, id uuid.UUID) (bool, error) {
 	err := r.Services.ExpenseTemplate.Delete(id)
 	return err == nil, err
 }
 
+// CreateExpenseFromTemplate is the resolver for the createExpenseFromTemplate field.
 func (r *mutationResolver) CreateExpenseFromTemplate(ctx context.Context, templateID uuid.UUID, expenseDate *time.Time) (*model.Expense, error) {
 	userID, ok := middleware.GetUserID(ctx)
 	if !ok {
@@ -191,6 +204,7 @@ func (r *mutationResolver) CreateExpenseFromTemplate(ctx context.Context, templa
 	return expenseToModel(exp), nil
 }
 
+// CreateInstallment is the resolver for the createInstallment field.
 func (r *mutationResolver) CreateInstallment(ctx context.Context, input model.CreateInstallmentInput) (*model.Installment, error) {
 	userID, ok := middleware.GetUserID(ctx)
 	if !ok {
@@ -212,6 +226,7 @@ func (r *mutationResolver) CreateInstallment(ctx context.Context, input model.Cr
 	return installmentToModel(inst), nil
 }
 
+// UpdateInstallment is the resolver for the updateInstallment field.
 func (r *mutationResolver) UpdateInstallment(ctx context.Context, id uuid.UUID, input model.UpdateInstallmentInput) (*model.Installment, error) {
 	inst, err := r.Services.Installment.GetByID(id)
 	if err != nil {
@@ -266,11 +281,13 @@ func (r *mutationResolver) UpdateInstallment(ctx context.Context, id uuid.UUID, 
 	return installmentToModel(updated), nil
 }
 
+// DeleteInstallment is the resolver for the deleteInstallment field.
 func (r *mutationResolver) DeleteInstallment(ctx context.Context, id uuid.UUID) (bool, error) {
 	err := r.Services.Installment.Delete(id)
 	return err == nil, err
 }
 
+// RecordInstallmentPayment is the resolver for the recordInstallmentPayment field.
 func (r *mutationResolver) RecordInstallmentPayment(ctx context.Context, input model.RecordInstallmentPaymentInput) (*model.InstallmentPayment, error) {
 	payment, err := r.Services.Installment.RecordPayment(input.InstallmentID, int64(input.Amount), input.PaidAt)
 	if err != nil {
@@ -279,6 +296,7 @@ func (r *mutationResolver) RecordInstallmentPayment(ctx context.Context, input m
 	return installmentPaymentToModel(payment), nil
 }
 
+// CreateDebt is the resolver for the createDebt field.
 func (r *mutationResolver) CreateDebt(ctx context.Context, input model.CreateDebtInput) (*model.Debt, error) {
 	userID, ok := middleware.GetUserID(ctx)
 	if !ok {
@@ -310,6 +328,7 @@ func (r *mutationResolver) CreateDebt(ctx context.Context, input model.CreateDeb
 	return debtToModel(debt), nil
 }
 
+// UpdateDebt is the resolver for the updateDebt field.
 func (r *mutationResolver) UpdateDebt(ctx context.Context, id uuid.UUID, input model.UpdateDebtInput) (*model.Debt, error) {
 	debt, err := r.Services.Debt.GetByID(id)
 	if err != nil {
@@ -366,11 +385,13 @@ func (r *mutationResolver) UpdateDebt(ctx context.Context, id uuid.UUID, input m
 	return debtToModel(updated), nil
 }
 
+// DeleteDebt is the resolver for the deleteDebt field.
 func (r *mutationResolver) DeleteDebt(ctx context.Context, id uuid.UUID) (bool, error) {
 	err := r.Services.Debt.Delete(id)
 	return err == nil, err
 }
 
+// RecordDebtPayment is the resolver for the recordDebtPayment field.
 func (r *mutationResolver) RecordDebtPayment(ctx context.Context, input model.RecordDebtPaymentInput) (*model.DebtPayment, error) {
 	payment, err := r.Services.Debt.RecordPayment(input.DebtID, int64(input.Amount), input.PaidAt)
 	if err != nil {
@@ -379,6 +400,159 @@ func (r *mutationResolver) RecordDebtPayment(ctx context.Context, input model.Re
 	return debtPaymentToModel(payment), nil
 }
 
+// CreateIncomeCategory is the resolver for the createIncomeCategory field.
+func (r *mutationResolver) CreateIncomeCategory(ctx context.Context, input model.CreateIncomeCategoryInput) (*model.IncomeCategory, error) {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
+		return nil, utils.ErrUnauthorized
+	}
+	cat, err := r.Services.IncomeCategory.Create(userID, input.Name)
+	if err != nil {
+		return nil, err
+	}
+	return incomeCategoryToModel(cat), nil
+}
+
+// UpdateIncomeCategory is the resolver for the updateIncomeCategory field.
+func (r *mutationResolver) UpdateIncomeCategory(ctx context.Context, id uuid.UUID, input model.UpdateIncomeCategoryInput) (*model.IncomeCategory, error) {
+	cat, err := r.Services.IncomeCategory.Update(id, input.Name)
+	if err != nil {
+		return nil, err
+	}
+	return incomeCategoryToModel(cat), nil
+}
+
+// DeleteIncomeCategory is the resolver for the deleteIncomeCategory field.
+func (r *mutationResolver) DeleteIncomeCategory(ctx context.Context, id uuid.UUID) (bool, error) {
+	err := r.Services.IncomeCategory.Delete(id)
+	return err == nil, err
+}
+
+// CreateIncome is the resolver for the createIncome field.
+func (r *mutationResolver) CreateIncome(ctx context.Context, input model.CreateIncomeInput) (*model.Income, error) {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
+		return nil, utils.ErrUnauthorized
+	}
+	isRecurring := false
+	if input.IsRecurring != nil {
+		isRecurring = *input.IsRecurring
+	}
+	inc, err := r.Services.Income.Create(userID, services.CreateIncomeInput{
+		CategoryID:  input.CategoryID,
+		SourceName:  input.SourceName,
+		Amount:      int64(input.Amount),
+		IncomeType:  models.IncomeType(input.IncomeType),
+		IncomeDate:  input.IncomeDate,
+		IsRecurring: isRecurring,
+		Notes:       input.Notes,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return incomeToModel(inc), nil
+}
+
+// UpdateIncome is the resolver for the updateIncome field.
+func (r *mutationResolver) UpdateIncome(ctx context.Context, id uuid.UUID, input model.UpdateIncomeInput) (*model.Income, error) {
+	var amount *int64
+	if input.Amount != nil {
+		v := int64(*input.Amount)
+		amount = &v
+	}
+	var incomeType *models.IncomeType
+	if input.IncomeType != nil {
+		v := models.IncomeType(*input.IncomeType)
+		incomeType = &v
+	}
+	inc, err := r.Services.Income.Update(id, services.UpdateIncomeInput{
+		CategoryID:  input.CategoryID,
+		SourceName:  input.SourceName,
+		Amount:      amount,
+		IncomeType:  incomeType,
+		IncomeDate:  input.IncomeDate,
+		IsRecurring: input.IsRecurring,
+		Notes:       input.Notes,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return incomeToModel(inc), nil
+}
+
+// DeleteIncome is the resolver for the deleteIncome field.
+func (r *mutationResolver) DeleteIncome(ctx context.Context, id uuid.UUID) (bool, error) {
+	err := r.Services.Income.Delete(id)
+	return err == nil, err
+}
+
+// CreateRecurringIncome is the resolver for the createRecurringIncome field.
+func (r *mutationResolver) CreateRecurringIncome(ctx context.Context, input model.CreateRecurringIncomeInput) (*model.RecurringIncome, error) {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
+		return nil, utils.ErrUnauthorized
+	}
+	ri, err := r.Services.RecurringIncome.Create(userID, services.CreateRecurringIncomeInput{
+		CategoryID:   input.CategoryID,
+		SourceName:   input.SourceName,
+		Amount:       int64(input.Amount),
+		IncomeType:   models.IncomeType(input.IncomeType),
+		RecurringDay: input.RecurringDay,
+		Notes:        input.Notes,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return recurringIncomeToModel(ri), nil
+}
+
+// UpdateRecurringIncome is the resolver for the updateRecurringIncome field.
+func (r *mutationResolver) UpdateRecurringIncome(ctx context.Context, id uuid.UUID, input model.UpdateRecurringIncomeInput) (*model.RecurringIncome, error) {
+	var amount *int64
+	if input.Amount != nil {
+		v := int64(*input.Amount)
+		amount = &v
+	}
+	var incomeType *models.IncomeType
+	if input.IncomeType != nil {
+		v := models.IncomeType(*input.IncomeType)
+		incomeType = &v
+	}
+	ri, err := r.Services.RecurringIncome.Update(id, services.UpdateRecurringIncomeInput{
+		CategoryID:   input.CategoryID,
+		SourceName:   input.SourceName,
+		Amount:       amount,
+		IncomeType:   incomeType,
+		RecurringDay: input.RecurringDay,
+		IsActive:     input.IsActive,
+		Notes:        input.Notes,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return recurringIncomeToModel(ri), nil
+}
+
+// DeleteRecurringIncome is the resolver for the deleteRecurringIncome field.
+func (r *mutationResolver) DeleteRecurringIncome(ctx context.Context, id uuid.UUID) (bool, error) {
+	err := r.Services.RecurringIncome.Delete(id)
+	return err == nil, err
+}
+
+// CreateIncomeFromRecurring is the resolver for the createIncomeFromRecurring field.
+func (r *mutationResolver) CreateIncomeFromRecurring(ctx context.Context, recurringID uuid.UUID, incomeDate *time.Time) (*model.Income, error) {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
+		return nil, utils.ErrUnauthorized
+	}
+	inc, err := r.Services.RecurringIncome.CreateIncomeFromRecurring(userID, recurringID, incomeDate)
+	if err != nil {
+		return nil, err
+	}
+	return incomeToModel(inc), nil
+}
+
+// Me is the resolver for the me field.
 func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
 	userID, ok := middleware.GetUserID(ctx)
 	if !ok {
@@ -391,6 +565,7 @@ func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
 	return userToModel(user), nil
 }
 
+// Categories is the resolver for the categories field.
 func (r *queryResolver) Categories(ctx context.Context) ([]*model.Category, error) {
 	userID, ok := middleware.GetUserID(ctx)
 	if !ok {
@@ -407,6 +582,7 @@ func (r *queryResolver) Categories(ctx context.Context) ([]*model.Category, erro
 	return result, nil
 }
 
+// Category is the resolver for the category field.
 func (r *queryResolver) Category(ctx context.Context, id uuid.UUID) (*model.Category, error) {
 	cat, err := r.Services.Category.GetByID(id)
 	if err != nil {
@@ -415,6 +591,7 @@ func (r *queryResolver) Category(ctx context.Context, id uuid.UUID) (*model.Cate
 	return categoryToModel(cat), nil
 }
 
+// Expenses is the resolver for the expenses field.
 func (r *queryResolver) Expenses(ctx context.Context, filter *model.ExpenseFilter) ([]*model.Expense, error) {
 	userID, ok := middleware.GetUserID(ctx)
 	if !ok {
@@ -445,6 +622,7 @@ func (r *queryResolver) Expenses(ctx context.Context, filter *model.ExpenseFilte
 	return result, nil
 }
 
+// Expense is the resolver for the expense field.
 func (r *queryResolver) Expense(ctx context.Context, id uuid.UUID) (*model.Expense, error) {
 	exp, err := r.Services.Expense.GetByID(id)
 	if err != nil {
@@ -453,6 +631,7 @@ func (r *queryResolver) Expense(ctx context.Context, id uuid.UUID) (*model.Expen
 	return expenseToModel(exp), nil
 }
 
+// ExpenseTemplates is the resolver for the expenseTemplates field.
 func (r *queryResolver) ExpenseTemplates(ctx context.Context) ([]*model.ExpenseTemplate, error) {
 	userID, ok := middleware.GetUserID(ctx)
 	if !ok {
@@ -469,6 +648,7 @@ func (r *queryResolver) ExpenseTemplates(ctx context.Context) ([]*model.ExpenseT
 	return result, nil
 }
 
+// ExpenseTemplate is the resolver for the expenseTemplate field.
 func (r *queryResolver) ExpenseTemplate(ctx context.Context, id uuid.UUID) (*model.ExpenseTemplate, error) {
 	tmpl, err := r.Services.ExpenseTemplate.GetByID(id)
 	if err != nil {
@@ -477,6 +657,7 @@ func (r *queryResolver) ExpenseTemplate(ctx context.Context, id uuid.UUID) (*mod
 	return expenseTemplateToModel(tmpl), nil
 }
 
+// Installments is the resolver for the installments field.
 func (r *queryResolver) Installments(ctx context.Context, status *model.InstallmentStatus) ([]*model.Installment, error) {
 	userID, ok := middleware.GetUserID(ctx)
 	if !ok {
@@ -498,6 +679,7 @@ func (r *queryResolver) Installments(ctx context.Context, status *model.Installm
 	return result, nil
 }
 
+// Installment is the resolver for the installment field.
 func (r *queryResolver) Installment(ctx context.Context, id uuid.UUID) (*model.Installment, error) {
 	inst, err := r.Services.Installment.GetByID(id)
 	if err != nil {
@@ -506,6 +688,7 @@ func (r *queryResolver) Installment(ctx context.Context, id uuid.UUID) (*model.I
 	return installmentToModel(inst), nil
 }
 
+// Debts is the resolver for the debts field.
 func (r *queryResolver) Debts(ctx context.Context, status *model.DebtStatus) ([]*model.Debt, error) {
 	userID, ok := middleware.GetUserID(ctx)
 	if !ok {
@@ -527,6 +710,7 @@ func (r *queryResolver) Debts(ctx context.Context, status *model.DebtStatus) ([]
 	return result, nil
 }
 
+// Debt is the resolver for the debt field.
 func (r *queryResolver) Debt(ctx context.Context, id uuid.UUID) (*model.Debt, error) {
 	debt, err := r.Services.Debt.GetByID(id)
 	if err != nil {
@@ -535,6 +719,130 @@ func (r *queryResolver) Debt(ctx context.Context, id uuid.UUID) (*model.Debt, er
 	return debtToModel(debt), nil
 }
 
+// IncomeCategories is the resolver for the incomeCategories field.
+func (r *queryResolver) IncomeCategories(ctx context.Context) ([]*model.IncomeCategory, error) {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
+		return nil, utils.ErrUnauthorized
+	}
+	cats, err := r.Services.IncomeCategory.GetByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*model.IncomeCategory, len(cats))
+	for i, c := range cats {
+		result[i] = incomeCategoryToModel(&c)
+	}
+	return result, nil
+}
+
+// IncomeCategory is the resolver for the incomeCategory field.
+func (r *queryResolver) IncomeCategory(ctx context.Context, id uuid.UUID) (*model.IncomeCategory, error) {
+	cat, err := r.Services.IncomeCategory.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+	return incomeCategoryToModel(cat), nil
+}
+
+// Incomes is the resolver for the incomes field.
+func (r *queryResolver) Incomes(ctx context.Context, filter *model.IncomeFilter) ([]*model.Income, error) {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
+		return nil, utils.ErrUnauthorized
+	}
+	var repoFilter *repository.IncomeFilter
+	if filter != nil {
+		repoFilter = &repository.IncomeFilter{
+			CategoryID: filter.CategoryID,
+		}
+		if filter.IncomeType != nil {
+			v := models.IncomeType(*filter.IncomeType)
+			repoFilter.IncomeType = &v
+		}
+		if filter.StartDate != nil {
+			s := filter.StartDate.Format("2006-01-02")
+			repoFilter.StartDate = &s
+		}
+		if filter.EndDate != nil {
+			e := filter.EndDate.Format("2006-01-02")
+			repoFilter.EndDate = &e
+		}
+	}
+	incomes, err := r.Services.Income.GetByUserID(userID, repoFilter)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*model.Income, len(incomes))
+	for i, inc := range incomes {
+		result[i] = incomeToModel(&inc)
+	}
+	return result, nil
+}
+
+// Income is the resolver for the income field.
+func (r *queryResolver) Income(ctx context.Context, id uuid.UUID) (*model.Income, error) {
+	inc, err := r.Services.Income.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+	return incomeToModel(inc), nil
+}
+
+// RecurringIncomes is the resolver for the recurringIncomes field.
+func (r *queryResolver) RecurringIncomes(ctx context.Context, isActive *bool) ([]*model.RecurringIncome, error) {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
+		return nil, utils.ErrUnauthorized
+	}
+	ris, err := r.Services.RecurringIncome.GetByUserID(userID, isActive)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*model.RecurringIncome, len(ris))
+	for i, ri := range ris {
+		result[i] = recurringIncomeToModel(&ri)
+	}
+	return result, nil
+}
+
+// RecurringIncome is the resolver for the recurringIncome field.
+func (r *queryResolver) RecurringIncome(ctx context.Context, id uuid.UUID) (*model.RecurringIncome, error) {
+	ri, err := r.Services.RecurringIncome.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+	return recurringIncomeToModel(ri), nil
+}
+
+// Balance is the resolver for the balance field.
+func (r *queryResolver) Balance(ctx context.Context, filter model.BalanceFilterInput) (*model.BalanceReport, error) {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
+		return nil, utils.ErrUnauthorized
+	}
+
+	var startDate, endDate *time.Time
+	if filter.StartDate != nil {
+		startDate = filter.StartDate
+	}
+	if filter.EndDate != nil {
+		endDate = filter.EndDate
+	}
+
+	report, err := r.Services.Balance.GetBalance(userID, services.BalanceFilterInput{
+		Period:    services.BalancePeriod(filter.Period),
+		StartDate: startDate,
+		EndDate:   endDate,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return balanceReportToModel(report), nil
+}
+
+// Dashboard is the resolver for the dashboard field.
 func (r *queryResolver) Dashboard(ctx context.Context) (*model.Dashboard, error) {
 	userID, ok := middleware.GetUserID(ctx)
 	if !ok {

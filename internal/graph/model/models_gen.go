@@ -16,6 +16,38 @@ type AuthPayload struct {
 	User  *User  `json:"user"`
 }
 
+type BalanceBreakdown struct {
+	Total int `json:"total"`
+	Count int `json:"count"`
+}
+
+type BalanceFilterInput struct {
+	Period    BalancePeriod `json:"period"`
+	StartDate *time.Time    `json:"startDate,omitempty"`
+	EndDate   *time.Time    `json:"endDate,omitempty"`
+}
+
+type BalanceReport struct {
+	PeriodLabel string            `json:"periodLabel"`
+	StartDate   time.Time         `json:"startDate"`
+	EndDate     time.Time         `json:"endDate"`
+	Income      *IncomeBreakdown  `json:"income"`
+	Expense     *ExpenseBreakdown `json:"expense"`
+	Installment *BalanceBreakdown `json:"installment"`
+	Debt        *BalanceBreakdown `json:"debt"`
+	NetBalance  int               `json:"netBalance"`
+	Status      BalanceStatus     `json:"status"`
+}
+
+type BalanceSummary struct {
+	TotalIncome             int           `json:"totalIncome"`
+	TotalExpense            int           `json:"totalExpense"`
+	TotalInstallmentPayment int           `json:"totalInstallmentPayment"`
+	TotalDebtPayment        int           `json:"totalDebtPayment"`
+	NetBalance              int           `json:"netBalance"`
+	Status                  BalanceStatus `json:"status"`
+}
+
 type Category struct {
 	ID           uuid.UUID  `json:"id"`
 	Name         string     `json:"name"`
@@ -64,6 +96,20 @@ type CreateExpenseTemplateInput struct {
 	Notes        *string   `json:"notes,omitempty"`
 }
 
+type CreateIncomeCategoryInput struct {
+	Name string `json:"name"`
+}
+
+type CreateIncomeInput struct {
+	CategoryID  uuid.UUID  `json:"categoryId"`
+	SourceName  string     `json:"sourceName"`
+	Amount      int        `json:"amount"`
+	IncomeType  IncomeType `json:"incomeType"`
+	IncomeDate  *time.Time `json:"incomeDate,omitempty"`
+	IsRecurring *bool      `json:"isRecurring,omitempty"`
+	Notes       *string    `json:"notes,omitempty"`
+}
+
 type CreateInstallmentInput struct {
 	Name           string    `json:"name"`
 	ActualAmount   int       `json:"actualAmount"`
@@ -75,10 +121,21 @@ type CreateInstallmentInput struct {
 	Notes          *string   `json:"notes,omitempty"`
 }
 
+type CreateRecurringIncomeInput struct {
+	CategoryID   uuid.UUID  `json:"categoryId"`
+	SourceName   string     `json:"sourceName"`
+	Amount       int        `json:"amount"`
+	IncomeType   IncomeType `json:"incomeType"`
+	RecurringDay int        `json:"recurringDay"`
+	Notes        *string    `json:"notes,omitempty"`
+}
+
 type Dashboard struct {
 	TotalActiveDebt        int                `json:"totalActiveDebt"`
 	TotalActiveInstallment int                `json:"totalActiveInstallment"`
 	TotalExpenseThisMonth  int                `json:"totalExpenseThisMonth"`
+	TotalIncomeThisMonth   int                `json:"totalIncomeThisMonth"`
+	BalanceSummary         *BalanceSummary    `json:"balanceSummary"`
 	UpcomingInstallments   []*Installment     `json:"upcomingInstallments"`
 	UpcomingDebts          []*Debt            `json:"upcomingDebts"`
 	ExpensesByCategory     []*CategorySummary `json:"expensesByCategory"`
@@ -126,6 +183,12 @@ type Expense struct {
 	Category    *Category  `json:"category"`
 }
 
+type ExpenseBreakdown struct {
+	Total      int                `json:"total"`
+	Count      int                `json:"count"`
+	ByCategory []*CategorySummary `json:"byCategory"`
+}
+
 type ExpenseFilter struct {
 	CategoryID *uuid.UUID `json:"categoryId,omitempty"`
 	StartDate  *time.Time `json:"startDate,omitempty"`
@@ -142,6 +205,53 @@ type ExpenseTemplate struct {
 	Notes        *string   `json:"notes,omitempty"`
 	CreatedAt    time.Time `json:"createdAt"`
 	Category     *Category `json:"category"`
+}
+
+type Income struct {
+	ID          uuid.UUID       `json:"id"`
+	SourceName  string          `json:"sourceName"`
+	Amount      int             `json:"amount"`
+	IncomeType  IncomeType      `json:"incomeType"`
+	IncomeDate  time.Time       `json:"incomeDate"`
+	IsRecurring bool            `json:"isRecurring"`
+	Notes       *string         `json:"notes,omitempty"`
+	CreatedAt   time.Time       `json:"createdAt"`
+	Category    *IncomeCategory `json:"category"`
+}
+
+type IncomeBreakdown struct {
+	Total      int                      `json:"total"`
+	Count      int                      `json:"count"`
+	ByCategory []*IncomeCategorySummary `json:"byCategory"`
+	ByType     []*IncomeTypeSummary     `json:"byType"`
+}
+
+type IncomeCategory struct {
+	ID          uuid.UUID `json:"id"`
+	Name        string    `json:"name"`
+	CreatedAt   time.Time `json:"createdAt"`
+	Incomes     []*Income `json:"incomes"`
+	IncomeCount int       `json:"incomeCount"`
+	TotalIncome int       `json:"totalIncome"`
+}
+
+type IncomeCategorySummary struct {
+	Category    *IncomeCategory `json:"category"`
+	TotalAmount int             `json:"totalAmount"`
+	IncomeCount int             `json:"incomeCount"`
+}
+
+type IncomeFilter struct {
+	CategoryID *uuid.UUID  `json:"categoryId,omitempty"`
+	IncomeType *IncomeType `json:"incomeType,omitempty"`
+	StartDate  *time.Time  `json:"startDate,omitempty"`
+	EndDate    *time.Time  `json:"endDate,omitempty"`
+}
+
+type IncomeTypeSummary struct {
+	IncomeType  IncomeType `json:"incomeType"`
+	TotalAmount int        `json:"totalAmount"`
+	IncomeCount int        `json:"incomeCount"`
 }
 
 type Installment struct {
@@ -196,6 +306,18 @@ type RecordInstallmentPaymentInput struct {
 	PaidAt        time.Time `json:"paidAt"`
 }
 
+type RecurringIncome struct {
+	ID           uuid.UUID       `json:"id"`
+	SourceName   string          `json:"sourceName"`
+	Amount       int             `json:"amount"`
+	IncomeType   IncomeType      `json:"incomeType"`
+	RecurringDay int             `json:"recurringDay"`
+	IsActive     bool            `json:"isActive"`
+	Notes        *string         `json:"notes,omitempty"`
+	CreatedAt    time.Time       `json:"createdAt"`
+	Category     *IncomeCategory `json:"category"`
+}
+
 type RegisterInput struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
@@ -236,6 +358,20 @@ type UpdateExpenseTemplateInput struct {
 	Notes        *string    `json:"notes,omitempty"`
 }
 
+type UpdateIncomeCategoryInput struct {
+	Name string `json:"name"`
+}
+
+type UpdateIncomeInput struct {
+	CategoryID  *uuid.UUID  `json:"categoryId,omitempty"`
+	SourceName  *string     `json:"sourceName,omitempty"`
+	Amount      *int        `json:"amount,omitempty"`
+	IncomeType  *IncomeType `json:"incomeType,omitempty"`
+	IncomeDate  *time.Time  `json:"incomeDate,omitempty"`
+	IsRecurring *bool       `json:"isRecurring,omitempty"`
+	Notes       *string     `json:"notes,omitempty"`
+}
+
 type UpdateInstallmentInput struct {
 	Name           *string            `json:"name,omitempty"`
 	ActualAmount   *int               `json:"actualAmount,omitempty"`
@@ -253,12 +389,110 @@ type UpdateProfileInput struct {
 	Password *string `json:"password,omitempty"`
 }
 
+type UpdateRecurringIncomeInput struct {
+	CategoryID   *uuid.UUID  `json:"categoryId,omitempty"`
+	SourceName   *string     `json:"sourceName,omitempty"`
+	Amount       *int        `json:"amount,omitempty"`
+	IncomeType   *IncomeType `json:"incomeType,omitempty"`
+	RecurringDay *int        `json:"recurringDay,omitempty"`
+	IsActive     *bool       `json:"isActive,omitempty"`
+	Notes        *string     `json:"notes,omitempty"`
+}
+
 type User struct {
 	ID        uuid.UUID  `json:"id"`
 	Email     string     `json:"email"`
 	Name      string     `json:"name"`
 	CreatedAt time.Time  `json:"createdAt"`
 	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
+}
+
+type BalancePeriod string
+
+const (
+	BalancePeriodThisMonth BalancePeriod = "THIS_MONTH"
+	BalancePeriodLastMonth BalancePeriod = "LAST_MONTH"
+	BalancePeriodThisYear  BalancePeriod = "THIS_YEAR"
+	BalancePeriodCustom    BalancePeriod = "CUSTOM"
+)
+
+var AllBalancePeriod = []BalancePeriod{
+	BalancePeriodThisMonth,
+	BalancePeriodLastMonth,
+	BalancePeriodThisYear,
+	BalancePeriodCustom,
+}
+
+func (e BalancePeriod) IsValid() bool {
+	switch e {
+	case BalancePeriodThisMonth, BalancePeriodLastMonth, BalancePeriodThisYear, BalancePeriodCustom:
+		return true
+	}
+	return false
+}
+
+func (e BalancePeriod) String() string {
+	return string(e)
+}
+
+func (e *BalancePeriod) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = BalancePeriod(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid BalancePeriod", str)
+	}
+	return nil
+}
+
+func (e BalancePeriod) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type BalanceStatus string
+
+const (
+	BalanceStatusSurplus  BalanceStatus = "SURPLUS"
+	BalanceStatusDeficit  BalanceStatus = "DEFICIT"
+	BalanceStatusBalanced BalanceStatus = "BALANCED"
+)
+
+var AllBalanceStatus = []BalanceStatus{
+	BalanceStatusSurplus,
+	BalanceStatusDeficit,
+	BalanceStatusBalanced,
+}
+
+func (e BalanceStatus) IsValid() bool {
+	switch e {
+	case BalanceStatusSurplus, BalanceStatusDeficit, BalanceStatusBalanced:
+		return true
+	}
+	return false
+}
+
+func (e BalanceStatus) String() string {
+	return string(e)
+}
+
+func (e *BalanceStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = BalanceStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid BalanceStatus", str)
+	}
+	return nil
+}
+
+func (e BalanceStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
 type DebtPaymentType string
@@ -340,6 +574,59 @@ func (e *DebtStatus) UnmarshalGQL(v interface{}) error {
 }
 
 func (e DebtStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type IncomeType string
+
+const (
+	IncomeTypeSalary     IncomeType = "SALARY"
+	IncomeTypeFreelance  IncomeType = "FREELANCE"
+	IncomeTypeInvestment IncomeType = "INVESTMENT"
+	IncomeTypeGift       IncomeType = "GIFT"
+	IncomeTypeBonus      IncomeType = "BONUS"
+	IncomeTypeRefund     IncomeType = "REFUND"
+	IncomeTypeBusiness   IncomeType = "BUSINESS"
+	IncomeTypeOther      IncomeType = "OTHER"
+)
+
+var AllIncomeType = []IncomeType{
+	IncomeTypeSalary,
+	IncomeTypeFreelance,
+	IncomeTypeInvestment,
+	IncomeTypeGift,
+	IncomeTypeBonus,
+	IncomeTypeRefund,
+	IncomeTypeBusiness,
+	IncomeTypeOther,
+}
+
+func (e IncomeType) IsValid() bool {
+	switch e {
+	case IncomeTypeSalary, IncomeTypeFreelance, IncomeTypeInvestment, IncomeTypeGift, IncomeTypeBonus, IncomeTypeRefund, IncomeTypeBusiness, IncomeTypeOther:
+		return true
+	}
+	return false
+}
+
+func (e IncomeType) String() string {
+	return string(e)
+}
+
+func (e *IncomeType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = IncomeType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid IncomeType", str)
+	}
+	return nil
+}
+
+func (e IncomeType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

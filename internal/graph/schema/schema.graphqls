@@ -19,6 +19,15 @@ type Query {
   debts(status: DebtStatus): [Debt!]!
   debt(id: UUID!): Debt
   
+  incomeCategories: [IncomeCategory!]!
+  incomeCategory(id: UUID!): IncomeCategory
+  incomes(filter: IncomeFilter): [Income!]!
+  income(id: UUID!): Income
+  recurringIncomes(isActive: Boolean): [RecurringIncome!]!
+  recurringIncome(id: UUID!): RecurringIncome
+  
+  balance(filter: BalanceFilterInput!): BalanceReport!
+  
   dashboard: Dashboard!
 }
 
@@ -49,4 +58,17 @@ type Mutation {
   updateDebt(id: UUID!, input: UpdateDebtInput!): Debt!
   deleteDebt(id: UUID!): Boolean!
   recordDebtPayment(input: RecordDebtPaymentInput!): DebtPayment!
+  
+  createIncomeCategory(input: CreateIncomeCategoryInput!): IncomeCategory!
+  updateIncomeCategory(id: UUID!, input: UpdateIncomeCategoryInput!): IncomeCategory!
+  deleteIncomeCategory(id: UUID!): Boolean!
+  
+  createIncome(input: CreateIncomeInput!): Income!
+  updateIncome(id: UUID!, input: UpdateIncomeInput!): Income!
+  deleteIncome(id: UUID!): Boolean!
+  
+  createRecurringIncome(input: CreateRecurringIncomeInput!): RecurringIncome!
+  updateRecurringIncome(id: UUID!, input: UpdateRecurringIncomeInput!): RecurringIncome!
+  deleteRecurringIncome(id: UUID!): Boolean!
+  createIncomeFromRecurring(recurringId: UUID!, incomeDate: Date): Income!
 }
