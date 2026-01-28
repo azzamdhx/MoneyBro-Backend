@@ -47,6 +47,7 @@ type UserRepository interface {
 	Create(user *models.User) error
 	GetByID(id uuid.UUID) (*models.User, error)
 	GetByEmail(email string) (*models.User, error)
+	GetAllWithNotificationsEnabled() ([]models.User, error)
 	Update(user *models.User) error
 	Delete(id uuid.UUID) error
 	DeleteAllUserData(userID uuid.UUID) error

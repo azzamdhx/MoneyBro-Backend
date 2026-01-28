@@ -37,6 +37,15 @@ func (r *userRepository) GetByEmail(email string) (*models.User, error) {
 	return &user, nil
 }
 
+func (r *userRepository) GetAllWithNotificationsEnabled() ([]models.User, error) {
+	var users []models.User
+	err := r.db.Where("notify_installment = ? OR notify_debt = ?", true, true).Find(&users).Error
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
 func (r *userRepository) Update(user *models.User) error {
 	return r.db.Save(user).Error
 }

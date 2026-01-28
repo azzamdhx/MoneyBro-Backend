@@ -23,9 +23,34 @@ func NewNotificationService(repos *repository.Repositories, emailService *EmailS
 
 func (s *NotificationService) SendDueReminders(ctx context.Context) error {
 	now := time.Now()
+
+	// Get all users with notifications enabled
+	users, err := s.repos.User.GetAllWithNotificationsEnabled()
+	if err != nil {
+		log.Printf("Error getting users with notifications: %v", err)
+		return err
+	}
+
+	for _, user := range users {
+		// Send installment reminders based on user preference
+		if user.NotifyInstallment {
+			s.sendInstallmentRemindersForUser(ctx, user, now)
+		}
+
+		// Send debt reminders based on user preference
+		if user.NotifyDebt {
+			s.sendDebtRemindersForUser(ctx, user, now)
+		}
+	}
+
+	return nil
+}
+
+func (s *NotificationService) sendInstallmentRemindersForUser(ctx context.Context, user models.User, now time.Time) {
 	today := now.Day()
 
-	for daysAhead := 1; daysAhead <= 3; daysAhead++ {
+	// Check for due dates within user's preferred notification window
+	for daysAhead := 0; daysAhead <= user.NotifyDaysBefore; daysAhead++ {
 		targetDay := today + daysAhead
 		if targetDay > 31 {
 			targetDay -= 31
@@ -38,7 +63,8 @@ func (s *NotificationService) SendDueReminders(ctx context.Context) error {
 		}
 
 		for _, inst := range installments {
-			if inst.User == nil {
+			// Only process this user's installments
+			if inst.UserID != user.ID {
 				continue
 			}
 
@@ -51,9 +77,9 @@ func (s *NotificationService) SendDueReminders(ctx context.Context) error {
 				continue
 			}
 
-			err = s.emailService.SendInstallmentReminder(ctx, inst.User.Email, inst.Name, daysAhead, inst.MonthlyPayment)
+			err = s.emailService.SendInstallmentReminder(ctx, user.Email, inst.Name, daysAhead, inst.MonthlyPayment)
 			if err != nil {
-				log.Printf("Error sending installment reminder: %v", err)
+				log.Printf("Error sending installment reminder to %s: %v", user.Email, err)
 				continue
 			}
 
@@ -68,10 +94,14 @@ func (s *NotificationService) SendDueReminders(ctx context.Context) error {
 			if err := s.repos.NotificationLog.Create(logEntry); err != nil {
 				log.Printf("Error creating notification log: %v", err)
 			}
+			log.Printf("Sent installment reminder to %s for %s (due in %d days)", user.Email, inst.Name, daysAhead)
 		}
 	}
+}
 
-	for daysAhead := 1; daysAhead <= 3; daysAhead++ {
+func (s *NotificationService) sendDebtRemindersForUser(ctx context.Context, user models.User, now time.Time) {
+	// Check for due dates within user's preferred notification window
+	for daysAhead := 0; daysAhead <= user.NotifyDaysBefore; daysAhead++ {
 		targetDate := now.AddDate(0, 0, daysAhead)
 		startDate := targetDate.Format("2006-01-02")
 		endDate := targetDate.Format("2006-01-02")
@@ -83,7 +113,8 @@ func (s *NotificationService) SendDueReminders(ctx context.Context) error {
 		}
 
 		for _, debt := range debts {
-			if debt.User == nil {
+			// Only process this user's debts
+			if debt.UserID != user.ID {
 				continue
 			}
 
@@ -96,9 +127,9 @@ func (s *NotificationService) SendDueReminders(ctx context.Context) error {
 				continue
 			}
 
-			err = s.emailService.SendDebtReminder(ctx, debt.User.Email, debt.PersonName, daysAhead, debt.RemainingAmount())
+			err = s.emailService.SendDebtReminder(ctx, user.Email, debt.PersonName, daysAhead, debt.RemainingAmount())
 			if err != nil {
-				log.Printf("Error sending debt reminder: %v", err)
+				log.Printf("Error sending debt reminder to %s: %v", user.Email, err)
 				continue
 			}
 
@@ -113,8 +144,7 @@ func (s *NotificationService) SendDueReminders(ctx context.Context) error {
 			if err := s.repos.NotificationLog.Create(logEntry); err != nil {
 				log.Printf("Error creating notification log: %v", err)
 			}
+			log.Printf("Sent debt reminder to %s for %s (due in %d days)", user.Email, debt.PersonName, daysAhead)
 		}
 	}
-
-	return nil
 }
