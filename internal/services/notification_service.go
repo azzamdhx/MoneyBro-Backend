@@ -5,6 +5,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/azzamdhx/moneybro/backend/internal/models"
 	"github.com/azzamdhx/moneybro/backend/internal/repository"
 )
@@ -19,6 +21,10 @@ func NewNotificationService(repos *repository.Repositories, emailService *EmailS
 		repos:        repos,
 		emailService: emailService,
 	}
+}
+
+func (s *NotificationService) GetByUserID(userID uuid.UUID) ([]models.NotificationLog, error) {
+	return s.repos.NotificationLog.GetByUserID(userID)
 }
 
 func (s *NotificationService) SendDueReminders(ctx context.Context) error {

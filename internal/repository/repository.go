@@ -116,6 +116,7 @@ type DebtPaymentRepository interface {
 
 type NotificationLogRepository interface {
 	Create(log *models.NotificationLog) error
+	GetByUserID(userID uuid.UUID) ([]models.NotificationLog, error)
 	ExistsForToday(userID, referenceID uuid.UUID, notificationType models.NotificationType) (bool, error)
 }
 

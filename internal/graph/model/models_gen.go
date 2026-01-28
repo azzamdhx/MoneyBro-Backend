@@ -301,6 +301,15 @@ type LoginInput struct {
 type Mutation struct {
 }
 
+type NotificationLog struct {
+	ID           uuid.UUID `json:"id"`
+	Type         string    `json:"type"`
+	ReferenceID  uuid.UUID `json:"referenceId"`
+	SentAt       time.Time `json:"sentAt"`
+	EmailSubject *string   `json:"emailSubject,omitempty"`
+	CreatedAt    time.Time `json:"createdAt"`
+}
+
 type Query struct {
 }
 

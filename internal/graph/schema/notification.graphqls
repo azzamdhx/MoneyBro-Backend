@@ -1,0 +1,12 @@
+type NotificationLog {
+  id: UUID!
+  type: String!
+  referenceId: UUID!
+  sentAt: Time!
+  emailSubject: String
+  createdAt: Time!
+}
+
+extend type Query {
+  notifications: [NotificationLog!]!
+}

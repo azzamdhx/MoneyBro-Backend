@@ -21,6 +21,12 @@ func (r *notificationLogRepository) Create(log *models.NotificationLog) error {
 	return r.db.Create(log).Error
 }
 
+func (r *notificationLogRepository) GetByUserID(userID uuid.UUID) ([]models.NotificationLog, error) {
+	var logs []models.NotificationLog
+	err := r.db.Where("user_id = ?", userID).Order("sent_at DESC").Limit(50).Find(&logs).Error
+	return logs, err
+}
+
 func (r *notificationLogRepository) ExistsForToday(userID, referenceID uuid.UUID, notificationType models.NotificationType) (bool, error) {
 	today := time.Now().Format("2006-01-02")
 	var count int64
