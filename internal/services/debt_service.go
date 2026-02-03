@@ -41,6 +41,20 @@ func (s *DebtService) Create(userID uuid.UUID, input CreateDebtInput) (*models.D
 		return nil, errors.New("actual amount must be positive")
 	}
 
+	// Validate and calculate for INSTALLMENT payment type
+	if input.PaymentType == models.DebtPaymentTypeInstallment {
+		if input.Tenor == nil || *input.Tenor <= 0 {
+			return nil, errors.New("tenor is required for installment debt")
+		}
+
+		// Auto-calculate monthly payment
+		calculatedMonthly := input.ActualAmount / int64(*input.Tenor)
+		if input.MonthlyPayment != nil && *input.MonthlyPayment != calculatedMonthly {
+			return nil, errors.New("monthly payment doesn't match calculated value")
+		}
+		input.MonthlyPayment = &calculatedMonthly
+	}
+
 	debt := &models.Debt{
 		ID:             uuid.New(),
 		UserID:         userID,
@@ -74,6 +88,20 @@ func (s *DebtService) Update(id uuid.UUID, input CreateDebtInput, status *models
 	debt, err := s.debtRepo.GetByID(id)
 	if err != nil {
 		return nil, err
+	}
+
+	// Validate and calculate for INSTALLMENT payment type
+	if input.PaymentType == models.DebtPaymentTypeInstallment {
+		if input.Tenor == nil || *input.Tenor <= 0 {
+			return nil, errors.New("tenor is required for installment debt")
+		}
+
+		// Auto-calculate monthly payment
+		calculatedMonthly := input.ActualAmount / int64(*input.Tenor)
+		if input.MonthlyPayment != nil && *input.MonthlyPayment != calculatedMonthly {
+			return nil, errors.New("monthly payment doesn't match calculated value")
+		}
+		input.MonthlyPayment = &calculatedMonthly
 	}
 
 	debt.PersonName = input.PersonName

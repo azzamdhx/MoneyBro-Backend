@@ -74,3 +74,18 @@ func (d *Debt) PaidAmount() int64 {
 func (d *Debt) RemainingAmount() int64 {
 	return d.TotalToPay() - d.PaidAmount()
 }
+
+func (d *Debt) PaidCount() int {
+	return len(d.Payments)
+}
+
+func (d *Debt) RemainingPayments() int {
+	if d.PaymentType != DebtPaymentTypeInstallment || d.Tenor == nil {
+		return 0
+	}
+	return *d.Tenor - d.PaidCount()
+}
+
+func (d *Debt) IsInstallment() bool {
+	return d.PaymentType == DebtPaymentTypeInstallment
+}
