@@ -25,6 +25,12 @@ func (r *installmentPaymentRepository) GetByInstallmentID(installmentID uuid.UUI
 	return payments, err
 }
 
+func (r *installmentPaymentRepository) GetByID(id uuid.UUID) (*models.InstallmentPayment, error) {
+	var payment models.InstallmentPayment
+	err := r.db.Preload("Installment").Where("id = ?", id).First(&payment).Error
+	return &payment, err
+}
+
 func (r *installmentPaymentRepository) GetLastPaymentNumber(installmentID uuid.UUID) (int, error) {
 	var payment models.InstallmentPayment
 	err := r.db.Where("installment_id = ?", installmentID).Order("payment_number DESC").First(&payment).Error

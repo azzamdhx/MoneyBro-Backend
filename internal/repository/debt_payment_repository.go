@@ -25,6 +25,12 @@ func (r *debtPaymentRepository) GetByDebtID(debtID uuid.UUID) ([]models.DebtPaym
 	return payments, err
 }
 
+func (r *debtPaymentRepository) GetByID(id uuid.UUID) (*models.DebtPayment, error) {
+	var payment models.DebtPayment
+	err := r.db.Preload("Debt").Where("id = ?", id).First(&payment).Error
+	return &payment, err
+}
+
 func (r *debtPaymentRepository) GetLastPaymentNumber(debtID uuid.UUID) (int, error) {
 	var payment models.DebtPayment
 	err := r.db.Where("debt_id = ?", debtID).Order("payment_number DESC").First(&payment).Error

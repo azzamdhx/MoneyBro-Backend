@@ -101,6 +101,7 @@ type InstallmentRepository interface {
 
 type InstallmentPaymentRepository interface {
 	Create(payment *models.InstallmentPayment) error
+	GetByID(id uuid.UUID) (*models.InstallmentPayment, error)
 	GetByInstallmentID(installmentID uuid.UUID) ([]models.InstallmentPayment, error)
 	GetLastPaymentNumber(installmentID uuid.UUID) (int, error)
 }
@@ -116,6 +117,7 @@ type DebtRepository interface {
 
 type DebtPaymentRepository interface {
 	Create(payment *models.DebtPayment) error
+	GetByID(id uuid.UUID) (*models.DebtPayment, error)
 	GetByDebtID(debtID uuid.UUID) ([]models.DebtPayment, error)
 	GetLastPaymentNumber(debtID uuid.UUID) (int, error)
 }

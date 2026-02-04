@@ -45,7 +45,7 @@ func (s *ActualPaymentsService) GetActualPayments(userID uuid.UUID, startDate, e
 		Debts:        []ActualDebtPayment{},
 	}
 
-	// Get installment payment transactions
+	// Get installment payment transactions from transactions table only
 	installmentTxs, err := s.repos.Transaction.GetByUserIDAndDateRangeAndReferenceType(
 		userID,
 		startDate,
@@ -53,17 +53,15 @@ func (s *ActualPaymentsService) GetActualPayments(userID uuid.UUID, startDate, e
 		"installment_payment",
 	)
 	if err == nil {
-		// Group by reference_id to get unique installments
-		installmentMap := make(map[uuid.UUID]*ActualInstallmentPayment)
-
+		// Each transaction record represents an actual payment
 		for _, tx := range installmentTxs {
 			if tx.ReferenceID == nil {
 				continue
 			}
 
-			// Get installment details
-			installment, err := s.repos.Installment.GetByID(*tx.ReferenceID)
-			if err != nil {
+			// Get installment_payment record (reference_id points to installment_payments.id)
+			installmentPayment, err := s.repos.InstallmentPayment.GetByID(*tx.ReferenceID)
+			if err != nil || installmentPayment.Installment == nil {
 				continue
 			}
 
@@ -75,28 +73,20 @@ func (s *ActualPaymentsService) GetActualPayments(userID uuid.UUID, startDate, e
 				}
 			}
 
-			// If this installment already exists, add to the amount
-			if existing, exists := installmentMap[*tx.ReferenceID]; exists {
-				existing.Amount += amount
-			} else {
-				installmentMap[*tx.ReferenceID] = &ActualInstallmentPayment{
-					InstallmentID:   *tx.ReferenceID,
-					Name:            installment.Name,
-					Amount:          amount,
-					TransactionDate: tx.TransactionDate.Format("2006-01-02"),
-					Description:     tx.Description,
-				}
-			}
+			// Add each transaction as a separate payment
+			report.Installments = append(report.Installments, ActualInstallmentPayment{
+				InstallmentID:   installmentPayment.InstallmentID,
+				Name:            installmentPayment.Installment.Name,
+				Amount:          amount,
+				TransactionDate: tx.TransactionDate.Format("2006-01-02"),
+				Description:     tx.Description,
+			})
 
 			report.TotalInstallment += amount
 		}
-
-		for _, payment := range installmentMap {
-			report.Installments = append(report.Installments, *payment)
-		}
 	}
 
-	// Get debt payment transactions
+	// Get debt payment transactions from transactions table only
 	debtTxs, err := s.repos.Transaction.GetByUserIDAndDateRangeAndReferenceType(
 		userID,
 		startDate,
@@ -104,17 +94,15 @@ func (s *ActualPaymentsService) GetActualPayments(userID uuid.UUID, startDate, e
 		"debt_payment",
 	)
 	if err == nil {
-		// Group by reference_id to get unique debts
-		debtMap := make(map[uuid.UUID]*ActualDebtPayment)
-
+		// Each transaction record represents an actual payment
 		for _, tx := range debtTxs {
 			if tx.ReferenceID == nil {
 				continue
 			}
 
-			// Get debt details
-			debt, err := s.repos.Debt.GetByID(*tx.ReferenceID)
-			if err != nil {
+			// Get debt_payment record (reference_id points to debt_payments.id)
+			debtPayment, err := s.repos.DebtPayment.GetByID(*tx.ReferenceID)
+			if err != nil || debtPayment.Debt == nil {
 				continue
 			}
 
@@ -126,24 +114,16 @@ func (s *ActualPaymentsService) GetActualPayments(userID uuid.UUID, startDate, e
 				}
 			}
 
-			// If this debt already exists, add to the amount
-			if existing, exists := debtMap[*tx.ReferenceID]; exists {
-				existing.Amount += amount
-			} else {
-				debtMap[*tx.ReferenceID] = &ActualDebtPayment{
-					DebtID:          *tx.ReferenceID,
-					PersonName:      debt.PersonName,
-					Amount:          amount,
-					TransactionDate: tx.TransactionDate.Format("2006-01-02"),
-					Description:     tx.Description,
-				}
-			}
+			// Add each transaction as a separate payment
+			report.Debts = append(report.Debts, ActualDebtPayment{
+				DebtID:          debtPayment.DebtID,
+				PersonName:      debtPayment.Debt.PersonName,
+				Amount:          amount,
+				TransactionDate: tx.TransactionDate.Format("2006-01-02"),
+				Description:     tx.Description,
+			})
 
 			report.TotalDebt += amount
-		}
-
-		for _, payment := range debtMap {
-			report.Debts = append(report.Debts, *payment)
 		}
 	}
 
