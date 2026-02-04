@@ -24,6 +24,7 @@ type AuthService struct {
 	emailService      *EmailService
 	jwtSecret         string
 	frontendURL       string
+	accountService    *AccountService
 }
 
 func NewAuthService(
@@ -33,6 +34,7 @@ func NewAuthService(
 	emailService *EmailService,
 	jwtSecret string,
 	frontendURL string,
+	accountService *AccountService,
 ) *AuthService {
 	return &AuthService{
 		userRepo:          userRepo,
@@ -41,6 +43,7 @@ func NewAuthService(
 		emailService:      emailService,
 		jwtSecret:         jwtSecret,
 		frontendURL:       frontendURL,
+		accountService:    accountService,
 	}
 }
 
@@ -88,6 +91,11 @@ func (s *AuthService) Register(email, password, name string) (*AuthPayload, erro
 	}
 
 	if err := s.userRepo.Create(user); err != nil {
+		return nil, err
+	}
+
+	// Create default account for user
+	if _, err := s.accountService.CreateDefaultAccount(user.ID); err != nil {
 		return nil, err
 	}
 

@@ -11,10 +11,14 @@ import (
 
 type IncomeCategoryService struct {
 	incomeCategoryRepo repository.IncomeCategoryRepository
+	accountService     *AccountService
 }
 
-func NewIncomeCategoryService(incomeCategoryRepo repository.IncomeCategoryRepository) *IncomeCategoryService {
-	return &IncomeCategoryService{incomeCategoryRepo: incomeCategoryRepo}
+func NewIncomeCategoryService(incomeCategoryRepo repository.IncomeCategoryRepository, accountService *AccountService) *IncomeCategoryService {
+	return &IncomeCategoryService{
+		incomeCategoryRepo: incomeCategoryRepo,
+		accountService:     accountService,
+	}
 }
 
 func (s *IncomeCategoryService) Create(userID uuid.UUID, name string) (*models.IncomeCategory, error) {
@@ -29,6 +33,11 @@ func (s *IncomeCategoryService) Create(userID uuid.UUID, name string) (*models.I
 	}
 
 	if err := s.incomeCategoryRepo.Create(category); err != nil {
+		return nil, err
+	}
+
+	// Create linked INCOME account for this category
+	if _, err := s.accountService.CreateLinkedAccount(userID, name, models.AccountTypeIncome, category.ID, "income_category"); err != nil {
 		return nil, err
 	}
 

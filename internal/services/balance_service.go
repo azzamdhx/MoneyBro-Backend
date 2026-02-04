@@ -11,11 +11,15 @@ import (
 )
 
 type BalanceService struct {
-	repos *repository.Repositories
+	repos         *repository.Repositories
+	ledgerService *LedgerService
 }
 
-func NewBalanceService(repos *repository.Repositories) *BalanceService {
-	return &BalanceService{repos: repos}
+func NewBalanceService(repos *repository.Repositories, ledgerService *LedgerService) *BalanceService {
+	return &BalanceService{
+		repos:         repos,
+		ledgerService: ledgerService,
+	}
 }
 
 type BalancePeriod string
@@ -157,34 +161,29 @@ func (s *BalanceService) GetBalance(userID uuid.UUID, filter BalanceFilterInput)
 		report.Expense.ByCategory = append(report.Expense.ByCategory, *summary)
 	}
 
-	// Get active installments and calculate monthly payment for the period
+	// Get actual liability payments from ledger for the period
+	actualLiabilityPayments, err := s.ledgerService.GetActualPaymentsByDateRange(
+		userID,
+		startDate.Format("2006-01-02"),
+		endDate.Format("2006-01-02"),
+		models.AccountTypeLiability,
+	)
+	if err != nil {
+		actualLiabilityPayments = 0
+	}
+
+	// For now, we track all liability payments together
+	report.Installment.Total = actualLiabilityPayments
+	report.Debt.Total = 0
+
+	// Get counts from active installments and debts
 	installmentActiveStatus := models.InstallmentStatusActive
-	installments, err := s.repos.Installment.GetByUserID(userID, &installmentActiveStatus)
-	if err != nil {
-		return nil, err
-	}
+	installments, _ := s.repos.Installment.GetByUserID(userID, &installmentActiveStatus)
+	report.Installment.Count = len(installments)
 
-	// Calculate number of months in the period
-	months := s.calculateMonths(startDate, endDate)
-
-	for _, inst := range installments {
-		report.Installment.Total += inst.MonthlyPayment * int64(months)
-		report.Installment.Count++
-	}
-
-	// Get active debts and calculate monthly payment for the period
 	debtActiveStatus := models.DebtStatusActive
-	debts, err := s.repos.Debt.GetByUserID(userID, &debtActiveStatus)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, debt := range debts {
-		if debt.MonthlyPayment != nil {
-			report.Debt.Total += *debt.MonthlyPayment * int64(months)
-		}
-		report.Debt.Count++
-	}
+	debts, _ := s.repos.Debt.GetByUserID(userID, &debtActiveStatus)
+	report.Debt.Count = len(debts)
 
 	// Calculate net balance
 	report.NetBalance = report.Income.Total - report.Expense.Total - report.Installment.Total - report.Debt.Total

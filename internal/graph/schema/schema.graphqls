@@ -30,6 +30,12 @@ type Query {
   balance(filter: BalanceFilterInput!): BalanceReport!
   
   dashboard: Dashboard!
+  
+  accounts: [Account!]!
+  account(id: UUID!): Account
+  accountsByType(accountType: AccountType!): [Account!]!
+  transactions(filter: TransactionFilter): [Transaction!]!
+  transaction(id: UUID!): Transaction
 }
 
 type Mutation {
@@ -82,4 +88,8 @@ type Mutation {
   updateRecurringIncome(id: UUID!, input: UpdateRecurringIncomeInput!): RecurringIncome!
   deleteRecurringIncome(id: UUID!): Boolean!
   createIncomeFromRecurring(recurringId: UUID!, incomeDate: Date): Income!
+  
+  createWalletAccount(input: CreateAccountInput!): Account!
+  updateWalletAccount(id: UUID!, input: UpdateAccountInput!): Account!
+  deleteWalletAccount(id: UUID!): Boolean!
 }

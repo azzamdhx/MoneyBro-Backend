@@ -13,12 +13,21 @@ import (
 type IncomeService struct {
 	incomeRepo         repository.IncomeRepository
 	incomeCategoryRepo repository.IncomeCategoryRepository
+	accountRepo        repository.AccountRepository
+	ledgerService      *LedgerService
 }
 
-func NewIncomeService(incomeRepo repository.IncomeRepository, incomeCategoryRepo repository.IncomeCategoryRepository) *IncomeService {
+func NewIncomeService(
+	incomeRepo repository.IncomeRepository,
+	incomeCategoryRepo repository.IncomeCategoryRepository,
+	accountRepo repository.AccountRepository,
+	ledgerService *LedgerService,
+) *IncomeService {
 	return &IncomeService{
 		incomeRepo:         incomeRepo,
 		incomeCategoryRepo: incomeCategoryRepo,
+		accountRepo:        accountRepo,
+		ledgerService:      ledgerService,
 	}
 }
 
@@ -73,6 +82,11 @@ func (s *IncomeService) Create(userID uuid.UUID, input CreateIncomeInput) (*mode
 	}
 
 	if err := s.incomeRepo.Create(income); err != nil {
+		return nil, err
+	}
+
+	// Create ledger entry: DEBIT Cash Account, CREDIT Income Account
+	if err := s.createLedgerEntry(userID, income); err != nil {
 		return nil, err
 	}
 
@@ -135,9 +149,78 @@ func (s *IncomeService) Update(id uuid.UUID, input UpdateIncomeInput) (*models.I
 		return nil, err
 	}
 
+	// Update ledger entry
+	if err := s.updateLedgerEntry(income); err != nil {
+		return nil, err
+	}
+
 	return s.incomeRepo.GetByID(id)
 }
 
 func (s *IncomeService) Delete(id uuid.UUID) error {
+	income, err := s.incomeRepo.GetByID(id)
+	if err != nil {
+		return err
+	}
+
+	// Delete ledger entry first
+	if err := s.ledgerService.DeleteByReference(income.ID, "income"); err != nil {
+		return err
+	}
+
 	return s.incomeRepo.Delete(id)
+}
+
+func (s *IncomeService) createLedgerEntry(userID uuid.UUID, income *models.Income) error {
+	// Get income account (linked to income category)
+	incomeAccount, err := s.accountRepo.GetByReference(income.CategoryID, "income_category")
+	if err != nil {
+		return err
+	}
+
+	// Get default cash account
+	cashAccount, err := s.accountRepo.GetDefaultByUserID(userID)
+	if err != nil {
+		return err
+	}
+
+	entries := []LedgerEntry{
+		{AccountID: cashAccount.ID, Debit: income.Amount, Credit: 0},
+		{AccountID: incomeAccount.ID, Debit: 0, Credit: income.Amount},
+	}
+
+	_, err = s.ledgerService.CreateJournalEntry(
+		userID,
+		income.IncomeDate,
+		"Income: "+income.SourceName,
+		entries,
+		&income.ID,
+		"income",
+	)
+	return err
+}
+
+func (s *IncomeService) updateLedgerEntry(income *models.Income) error {
+	tx, err := s.ledgerService.GetTransactionByReference(income.ID, "income")
+	if err != nil {
+		return err
+	}
+
+	incomeAccount, err := s.accountRepo.GetByReference(income.CategoryID, "income_category")
+	if err != nil {
+		return err
+	}
+
+	cashAccount, err := s.accountRepo.GetDefaultByUserID(income.UserID)
+	if err != nil {
+		return err
+	}
+
+	entries := []LedgerEntry{
+		{AccountID: cashAccount.ID, Debit: income.Amount, Credit: 0},
+		{AccountID: incomeAccount.ID, Debit: 0, Credit: income.Amount},
+	}
+
+	_, err = s.ledgerService.UpdateJournalEntry(tx.ID, income.IncomeDate, "Income: "+income.SourceName, entries)
+	return err
 }

@@ -22,6 +22,9 @@ type Repositories struct {
 	RecurringIncome    RecurringIncomeRepository
 	PasswordResetToken PasswordResetTokenRepository
 	TwoFACode          TwoFACodeRepository
+	Account            AccountRepository
+	Transaction        TransactionRepository
+	TransactionEntry   TransactionEntryRepository
 }
 
 func NewRepositories(db *gorm.DB) *Repositories {
@@ -40,6 +43,9 @@ func NewRepositories(db *gorm.DB) *Repositories {
 		RecurringIncome:    NewRecurringIncomeRepository(db),
 		PasswordResetToken: NewPasswordResetTokenRepository(db),
 		TwoFACode:          NewTwoFACodeRepository(db),
+		Account:            NewAccountRepository(db),
+		Transaction:        NewTransactionRepository(db),
+		TransactionEntry:   NewTransactionEntryRepository(db),
 	}
 }
 
@@ -168,4 +174,40 @@ type TwoFACodeRepository interface {
 	MarkAsUsed(id uuid.UUID) error
 	DeleteByUserID(userID uuid.UUID) error
 	DeleteExpiredCodes() error
+}
+
+type AccountRepository interface {
+	Create(account *models.Account) error
+	GetByID(id uuid.UUID) (*models.Account, error)
+	GetByUserID(userID uuid.UUID) ([]models.Account, error)
+	GetByUserIDAndType(userID uuid.UUID, accountType models.AccountType) ([]models.Account, error)
+	GetDefaultByUserID(userID uuid.UUID) (*models.Account, error)
+	GetByReference(referenceID uuid.UUID, referenceType string) (*models.Account, error)
+	Update(account *models.Account) error
+	UpdateBalance(id uuid.UUID, balance int64) error
+	AddToBalance(id uuid.UUID, amount int64) error
+	Delete(id uuid.UUID) error
+	DeleteByReference(referenceID uuid.UUID, referenceType string) error
+}
+
+type TransactionRepository interface {
+	Create(tx *models.Transaction) error
+	GetByID(id uuid.UUID) (*models.Transaction, error)
+	GetByUserID(userID uuid.UUID) ([]models.Transaction, error)
+	GetByUserIDAndDateRange(userID uuid.UUID, startDate, endDate string) ([]models.Transaction, error)
+	GetByReference(referenceID uuid.UUID, referenceType string) (*models.Transaction, error)
+	Delete(id uuid.UUID) error
+	DeleteByReference(referenceID uuid.UUID, referenceType string) error
+}
+
+type TransactionEntryRepository interface {
+	Create(entry *models.TransactionEntry) error
+	CreateBatch(entries []models.TransactionEntry) error
+	GetByTransactionID(transactionID uuid.UUID) ([]models.TransactionEntry, error)
+	GetByAccountID(accountID uuid.UUID) ([]models.TransactionEntry, error)
+	GetByAccountIDAndDateRange(accountID uuid.UUID, startDate, endDate string) ([]models.TransactionEntry, error)
+	GetByUserIDAndDateRange(userID uuid.UUID, startDate, endDate string) ([]models.TransactionEntry, error)
+	DeleteByTransactionID(transactionID uuid.UUID) error
+	SumByAccountID(accountID uuid.UUID) (debit int64, credit int64, err error)
+	SumByAccountIDAndDateRange(accountID uuid.UUID, startDate, endDate string) (debit int64, credit int64, err error)
 }

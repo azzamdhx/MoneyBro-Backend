@@ -271,6 +271,61 @@ func balanceReportToModel(r *services.BalanceReport) *model.BalanceReport {
 	return report
 }
 
+func accountToModel(a *models.Account) *model.Account {
+	acc := &model.Account{
+		ID:             a.ID.String(),
+		Name:           a.Name,
+		AccountType:    model.AccountType(a.AccountType),
+		CurrentBalance: int(a.CurrentBalance),
+		IsDefault:      a.IsDefault,
+		CreatedAt:      a.CreatedAt,
+	}
+	if a.ReferenceID != nil {
+		refID := a.ReferenceID.String()
+		acc.ReferenceID = &refID
+	}
+	if a.ReferenceType != nil {
+		acc.ReferenceType = a.ReferenceType
+	}
+	return acc
+}
+
+func transactionToModel(t *models.Transaction) *model.Transaction {
+	tx := &model.Transaction{
+		ID:              t.ID.String(),
+		TransactionDate: t.TransactionDate,
+		Description:     t.Description,
+		CreatedAt:       t.CreatedAt,
+	}
+	if t.ReferenceID != nil {
+		refID := t.ReferenceID.String()
+		tx.ReferenceID = &refID
+	}
+	if t.ReferenceType != nil {
+		tx.ReferenceType = t.ReferenceType
+	}
+	if len(t.Entries) > 0 {
+		entries := make([]*model.TransactionEntry, len(t.Entries))
+		for i, e := range t.Entries {
+			entries[i] = transactionEntryToModel(&e)
+		}
+		tx.Entries = entries
+	}
+	return tx
+}
+
+func transactionEntryToModel(e *models.TransactionEntry) *model.TransactionEntry {
+	entry := &model.TransactionEntry{
+		ID:     e.ID.String(),
+		Debit:  int(e.Debit),
+		Credit: int(e.Credit),
+	}
+	if e.Account != nil {
+		entry.Account = accountToModel(e.Account)
+	}
+	return entry
+}
+
 func dashboardToModel(d *services.Dashboard) *model.Dashboard {
 	dash := &model.Dashboard{
 		TotalActiveDebt:        int(d.TotalActiveDebt),

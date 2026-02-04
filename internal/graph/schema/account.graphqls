@@ -1,0 +1,26 @@
+enum AccountType {
+  ASSET
+  LIABILITY
+  INCOME
+  EXPENSE
+}
+
+type Account {
+  id: ID!
+  name: String!
+  accountType: AccountType!
+  currentBalance: Int!
+  isDefault: Boolean!
+  referenceId: ID
+  referenceType: String
+  createdAt: Time!
+}
+
+input CreateAccountInput {
+  name: String!
+  accountType: AccountType!
+}
+
+input UpdateAccountInput {
+  name: String!
+}

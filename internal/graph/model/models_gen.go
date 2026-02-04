@@ -3,6 +3,7 @@
 package model
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"strconv"
@@ -10,6 +11,17 @@ import (
 
 	"github.com/google/uuid"
 )
+
+type Account struct {
+	ID             string      `json:"id"`
+	Name           string      `json:"name"`
+	AccountType    AccountType `json:"accountType"`
+	CurrentBalance int         `json:"currentBalance"`
+	IsDefault      bool        `json:"isDefault"`
+	ReferenceID    *string     `json:"referenceId,omitempty"`
+	ReferenceType  *string     `json:"referenceType,omitempty"`
+	CreatedAt      time.Time   `json:"createdAt"`
+}
 
 type AuthPayload struct {
 	Token       *string `json:"token,omitempty"`
@@ -63,6 +75,11 @@ type CategorySummary struct {
 	Category     *Category `json:"category"`
 	TotalAmount  int       `json:"totalAmount"`
 	ExpenseCount int       `json:"expenseCount"`
+}
+
+type CreateAccountInput struct {
+	Name        string      `json:"name"`
+	AccountType AccountType `json:"accountType"`
 }
 
 type CreateCategoryInput struct {
@@ -293,6 +310,14 @@ type InstallmentPayment struct {
 	Installment   *Installment `json:"installment"`
 }
 
+type LedgerSummary struct {
+	TotalAssets      int `json:"totalAssets"`
+	TotalLiabilities int `json:"totalLiabilities"`
+	TotalIncome      int `json:"totalIncome"`
+	TotalExpense     int `json:"totalExpense"`
+	NetWorth         int `json:"netWorth"`
+}
+
 type LoginInput struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
@@ -348,9 +373,35 @@ type ResetPasswordInput struct {
 	Password string `json:"password"`
 }
 
+type Transaction struct {
+	ID              string              `json:"id"`
+	TransactionDate time.Time           `json:"transactionDate"`
+	Description     string              `json:"description"`
+	Entries         []*TransactionEntry `json:"entries"`
+	ReferenceID     *string             `json:"referenceId,omitempty"`
+	ReferenceType   *string             `json:"referenceType,omitempty"`
+	CreatedAt       time.Time           `json:"createdAt"`
+}
+
+type TransactionEntry struct {
+	ID      string   `json:"id"`
+	Account *Account `json:"account"`
+	Debit   int      `json:"debit"`
+	Credit  int      `json:"credit"`
+}
+
+type TransactionFilter struct {
+	StartDate *time.Time `json:"startDate,omitempty"`
+	EndDate   *time.Time `json:"endDate,omitempty"`
+}
+
 type TwoFAPayload struct {
 	Token string `json:"token"`
 	User  *User  `json:"user"`
+}
+
+type UpdateAccountInput struct {
+	Name string `json:"name"`
 }
 
 type UpdateCategoryInput struct {
@@ -453,6 +504,65 @@ type Verify2FAInput struct {
 	Code      string `json:"code"`
 }
 
+type AccountType string
+
+const (
+	AccountTypeAsset     AccountType = "ASSET"
+	AccountTypeLiability AccountType = "LIABILITY"
+	AccountTypeIncome    AccountType = "INCOME"
+	AccountTypeExpense   AccountType = "EXPENSE"
+)
+
+var AllAccountType = []AccountType{
+	AccountTypeAsset,
+	AccountTypeLiability,
+	AccountTypeIncome,
+	AccountTypeExpense,
+}
+
+func (e AccountType) IsValid() bool {
+	switch e {
+	case AccountTypeAsset, AccountTypeLiability, AccountTypeIncome, AccountTypeExpense:
+		return true
+	}
+	return false
+}
+
+func (e AccountType) String() string {
+	return string(e)
+}
+
+func (e *AccountType) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = AccountType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid AccountType", str)
+	}
+	return nil
+}
+
+func (e AccountType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *AccountType) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e AccountType) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
 type BalancePeriod string
 
 const (
@@ -481,7 +591,7 @@ func (e BalancePeriod) String() string {
 	return string(e)
 }
 
-func (e *BalancePeriod) UnmarshalGQL(v interface{}) error {
+func (e *BalancePeriod) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -496,6 +606,20 @@ func (e *BalancePeriod) UnmarshalGQL(v interface{}) error {
 
 func (e BalancePeriod) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *BalancePeriod) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e BalancePeriod) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
 }
 
 type BalanceStatus string
@@ -524,7 +648,7 @@ func (e BalanceStatus) String() string {
 	return string(e)
 }
 
-func (e *BalanceStatus) UnmarshalGQL(v interface{}) error {
+func (e *BalanceStatus) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -539,6 +663,20 @@ func (e *BalanceStatus) UnmarshalGQL(v interface{}) error {
 
 func (e BalanceStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *BalanceStatus) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e BalanceStatus) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
 }
 
 type DebtPaymentType string
@@ -565,7 +703,7 @@ func (e DebtPaymentType) String() string {
 	return string(e)
 }
 
-func (e *DebtPaymentType) UnmarshalGQL(v interface{}) error {
+func (e *DebtPaymentType) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -580,6 +718,20 @@ func (e *DebtPaymentType) UnmarshalGQL(v interface{}) error {
 
 func (e DebtPaymentType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *DebtPaymentType) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e DebtPaymentType) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
 }
 
 type DebtStatus string
@@ -606,7 +758,7 @@ func (e DebtStatus) String() string {
 	return string(e)
 }
 
-func (e *DebtStatus) UnmarshalGQL(v interface{}) error {
+func (e *DebtStatus) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -621,6 +773,20 @@ func (e *DebtStatus) UnmarshalGQL(v interface{}) error {
 
 func (e DebtStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *DebtStatus) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e DebtStatus) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
 }
 
 type IncomeType string
@@ -659,7 +825,7 @@ func (e IncomeType) String() string {
 	return string(e)
 }
 
-func (e *IncomeType) UnmarshalGQL(v interface{}) error {
+func (e *IncomeType) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -674,6 +840,20 @@ func (e *IncomeType) UnmarshalGQL(v interface{}) error {
 
 func (e IncomeType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *IncomeType) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e IncomeType) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
 }
 
 type InstallmentStatus string
@@ -700,7 +880,7 @@ func (e InstallmentStatus) String() string {
 	return string(e)
 }
 
-func (e *InstallmentStatus) UnmarshalGQL(v interface{}) error {
+func (e *InstallmentStatus) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -715,4 +895,18 @@ func (e *InstallmentStatus) UnmarshalGQL(v interface{}) error {
 
 func (e InstallmentStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *InstallmentStatus) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e InstallmentStatus) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
 }

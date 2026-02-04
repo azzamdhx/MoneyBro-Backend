@@ -10,11 +10,15 @@ import (
 )
 
 type CategoryService struct {
-	categoryRepo repository.CategoryRepository
+	categoryRepo   repository.CategoryRepository
+	accountService *AccountService
 }
 
-func NewCategoryService(categoryRepo repository.CategoryRepository) *CategoryService {
-	return &CategoryService{categoryRepo: categoryRepo}
+func NewCategoryService(categoryRepo repository.CategoryRepository, accountService *AccountService) *CategoryService {
+	return &CategoryService{
+		categoryRepo:   categoryRepo,
+		accountService: accountService,
+	}
 }
 
 func (s *CategoryService) Create(userID uuid.UUID, name string) (*models.Category, error) {
@@ -29,6 +33,11 @@ func (s *CategoryService) Create(userID uuid.UUID, name string) (*models.Categor
 	}
 
 	if err := s.categoryRepo.Create(category); err != nil {
+		return nil, err
+	}
+
+	// Create linked EXPENSE account for this category
+	if _, err := s.accountService.CreateLinkedAccount(userID, name, models.AccountTypeExpense, category.ID, "category"); err != nil {
 		return nil, err
 	}
 

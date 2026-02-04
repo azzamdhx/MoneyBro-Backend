@@ -13,12 +13,24 @@ import (
 type InstallmentService struct {
 	installmentRepo repository.InstallmentRepository
 	paymentRepo     repository.InstallmentPaymentRepository
+	accountRepo     repository.AccountRepository
+	accountService  *AccountService
+	ledgerService   *LedgerService
 }
 
-func NewInstallmentService(installmentRepo repository.InstallmentRepository, paymentRepo repository.InstallmentPaymentRepository) *InstallmentService {
+func NewInstallmentService(
+	installmentRepo repository.InstallmentRepository,
+	paymentRepo repository.InstallmentPaymentRepository,
+	accountRepo repository.AccountRepository,
+	accountService *AccountService,
+	ledgerService *LedgerService,
+) *InstallmentService {
 	return &InstallmentService{
 		installmentRepo: installmentRepo,
 		paymentRepo:     paymentRepo,
+		accountRepo:     accountRepo,
+		accountService:  accountService,
+		ledgerService:   ledgerService,
 	}
 }
 
@@ -71,6 +83,11 @@ func (s *InstallmentService) Create(userID uuid.UUID, input CreateInstallmentInp
 		return nil, err
 	}
 
+	// Create linked LIABILITY account for this installment
+	if _, err := s.accountService.CreateLinkedAccount(userID, input.Name, models.AccountTypeLiability, installment.ID, "installment"); err != nil {
+		return nil, err
+	}
+
 	return s.installmentRepo.GetByID(installment.ID)
 }
 
@@ -109,6 +126,10 @@ func (s *InstallmentService) Update(id uuid.UUID, input CreateInstallmentInput, 
 }
 
 func (s *InstallmentService) Delete(id uuid.UUID) error {
+	// Delete linked account
+	if err := s.accountService.DeleteAccountByReference(id, "installment"); err != nil {
+		return err
+	}
 	return s.installmentRepo.Delete(id)
 }
 
@@ -135,6 +156,11 @@ func (s *InstallmentService) RecordPayment(installmentID uuid.UUID, amount int64
 		return nil, err
 	}
 
+	// Create ledger entry: DEBIT Liability Account, CREDIT Cash Account
+	if err := s.createPaymentLedgerEntry(installment.UserID, installment, payment); err != nil {
+		return nil, err
+	}
+
 	if payment.PaymentNumber >= installment.Tenor {
 		installment.Status = models.InstallmentStatusCompleted
 		if err := s.installmentRepo.Update(installment); err != nil {
@@ -157,4 +183,33 @@ func (s *InstallmentService) MarkComplete(id uuid.UUID) (*models.Installment, er
 	}
 
 	return s.installmentRepo.GetByID(id)
+}
+
+func (s *InstallmentService) createPaymentLedgerEntry(userID uuid.UUID, installment *models.Installment, payment *models.InstallmentPayment) error {
+	// Get liability account (linked to installment)
+	liabilityAccount, err := s.accountRepo.GetByReference(installment.ID, "installment")
+	if err != nil {
+		return err
+	}
+
+	// Get default cash account
+	cashAccount, err := s.accountRepo.GetDefaultByUserID(userID)
+	if err != nil {
+		return err
+	}
+
+	entries := []LedgerEntry{
+		{AccountID: liabilityAccount.ID, Debit: payment.Amount, Credit: 0},
+		{AccountID: cashAccount.ID, Debit: 0, Credit: payment.Amount},
+	}
+
+	_, err = s.ledgerService.CreateJournalEntry(
+		userID,
+		payment.PaidAt,
+		"Installment Payment: "+installment.Name,
+		entries,
+		&payment.ID,
+		"installment_payment",
+	)
+	return err
 }

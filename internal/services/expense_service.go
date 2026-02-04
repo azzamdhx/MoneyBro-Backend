@@ -11,14 +11,23 @@ import (
 )
 
 type ExpenseService struct {
-	expenseRepo  repository.ExpenseRepository
-	categoryRepo repository.CategoryRepository
+	expenseRepo   repository.ExpenseRepository
+	categoryRepo  repository.CategoryRepository
+	accountRepo   repository.AccountRepository
+	ledgerService *LedgerService
 }
 
-func NewExpenseService(expenseRepo repository.ExpenseRepository, categoryRepo repository.CategoryRepository) *ExpenseService {
+func NewExpenseService(
+	expenseRepo repository.ExpenseRepository,
+	categoryRepo repository.CategoryRepository,
+	accountRepo repository.AccountRepository,
+	ledgerService *LedgerService,
+) *ExpenseService {
 	return &ExpenseService{
-		expenseRepo:  expenseRepo,
-		categoryRepo: categoryRepo,
+		expenseRepo:   expenseRepo,
+		categoryRepo:  categoryRepo,
+		accountRepo:   accountRepo,
+		ledgerService: ledgerService,
 	}
 }
 
@@ -54,6 +63,11 @@ func (s *ExpenseService) Create(userID uuid.UUID, input CreateExpenseInput) (*mo
 	}
 
 	if err := s.expenseRepo.Create(expense); err != nil {
+		return nil, err
+	}
+
+	// Create ledger entry: DEBIT Expense Account, CREDIT Cash Account
+	if err := s.createLedgerEntry(userID, expense); err != nil {
 		return nil, err
 	}
 
@@ -106,9 +120,90 @@ func (s *ExpenseService) Update(id uuid.UUID, input UpdateExpenseInput) (*models
 		return nil, err
 	}
 
+	// Update ledger entry
+	if err := s.updateLedgerEntry(expense); err != nil {
+		return nil, err
+	}
+
 	return s.expenseRepo.GetByID(expense.ID)
 }
 
 func (s *ExpenseService) Delete(id uuid.UUID) error {
+	expense, err := s.expenseRepo.GetByID(id)
+	if err != nil {
+		return err
+	}
+
+	// Delete ledger entry first
+	if err := s.ledgerService.DeleteByReference(expense.ID, "expense"); err != nil {
+		return err
+	}
+
 	return s.expenseRepo.Delete(id)
+}
+
+func (s *ExpenseService) createLedgerEntry(userID uuid.UUID, expense *models.Expense) error {
+	// Get expense account (linked to category)
+	expenseAccount, err := s.accountRepo.GetByReference(expense.CategoryID, "category")
+	if err != nil {
+		return err
+	}
+
+	// Get default cash account
+	cashAccount, err := s.accountRepo.GetDefaultByUserID(userID)
+	if err != nil {
+		return err
+	}
+
+	amount := expense.Total()
+	expenseDate := time.Now()
+	if expense.ExpenseDate != nil {
+		expenseDate = *expense.ExpenseDate
+	}
+
+	entries := []LedgerEntry{
+		{AccountID: expenseAccount.ID, Debit: amount, Credit: 0},
+		{AccountID: cashAccount.ID, Debit: 0, Credit: amount},
+	}
+
+	_, err = s.ledgerService.CreateJournalEntry(
+		userID,
+		expenseDate,
+		"Expense: "+expense.ItemName,
+		entries,
+		&expense.ID,
+		"expense",
+	)
+	return err
+}
+
+func (s *ExpenseService) updateLedgerEntry(expense *models.Expense) error {
+	tx, err := s.ledgerService.GetTransactionByReference(expense.ID, "expense")
+	if err != nil {
+		return err
+	}
+
+	expenseAccount, err := s.accountRepo.GetByReference(expense.CategoryID, "category")
+	if err != nil {
+		return err
+	}
+
+	cashAccount, err := s.accountRepo.GetDefaultByUserID(expense.UserID)
+	if err != nil {
+		return err
+	}
+
+	amount := expense.Total()
+	expenseDate := time.Now()
+	if expense.ExpenseDate != nil {
+		expenseDate = *expense.ExpenseDate
+	}
+
+	entries := []LedgerEntry{
+		{AccountID: expenseAccount.ID, Debit: amount, Credit: 0},
+		{AccountID: cashAccount.ID, Debit: 0, Credit: amount},
+	}
+
+	_, err = s.ledgerService.UpdateJournalEntry(tx.ID, expenseDate, "Expense: "+expense.ItemName, entries)
+	return err
 }

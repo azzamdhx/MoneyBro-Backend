@@ -11,14 +11,16 @@ import (
 )
 
 type DashboardService struct {
-	repos *repository.Repositories
-	redis *redis.Client
+	repos         *repository.Repositories
+	redis         *redis.Client
+	ledgerService *LedgerService
 }
 
-func NewDashboardService(repos *repository.Repositories, redis *redis.Client) *DashboardService {
+func NewDashboardService(repos *repository.Repositories, redis *redis.Client, ledgerService *LedgerService) *DashboardService {
 	return &DashboardService{
-		repos: repos,
-		redis: redis,
+		repos:         repos,
+		redis:         redis,
+		ledgerService: ledgerService,
 	}
 }
 
@@ -121,22 +123,23 @@ func (s *DashboardService) GetDashboard(userID uuid.UUID) (*Dashboard, error) {
 		dashboard.TotalIncomeThisMonth += inc.Amount
 	}
 
-	// Calculate monthly installment payments (active installments * monthly payment)
-	var monthlyInstallmentPayment int64
-	for _, inst := range installments {
-		monthlyInstallmentPayment += inst.MonthlyPayment
+	// Get actual installment payments this month from ledger
+	actualInstallmentPayment, err := s.ledgerService.GetActualPaymentsByDateRange(
+		userID,
+		startOfMonth.Format("2006-01-02"),
+		endOfMonth.Format("2006-01-02"),
+		models.AccountTypeLiability,
+	)
+	if err != nil {
+		actualInstallmentPayment = 0
 	}
 
-	// Calculate monthly debt payments (for installment-type debts)
-	var monthlyDebtPayment int64
-	for _, debt := range debts {
-		if debt.MonthlyPayment != nil {
-			monthlyDebtPayment += *debt.MonthlyPayment
-		}
-	}
+	// For now, we track all liability payments together
+	// In a more detailed implementation, we could separate installment vs debt payments
+	actualDebtPayment := int64(0)
 
-	// Calculate balance summary
-	netBalance := dashboard.TotalIncomeThisMonth - dashboard.TotalExpenseThisMonth - monthlyInstallmentPayment - monthlyDebtPayment
+	// Calculate balance summary using actual payments
+	netBalance := dashboard.TotalIncomeThisMonth - dashboard.TotalExpenseThisMonth - actualInstallmentPayment - actualDebtPayment
 	var status BalanceStatus
 	if netBalance > 0 {
 		status = BalanceStatusSurplus
@@ -149,8 +152,8 @@ func (s *DashboardService) GetDashboard(userID uuid.UUID) (*Dashboard, error) {
 	dashboard.BalanceSummary = BalanceSummary{
 		TotalIncome:             dashboard.TotalIncomeThisMonth,
 		TotalExpense:            dashboard.TotalExpenseThisMonth,
-		TotalInstallmentPayment: monthlyInstallmentPayment,
-		TotalDebtPayment:        monthlyDebtPayment,
+		TotalInstallmentPayment: actualInstallmentPayment,
+		TotalDebtPayment:        actualDebtPayment,
 		NetBalance:              netBalance,
 		Status:                  status,
 	}

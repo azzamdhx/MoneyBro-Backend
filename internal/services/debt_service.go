@@ -11,14 +11,26 @@ import (
 )
 
 type DebtService struct {
-	debtRepo    repository.DebtRepository
-	paymentRepo repository.DebtPaymentRepository
+	debtRepo       repository.DebtRepository
+	paymentRepo    repository.DebtPaymentRepository
+	accountRepo    repository.AccountRepository
+	accountService *AccountService
+	ledgerService  *LedgerService
 }
 
-func NewDebtService(debtRepo repository.DebtRepository, paymentRepo repository.DebtPaymentRepository) *DebtService {
+func NewDebtService(
+	debtRepo repository.DebtRepository,
+	paymentRepo repository.DebtPaymentRepository,
+	accountRepo repository.AccountRepository,
+	accountService *AccountService,
+	ledgerService *LedgerService,
+) *DebtService {
 	return &DebtService{
-		debtRepo:    debtRepo,
-		paymentRepo: paymentRepo,
+		debtRepo:       debtRepo,
+		paymentRepo:    paymentRepo,
+		accountRepo:    accountRepo,
+		accountService: accountService,
+		ledgerService:  ledgerService,
 	}
 }
 
@@ -70,6 +82,12 @@ func (s *DebtService) Create(userID uuid.UUID, input CreateDebtInput) (*models.D
 	}
 
 	if err := s.debtRepo.Create(debt); err != nil {
+		return nil, err
+	}
+
+	// Create linked LIABILITY account for this debt
+	accountName := "Hutang: " + input.PersonName
+	if _, err := s.accountService.CreateLinkedAccount(userID, accountName, models.AccountTypeLiability, debt.ID, "debt"); err != nil {
 		return nil, err
 	}
 
@@ -125,6 +143,10 @@ func (s *DebtService) Update(id uuid.UUID, input CreateDebtInput, status *models
 }
 
 func (s *DebtService) Delete(id uuid.UUID) error {
+	// Delete linked account
+	if err := s.accountService.DeleteAccountByReference(id, "debt"); err != nil {
+		return err
+	}
 	return s.debtRepo.Delete(id)
 }
 
@@ -151,6 +173,11 @@ func (s *DebtService) RecordPayment(debtID uuid.UUID, amount int64, paidAt time.
 		return nil, err
 	}
 
+	// Create ledger entry: DEBIT Liability Account, CREDIT Cash Account
+	if err := s.createPaymentLedgerEntry(debt.UserID, debt, payment); err != nil {
+		return nil, err
+	}
+
 	debt.Payments = append(debt.Payments, *payment)
 	if debt.RemainingAmount() <= 0 {
 		debt.Status = models.DebtStatusCompleted
@@ -174,4 +201,33 @@ func (s *DebtService) MarkComplete(id uuid.UUID) (*models.Debt, error) {
 	}
 
 	return s.debtRepo.GetByID(id)
+}
+
+func (s *DebtService) createPaymentLedgerEntry(userID uuid.UUID, debt *models.Debt, payment *models.DebtPayment) error {
+	// Get liability account (linked to debt)
+	liabilityAccount, err := s.accountRepo.GetByReference(debt.ID, "debt")
+	if err != nil {
+		return err
+	}
+
+	// Get default cash account
+	cashAccount, err := s.accountRepo.GetDefaultByUserID(userID)
+	if err != nil {
+		return err
+	}
+
+	entries := []LedgerEntry{
+		{AccountID: liabilityAccount.ID, Debit: payment.Amount, Credit: 0},
+		{AccountID: cashAccount.ID, Debit: 0, Credit: payment.Amount},
+	}
+
+	_, err = s.ledgerService.CreateJournalEntry(
+		userID,
+		payment.PaidAt,
+		"Debt Payment: "+debt.PersonName,
+		entries,
+		&payment.ID,
+		"debt_payment",
+	)
+	return err
 }

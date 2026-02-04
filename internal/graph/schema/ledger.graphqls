@@ -1,0 +1,29 @@
+type Transaction {
+  id: ID!
+  transactionDate: Time!
+  description: String!
+  entries: [TransactionEntry!]!
+  referenceId: ID
+  referenceType: String
+  createdAt: Time!
+}
+
+type TransactionEntry {
+  id: ID!
+  account: Account!
+  debit: Int!
+  credit: Int!
+}
+
+type LedgerSummary {
+  totalAssets: Int!
+  totalLiabilities: Int!
+  totalIncome: Int!
+  totalExpense: Int!
+  netWorth: Int!
+}
+
+input TransactionFilter {
+  startDate: Time
+  endDate: Time
+}

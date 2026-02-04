@@ -44,6 +44,7 @@ func main() {
 	repos := repository.NewRepositories(db)
 
 	svc := services.NewServices(services.Config{
+		DB:                db,
 		Repos:             repos,
 		Redis:             rdb,
 		JWTSecret:         cfg.JWTSecret,
