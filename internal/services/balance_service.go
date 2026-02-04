@@ -185,14 +185,28 @@ func (s *BalanceService) GetBalance(userID uuid.UUID, filter BalanceFilterInput)
 	}
 	report.Debt.Total = debtPayments
 
-	// Get counts from active installments and debts
-	installmentActiveStatus := models.InstallmentStatusActive
-	installments, _ := s.repos.Installment.GetByUserID(userID, &installmentActiveStatus)
-	report.Installment.Count = len(installments)
+	// Get counts from actual transactions in the period
+	installmentCount, err := s.ledgerService.GetTransactionCountByReferenceType(
+		userID,
+		startDate.Format("2006-01-02"),
+		endDate.Format("2006-01-02"),
+		"installment_payment",
+	)
+	if err != nil {
+		installmentCount = 0
+	}
+	report.Installment.Count = installmentCount
 
-	debtActiveStatus := models.DebtStatusActive
-	debts, _ := s.repos.Debt.GetByUserID(userID, &debtActiveStatus)
-	report.Debt.Count = len(debts)
+	debtCount, err := s.ledgerService.GetTransactionCountByReferenceType(
+		userID,
+		startDate.Format("2006-01-02"),
+		endDate.Format("2006-01-02"),
+		"debt_payment",
+	)
+	if err != nil {
+		debtCount = 0
+	}
+	report.Debt.Count = debtCount
 
 	// Calculate net balance
 	report.NetBalance = report.Income.Total - report.Expense.Total - report.Installment.Total - report.Debt.Total

@@ -313,3 +313,21 @@ func (s *LedgerService) GetMonthlyObligationByReferenceType(userID uuid.UUID, st
 	}
 	return total, nil
 }
+
+// GetTransactionCountByReferenceType returns the number of unique transactions for a reference type in a date range
+func (s *LedgerService) GetTransactionCountByReferenceType(userID uuid.UUID, startDate, endDate, referenceType string) (int, error) {
+	transactions, err := s.transactionRepo.GetByUserIDAndDateRangeAndReferenceType(userID, startDate, endDate, referenceType)
+	if err != nil {
+		return 0, err
+	}
+
+	// Use a map to count unique reference IDs (to avoid counting multiple entries from same transaction)
+	uniqueReferences := make(map[uuid.UUID]bool)
+	for _, tx := range transactions {
+		if tx.ReferenceID != nil {
+			uniqueReferences[*tx.ReferenceID] = true
+		}
+	}
+
+	return len(uniqueReferences), nil
+}
