@@ -370,16 +370,9 @@ func dashboardToModel(d *services.Dashboard) *model.Dashboard {
 }
 
 func upcomingPaymentsReportToModel(report *services.UpcomingPaymentsReport) *model.UpcomingPaymentsReport {
-	result := &model.UpcomingPaymentsReport{
-		TotalInstallment: int(report.TotalInstallment),
-		TotalDebt:        int(report.TotalDebt),
-		TotalPayments:    int(report.TotalPayments),
-		Installments:     []*model.UpcomingInstallmentPayment{},
-		Debts:            []*model.UpcomingDebtPayment{},
-	}
-
-	for _, inst := range report.Installments {
-		result.Installments = append(result.Installments, &model.UpcomingInstallmentPayment{
+	installments := make([]*model.UpcomingInstallmentPayment, len(report.Installments))
+	for i, inst := range report.Installments {
+		installments[i] = &model.UpcomingInstallmentPayment{
 			InstallmentID:     inst.InstallmentID.String(),
 			Name:              inst.Name,
 			MonthlyPayment:    int(inst.MonthlyPayment),
@@ -387,19 +380,58 @@ func upcomingPaymentsReportToModel(report *services.UpcomingPaymentsReport) *mod
 			DueDate:           inst.DueDate.Format("2006-01-02"),
 			RemainingAmount:   int(inst.RemainingAmount),
 			RemainingPayments: inst.RemainingPayments,
-		})
+		}
 	}
 
-	for _, debt := range report.Debts {
-		result.Debts = append(result.Debts, &model.UpcomingDebtPayment{
+	debts := make([]*model.UpcomingDebtPayment, len(report.Debts))
+	for i, debt := range report.Debts {
+		debts[i] = &model.UpcomingDebtPayment{
 			DebtID:          debt.DebtID.String(),
 			PersonName:      debt.PersonName,
 			MonthlyPayment:  int(debt.MonthlyPayment),
 			DueDate:         debt.DueDate.Format("2006-01-02"),
 			RemainingAmount: int(debt.RemainingAmount),
 			PaymentType:     debt.PaymentType,
-		})
+		}
 	}
 
-	return result
+	return &model.UpcomingPaymentsReport{
+		Installments:     installments,
+		Debts:            debts,
+		TotalInstallment: int(report.TotalInstallment),
+		TotalDebt:        int(report.TotalDebt),
+		TotalPayments:    int(report.TotalPayments),
+	}
+}
+
+func actualPaymentsReportToModel(report *services.ActualPaymentsReport) *model.ActualPaymentsReport {
+	installments := make([]*model.ActualInstallmentPayment, len(report.Installments))
+	for i, inst := range report.Installments {
+		installments[i] = &model.ActualInstallmentPayment{
+			InstallmentID:   inst.InstallmentID.String(),
+			Name:            inst.Name,
+			Amount:          float64(inst.Amount),
+			TransactionDate: inst.TransactionDate,
+			Description:     inst.Description,
+		}
+	}
+
+	debts := make([]*model.ActualDebtPayment, len(report.Debts))
+	for i, debt := range report.Debts {
+		debts[i] = &model.ActualDebtPayment{
+			DebtID:          debt.DebtID.String(),
+			PersonName:      debt.PersonName,
+			Amount:          float64(debt.Amount),
+			TransactionDate: debt.TransactionDate,
+			Description:     debt.Description,
+		}
+	}
+
+	return &model.ActualPaymentsReport{
+		Installments:     installments,
+		Debts:            debts,
+		TotalInstallment: float64(report.TotalInstallment),
+		TotalDebt:        float64(report.TotalDebt),
+		TotalPayments:    float64(report.TotalPayments),
+	}
 }

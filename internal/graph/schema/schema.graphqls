@@ -28,9 +28,10 @@ type Query {
   recurringIncome(id: UUID!): RecurringIncome
   
   balance(filter: BalanceFilterInput!): BalanceReport!
+  upcomingPayments(filter: UpcomingPaymentsFilter!): UpcomingPaymentsReport!
+  actualPayments(filter: ActualPaymentsFilter!): ActualPaymentsReport!
   
   dashboard: Dashboard!
-  upcomingPayments(filter: UpcomingPaymentsFilter!): UpcomingPaymentsReport!
   
   accounts: [Account!]!
   account(id: UUID!): Account

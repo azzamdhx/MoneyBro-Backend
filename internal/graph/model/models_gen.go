@@ -23,6 +23,35 @@ type Account struct {
 	CreatedAt      time.Time   `json:"createdAt"`
 }
 
+type ActualDebtPayment struct {
+	DebtID          string  `json:"debtId"`
+	PersonName      string  `json:"personName"`
+	Amount          float64 `json:"amount"`
+	TransactionDate string  `json:"transactionDate"`
+	Description     string  `json:"description"`
+}
+
+type ActualInstallmentPayment struct {
+	InstallmentID   string  `json:"installmentId"`
+	Name            string  `json:"name"`
+	Amount          float64 `json:"amount"`
+	TransactionDate string  `json:"transactionDate"`
+	Description     string  `json:"description"`
+}
+
+type ActualPaymentsFilter struct {
+	StartDate string `json:"startDate"`
+	EndDate   string `json:"endDate"`
+}
+
+type ActualPaymentsReport struct {
+	Installments     []*ActualInstallmentPayment `json:"installments"`
+	Debts            []*ActualDebtPayment        `json:"debts"`
+	TotalInstallment float64                     `json:"totalInstallment"`
+	TotalDebt        float64                     `json:"totalDebt"`
+	TotalPayments    float64                     `json:"totalPayments"`
+}
+
 type AuthPayload struct {
 	Token       *string `json:"token,omitempty"`
 	User        *User   `json:"user,omitempty"`

@@ -998,19 +998,6 @@ func (r *queryResolver) Balance(ctx context.Context, filter model.BalanceFilterI
 	return balanceReportToModel(report), nil
 }
 
-// Dashboard is the resolver for the dashboard field.
-func (r *queryResolver) Dashboard(ctx context.Context) (*model.Dashboard, error) {
-	userID, ok := middleware.GetUserID(ctx)
-	if !ok {
-		return nil, utils.ErrUnauthorized
-	}
-	dash, err := r.Services.Dashboard.GetDashboard(userID)
-	if err != nil {
-		return nil, err
-	}
-	return dashboardToModel(dash), nil
-}
-
 // UpcomingPayments is the resolver for the upcomingPayments field.
 func (r *queryResolver) UpcomingPayments(ctx context.Context, filter model.UpcomingPaymentsFilter) (*model.UpcomingPaymentsReport, error) {
 	userID, ok := middleware.GetUserID(ctx)
@@ -1024,6 +1011,34 @@ func (r *queryResolver) UpcomingPayments(ctx context.Context, filter model.Upcom
 	}
 
 	return upcomingPaymentsReportToModel(report), nil
+}
+
+// ActualPayments is the resolver for the actualPayments field.
+func (r *queryResolver) ActualPayments(ctx context.Context, filter model.ActualPaymentsFilter) (*model.ActualPaymentsReport, error) {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
+		return nil, utils.ErrUnauthorized
+	}
+
+	report, err := r.Services.ActualPayments.GetActualPayments(userID, filter.StartDate, filter.EndDate)
+	if err != nil {
+		return nil, err
+	}
+
+	return actualPaymentsReportToModel(report), nil
+}
+
+// Dashboard is the resolver for the dashboard field.
+func (r *queryResolver) Dashboard(ctx context.Context) (*model.Dashboard, error) {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
+		return nil, utils.ErrUnauthorized
+	}
+	dash, err := r.Services.Dashboard.GetDashboard(userID)
+	if err != nil {
+		return nil, err
+	}
+	return dashboardToModel(dash), nil
 }
 
 // Accounts is the resolver for the accounts field.

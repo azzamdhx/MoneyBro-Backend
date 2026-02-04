@@ -35,6 +35,7 @@ type Services struct {
 	Account          *AccountService
 	Ledger           *LedgerService
 	UpcomingPayments *UpcomingPaymentsService
+	ActualPayments   *ActualPaymentsService
 }
 
 func NewServices(cfg Config) *Services {
@@ -60,5 +61,6 @@ func NewServices(cfg Config) *Services {
 		Account:          accountService,
 		Ledger:           ledgerService,
 		UpcomingPayments: NewUpcomingPaymentsService(cfg.Repos),
+		ActualPayments:   NewActualPaymentsService(cfg.Repos),
 	}
 }

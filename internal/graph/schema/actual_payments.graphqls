@@ -1,0 +1,28 @@
+type ActualPaymentsReport {
+  installments: [ActualInstallmentPayment!]!
+  debts: [ActualDebtPayment!]!
+  totalInstallment: Float!
+  totalDebt: Float!
+  totalPayments: Float!
+}
+
+type ActualInstallmentPayment {
+  installmentId: ID!
+  name: String!
+  amount: Float!
+  transactionDate: String!
+  description: String!
+}
+
+type ActualDebtPayment {
+  debtId: ID!
+  personName: String!
+  amount: Float!
+  transactionDate: String!
+  description: String!
+}
+
+input ActualPaymentsFilter {
+  startDate: String!
+  endDate: String!
+}

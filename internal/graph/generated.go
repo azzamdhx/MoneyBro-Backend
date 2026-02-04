@@ -60,6 +60,30 @@ type ComplexityRoot struct {
 		ReferenceType  func(childComplexity int) int
 	}
 
+	ActualDebtPayment struct {
+		Amount          func(childComplexity int) int
+		DebtID          func(childComplexity int) int
+		Description     func(childComplexity int) int
+		PersonName      func(childComplexity int) int
+		TransactionDate func(childComplexity int) int
+	}
+
+	ActualInstallmentPayment struct {
+		Amount          func(childComplexity int) int
+		Description     func(childComplexity int) int
+		InstallmentID   func(childComplexity int) int
+		Name            func(childComplexity int) int
+		TransactionDate func(childComplexity int) int
+	}
+
+	ActualPaymentsReport struct {
+		Debts            func(childComplexity int) int
+		Installments     func(childComplexity int) int
+		TotalDebt        func(childComplexity int) int
+		TotalInstallment func(childComplexity int) int
+		TotalPayments    func(childComplexity int) int
+	}
+
 	AuthPayload struct {
 		Requires2fa func(childComplexity int) int
 		TempToken   func(childComplexity int) int
@@ -316,6 +340,7 @@ type ComplexityRoot struct {
 		Account                func(childComplexity int, id uuid.UUID) int
 		Accounts               func(childComplexity int) int
 		AccountsByType         func(childComplexity int, accountType model.AccountType) int
+		ActualPayments         func(childComplexity int, filter model.ActualPaymentsFilter) int
 		Balance                func(childComplexity int, filter model.BalanceFilterInput) int
 		Categories             func(childComplexity int) int
 		Category               func(childComplexity int, id uuid.UUID) int
@@ -482,8 +507,9 @@ type QueryResolver interface {
 	RecurringIncomes(ctx context.Context, isActive *bool) ([]*model.RecurringIncome, error)
 	RecurringIncome(ctx context.Context, id uuid.UUID) (*model.RecurringIncome, error)
 	Balance(ctx context.Context, filter model.BalanceFilterInput) (*model.BalanceReport, error)
-	Dashboard(ctx context.Context) (*model.Dashboard, error)
 	UpcomingPayments(ctx context.Context, filter model.UpcomingPaymentsFilter) (*model.UpcomingPaymentsReport, error)
+	ActualPayments(ctx context.Context, filter model.ActualPaymentsFilter) (*model.ActualPaymentsReport, error)
+	Dashboard(ctx context.Context) (*model.Dashboard, error)
 	Accounts(ctx context.Context) ([]*model.Account, error)
 	Account(ctx context.Context, id uuid.UUID) (*model.Account, error)
 	AccountsByType(ctx context.Context, accountType model.AccountType) ([]*model.Account, error)
@@ -559,6 +585,99 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Account.ReferenceType(childComplexity), true
+
+	case "ActualDebtPayment.amount":
+		if e.complexity.ActualDebtPayment.Amount == nil {
+			break
+		}
+
+		return e.complexity.ActualDebtPayment.Amount(childComplexity), true
+	case "ActualDebtPayment.debtId":
+		if e.complexity.ActualDebtPayment.DebtID == nil {
+			break
+		}
+
+		return e.complexity.ActualDebtPayment.DebtID(childComplexity), true
+	case "ActualDebtPayment.description":
+		if e.complexity.ActualDebtPayment.Description == nil {
+			break
+		}
+
+		return e.complexity.ActualDebtPayment.Description(childComplexity), true
+	case "ActualDebtPayment.personName":
+		if e.complexity.ActualDebtPayment.PersonName == nil {
+			break
+		}
+
+		return e.complexity.ActualDebtPayment.PersonName(childComplexity), true
+	case "ActualDebtPayment.transactionDate":
+		if e.complexity.ActualDebtPayment.TransactionDate == nil {
+			break
+		}
+
+		return e.complexity.ActualDebtPayment.TransactionDate(childComplexity), true
+
+	case "ActualInstallmentPayment.amount":
+		if e.complexity.ActualInstallmentPayment.Amount == nil {
+			break
+		}
+
+		return e.complexity.ActualInstallmentPayment.Amount(childComplexity), true
+	case "ActualInstallmentPayment.description":
+		if e.complexity.ActualInstallmentPayment.Description == nil {
+			break
+		}
+
+		return e.complexity.ActualInstallmentPayment.Description(childComplexity), true
+	case "ActualInstallmentPayment.installmentId":
+		if e.complexity.ActualInstallmentPayment.InstallmentID == nil {
+			break
+		}
+
+		return e.complexity.ActualInstallmentPayment.InstallmentID(childComplexity), true
+	case "ActualInstallmentPayment.name":
+		if e.complexity.ActualInstallmentPayment.Name == nil {
+			break
+		}
+
+		return e.complexity.ActualInstallmentPayment.Name(childComplexity), true
+	case "ActualInstallmentPayment.transactionDate":
+		if e.complexity.ActualInstallmentPayment.TransactionDate == nil {
+			break
+		}
+
+		return e.complexity.ActualInstallmentPayment.TransactionDate(childComplexity), true
+
+	case "ActualPaymentsReport.debts":
+		if e.complexity.ActualPaymentsReport.Debts == nil {
+			break
+		}
+
+		return e.complexity.ActualPaymentsReport.Debts(childComplexity), true
+	case "ActualPaymentsReport.installments":
+		if e.complexity.ActualPaymentsReport.Installments == nil {
+			break
+		}
+
+		return e.complexity.ActualPaymentsReport.Installments(childComplexity), true
+	case "ActualPaymentsReport.totalDebt":
+		if e.complexity.ActualPaymentsReport.TotalDebt == nil {
+			break
+		}
+
+		return e.complexity.ActualPaymentsReport.TotalDebt(childComplexity), true
+	case "ActualPaymentsReport.totalInstallment":
+		if e.complexity.ActualPaymentsReport.TotalInstallment == nil {
+			break
+		}
+
+		return e.complexity.ActualPaymentsReport.TotalInstallment(childComplexity), true
+	case "ActualPaymentsReport.totalPayments":
+		if e.complexity.ActualPaymentsReport.TotalPayments == nil {
+			break
+		}
+
+		return e.complexity.ActualPaymentsReport.TotalPayments(childComplexity), true
 
 	case "AuthPayload.requires2FA":
 		if e.complexity.AuthPayload.Requires2fa == nil {
@@ -1946,6 +2065,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.AccountsByType(childComplexity, args["accountType"].(model.AccountType)), true
+	case "Query.actualPayments":
+		if e.complexity.Query.ActualPayments == nil {
+			break
+		}
+
+		args, err := ec.field_Query_actualPayments_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ActualPayments(childComplexity, args["filter"].(model.ActualPaymentsFilter)), true
 	case "Query.balance":
 		if e.complexity.Query.Balance == nil {
 			break
@@ -2491,6 +2621,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	opCtx := graphql.GetOperationContext(ctx)
 	ec := executionContext{opCtx, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputActualPaymentsFilter,
 		ec.unmarshalInputBalanceFilterInput,
 		ec.unmarshalInputCreateAccountInput,
 		ec.unmarshalInputCreateCategoryInput,
@@ -2620,7 +2751,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 	return introspection.WrapTypeFromDef(ec.Schema(), ec.Schema().Types[name]), nil
 }
 
-//go:embed "schema/account.graphqls" "schema/balance.graphqls" "schema/category.graphqls" "schema/dashboard.graphqls" "schema/debt.graphqls" "schema/expense.graphqls" "schema/income.graphqls" "schema/installment.graphqls" "schema/ledger.graphqls" "schema/notification.graphqls" "schema/schema.graphqls" "schema/upcoming_payments.graphqls" "schema/user.graphqls"
+//go:embed "schema/account.graphqls" "schema/actual_payments.graphqls" "schema/balance.graphqls" "schema/category.graphqls" "schema/dashboard.graphqls" "schema/debt.graphqls" "schema/expense.graphqls" "schema/income.graphqls" "schema/installment.graphqls" "schema/ledger.graphqls" "schema/notification.graphqls" "schema/schema.graphqls" "schema/upcoming_payments.graphqls" "schema/user.graphqls"
 var sourcesFS embed.FS
 
 func sourceData(filename string) string {
@@ -2633,6 +2764,7 @@ func sourceData(filename string) string {
 
 var sources = []*ast.Source{
 	{Name: "schema/account.graphqls", Input: sourceData("schema/account.graphqls"), BuiltIn: false},
+	{Name: "schema/actual_payments.graphqls", Input: sourceData("schema/actual_payments.graphqls"), BuiltIn: false},
 	{Name: "schema/balance.graphqls", Input: sourceData("schema/balance.graphqls"), BuiltIn: false},
 	{Name: "schema/category.graphqls", Input: sourceData("schema/category.graphqls"), BuiltIn: false},
 	{Name: "schema/dashboard.graphqls", Input: sourceData("schema/dashboard.graphqls"), BuiltIn: false},
@@ -3224,6 +3356,17 @@ func (ec *executionContext) field_Query_accountsByType_args(ctx context.Context,
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_actualPayments_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "filter", ec.unmarshalNActualPaymentsFilter2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐActualPaymentsFilter)
+	if err != nil {
+		return nil, err
+	}
+	args["filter"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_balance_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -3701,6 +3844,465 @@ func (ec *executionContext) fieldContext_Account_createdAt(_ context.Context, fi
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ActualDebtPayment_debtId(ctx context.Context, field graphql.CollectedField, obj *model.ActualDebtPayment) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ActualDebtPayment_debtId,
+		func(ctx context.Context) (any, error) {
+			return obj.DebtID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ActualDebtPayment_debtId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ActualDebtPayment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ActualDebtPayment_personName(ctx context.Context, field graphql.CollectedField, obj *model.ActualDebtPayment) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ActualDebtPayment_personName,
+		func(ctx context.Context) (any, error) {
+			return obj.PersonName, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ActualDebtPayment_personName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ActualDebtPayment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ActualDebtPayment_amount(ctx context.Context, field graphql.CollectedField, obj *model.ActualDebtPayment) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ActualDebtPayment_amount,
+		func(ctx context.Context) (any, error) {
+			return obj.Amount, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ActualDebtPayment_amount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ActualDebtPayment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ActualDebtPayment_transactionDate(ctx context.Context, field graphql.CollectedField, obj *model.ActualDebtPayment) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ActualDebtPayment_transactionDate,
+		func(ctx context.Context) (any, error) {
+			return obj.TransactionDate, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ActualDebtPayment_transactionDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ActualDebtPayment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ActualDebtPayment_description(ctx context.Context, field graphql.CollectedField, obj *model.ActualDebtPayment) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ActualDebtPayment_description,
+		func(ctx context.Context) (any, error) {
+			return obj.Description, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ActualDebtPayment_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ActualDebtPayment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ActualInstallmentPayment_installmentId(ctx context.Context, field graphql.CollectedField, obj *model.ActualInstallmentPayment) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ActualInstallmentPayment_installmentId,
+		func(ctx context.Context) (any, error) {
+			return obj.InstallmentID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ActualInstallmentPayment_installmentId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ActualInstallmentPayment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ActualInstallmentPayment_name(ctx context.Context, field graphql.CollectedField, obj *model.ActualInstallmentPayment) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ActualInstallmentPayment_name,
+		func(ctx context.Context) (any, error) {
+			return obj.Name, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ActualInstallmentPayment_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ActualInstallmentPayment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ActualInstallmentPayment_amount(ctx context.Context, field graphql.CollectedField, obj *model.ActualInstallmentPayment) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ActualInstallmentPayment_amount,
+		func(ctx context.Context) (any, error) {
+			return obj.Amount, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ActualInstallmentPayment_amount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ActualInstallmentPayment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ActualInstallmentPayment_transactionDate(ctx context.Context, field graphql.CollectedField, obj *model.ActualInstallmentPayment) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ActualInstallmentPayment_transactionDate,
+		func(ctx context.Context) (any, error) {
+			return obj.TransactionDate, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ActualInstallmentPayment_transactionDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ActualInstallmentPayment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ActualInstallmentPayment_description(ctx context.Context, field graphql.CollectedField, obj *model.ActualInstallmentPayment) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ActualInstallmentPayment_description,
+		func(ctx context.Context) (any, error) {
+			return obj.Description, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ActualInstallmentPayment_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ActualInstallmentPayment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ActualPaymentsReport_installments(ctx context.Context, field graphql.CollectedField, obj *model.ActualPaymentsReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ActualPaymentsReport_installments,
+		func(ctx context.Context) (any, error) {
+			return obj.Installments, nil
+		},
+		nil,
+		ec.marshalNActualInstallmentPayment2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐActualInstallmentPaymentᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ActualPaymentsReport_installments(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ActualPaymentsReport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "installmentId":
+				return ec.fieldContext_ActualInstallmentPayment_installmentId(ctx, field)
+			case "name":
+				return ec.fieldContext_ActualInstallmentPayment_name(ctx, field)
+			case "amount":
+				return ec.fieldContext_ActualInstallmentPayment_amount(ctx, field)
+			case "transactionDate":
+				return ec.fieldContext_ActualInstallmentPayment_transactionDate(ctx, field)
+			case "description":
+				return ec.fieldContext_ActualInstallmentPayment_description(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ActualInstallmentPayment", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ActualPaymentsReport_debts(ctx context.Context, field graphql.CollectedField, obj *model.ActualPaymentsReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ActualPaymentsReport_debts,
+		func(ctx context.Context) (any, error) {
+			return obj.Debts, nil
+		},
+		nil,
+		ec.marshalNActualDebtPayment2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐActualDebtPaymentᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ActualPaymentsReport_debts(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ActualPaymentsReport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "debtId":
+				return ec.fieldContext_ActualDebtPayment_debtId(ctx, field)
+			case "personName":
+				return ec.fieldContext_ActualDebtPayment_personName(ctx, field)
+			case "amount":
+				return ec.fieldContext_ActualDebtPayment_amount(ctx, field)
+			case "transactionDate":
+				return ec.fieldContext_ActualDebtPayment_transactionDate(ctx, field)
+			case "description":
+				return ec.fieldContext_ActualDebtPayment_description(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ActualDebtPayment", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ActualPaymentsReport_totalInstallment(ctx context.Context, field graphql.CollectedField, obj *model.ActualPaymentsReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ActualPaymentsReport_totalInstallment,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalInstallment, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ActualPaymentsReport_totalInstallment(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ActualPaymentsReport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ActualPaymentsReport_totalDebt(ctx context.Context, field graphql.CollectedField, obj *model.ActualPaymentsReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ActualPaymentsReport_totalDebt,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalDebt, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ActualPaymentsReport_totalDebt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ActualPaymentsReport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ActualPaymentsReport_totalPayments(ctx context.Context, field graphql.CollectedField, obj *model.ActualPaymentsReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ActualPaymentsReport_totalPayments,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalPayments, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ActualPaymentsReport_totalPayments(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ActualPaymentsReport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
 		},
 	}
 	return fc, nil
@@ -11759,55 +12361,6 @@ func (ec *executionContext) fieldContext_Query_balance(ctx context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_dashboard(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_Query_dashboard,
-		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Query().Dashboard(ctx)
-		},
-		nil,
-		ec.marshalNDashboard2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐDashboard,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_Query_dashboard(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "totalActiveDebt":
-				return ec.fieldContext_Dashboard_totalActiveDebt(ctx, field)
-			case "totalActiveInstallment":
-				return ec.fieldContext_Dashboard_totalActiveInstallment(ctx, field)
-			case "totalExpenseThisMonth":
-				return ec.fieldContext_Dashboard_totalExpenseThisMonth(ctx, field)
-			case "totalIncomeThisMonth":
-				return ec.fieldContext_Dashboard_totalIncomeThisMonth(ctx, field)
-			case "balanceSummary":
-				return ec.fieldContext_Dashboard_balanceSummary(ctx, field)
-			case "upcomingInstallments":
-				return ec.fieldContext_Dashboard_upcomingInstallments(ctx, field)
-			case "upcomingDebts":
-				return ec.fieldContext_Dashboard_upcomingDebts(ctx, field)
-			case "expensesByCategory":
-				return ec.fieldContext_Dashboard_expensesByCategory(ctx, field)
-			case "recentExpenses":
-				return ec.fieldContext_Dashboard_recentExpenses(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Dashboard", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Query_upcomingPayments(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -11857,6 +12410,108 @@ func (ec *executionContext) fieldContext_Query_upcomingPayments(ctx context.Cont
 	if fc.Args, err = ec.field_Query_upcomingPayments_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_actualPayments(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_actualPayments,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().ActualPayments(ctx, fc.Args["filter"].(model.ActualPaymentsFilter))
+		},
+		nil,
+		ec.marshalNActualPaymentsReport2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐActualPaymentsReport,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_actualPayments(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "installments":
+				return ec.fieldContext_ActualPaymentsReport_installments(ctx, field)
+			case "debts":
+				return ec.fieldContext_ActualPaymentsReport_debts(ctx, field)
+			case "totalInstallment":
+				return ec.fieldContext_ActualPaymentsReport_totalInstallment(ctx, field)
+			case "totalDebt":
+				return ec.fieldContext_ActualPaymentsReport_totalDebt(ctx, field)
+			case "totalPayments":
+				return ec.fieldContext_ActualPaymentsReport_totalPayments(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ActualPaymentsReport", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_actualPayments_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_dashboard(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_dashboard,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().Dashboard(ctx)
+		},
+		nil,
+		ec.marshalNDashboard2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐDashboard,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_dashboard(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "totalActiveDebt":
+				return ec.fieldContext_Dashboard_totalActiveDebt(ctx, field)
+			case "totalActiveInstallment":
+				return ec.fieldContext_Dashboard_totalActiveInstallment(ctx, field)
+			case "totalExpenseThisMonth":
+				return ec.fieldContext_Dashboard_totalExpenseThisMonth(ctx, field)
+			case "totalIncomeThisMonth":
+				return ec.fieldContext_Dashboard_totalIncomeThisMonth(ctx, field)
+			case "balanceSummary":
+				return ec.fieldContext_Dashboard_balanceSummary(ctx, field)
+			case "upcomingInstallments":
+				return ec.fieldContext_Dashboard_upcomingInstallments(ctx, field)
+			case "upcomingDebts":
+				return ec.fieldContext_Dashboard_upcomingDebts(ctx, field)
+			case "expensesByCategory":
+				return ec.fieldContext_Dashboard_expensesByCategory(ctx, field)
+			case "recentExpenses":
+				return ec.fieldContext_Dashboard_recentExpenses(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Dashboard", field.Name)
+		},
 	}
 	return fc, nil
 }
@@ -15250,6 +15905,40 @@ func (ec *executionContext) fieldContext___Type_isOneOf(_ context.Context, field
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputActualPaymentsFilter(ctx context.Context, obj any) (model.ActualPaymentsFilter, error) {
+	var it model.ActualPaymentsFilter
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"startDate", "endDate"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "startDate":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startDate"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StartDate = data
+		case "endDate":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endDate"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EndDate = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputBalanceFilterInput(ctx context.Context, obj any) (model.BalanceFilterInput, error) {
 	var it model.BalanceFilterInput
 	asMap := map[string]any{}
@@ -16870,6 +17559,183 @@ func (ec *executionContext) _Account(ctx context.Context, sel ast.SelectionSet, 
 			out.Values[i] = ec._Account_referenceType(ctx, field, obj)
 		case "createdAt":
 			out.Values[i] = ec._Account_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var actualDebtPaymentImplementors = []string{"ActualDebtPayment"}
+
+func (ec *executionContext) _ActualDebtPayment(ctx context.Context, sel ast.SelectionSet, obj *model.ActualDebtPayment) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, actualDebtPaymentImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ActualDebtPayment")
+		case "debtId":
+			out.Values[i] = ec._ActualDebtPayment_debtId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "personName":
+			out.Values[i] = ec._ActualDebtPayment_personName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "amount":
+			out.Values[i] = ec._ActualDebtPayment_amount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "transactionDate":
+			out.Values[i] = ec._ActualDebtPayment_transactionDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "description":
+			out.Values[i] = ec._ActualDebtPayment_description(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var actualInstallmentPaymentImplementors = []string{"ActualInstallmentPayment"}
+
+func (ec *executionContext) _ActualInstallmentPayment(ctx context.Context, sel ast.SelectionSet, obj *model.ActualInstallmentPayment) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, actualInstallmentPaymentImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ActualInstallmentPayment")
+		case "installmentId":
+			out.Values[i] = ec._ActualInstallmentPayment_installmentId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._ActualInstallmentPayment_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "amount":
+			out.Values[i] = ec._ActualInstallmentPayment_amount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "transactionDate":
+			out.Values[i] = ec._ActualInstallmentPayment_transactionDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "description":
+			out.Values[i] = ec._ActualInstallmentPayment_description(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var actualPaymentsReportImplementors = []string{"ActualPaymentsReport"}
+
+func (ec *executionContext) _ActualPaymentsReport(ctx context.Context, sel ast.SelectionSet, obj *model.ActualPaymentsReport) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, actualPaymentsReportImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ActualPaymentsReport")
+		case "installments":
+			out.Values[i] = ec._ActualPaymentsReport_installments(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "debts":
+			out.Values[i] = ec._ActualPaymentsReport_debts(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalInstallment":
+			out.Values[i] = ec._ActualPaymentsReport_totalInstallment(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalDebt":
+			out.Values[i] = ec._ActualPaymentsReport_totalDebt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalPayments":
+			out.Values[i] = ec._ActualPaymentsReport_totalPayments(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -19032,7 +19898,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "dashboard":
+		case "upcomingPayments":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -19041,7 +19907,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_dashboard(ctx, field)
+				res = ec._Query_upcomingPayments(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -19054,7 +19920,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "upcomingPayments":
+		case "actualPayments":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -19063,7 +19929,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_upcomingPayments(ctx, field)
+				res = ec._Query_actualPayments(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "dashboard":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_dashboard(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -20139,6 +21027,133 @@ func (ec *executionContext) unmarshalNAccountType2githubᚗcomᚋazzamdhxᚋmone
 
 func (ec *executionContext) marshalNAccountType2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐAccountType(ctx context.Context, sel ast.SelectionSet, v model.AccountType) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) marshalNActualDebtPayment2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐActualDebtPaymentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ActualDebtPayment) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNActualDebtPayment2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐActualDebtPayment(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNActualDebtPayment2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐActualDebtPayment(ctx context.Context, sel ast.SelectionSet, v *model.ActualDebtPayment) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ActualDebtPayment(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNActualInstallmentPayment2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐActualInstallmentPaymentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ActualInstallmentPayment) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNActualInstallmentPayment2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐActualInstallmentPayment(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNActualInstallmentPayment2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐActualInstallmentPayment(ctx context.Context, sel ast.SelectionSet, v *model.ActualInstallmentPayment) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ActualInstallmentPayment(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNActualPaymentsFilter2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐActualPaymentsFilter(ctx context.Context, v any) (model.ActualPaymentsFilter, error) {
+	res, err := ec.unmarshalInputActualPaymentsFilter(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNActualPaymentsReport2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐActualPaymentsReport(ctx context.Context, sel ast.SelectionSet, v model.ActualPaymentsReport) graphql.Marshaler {
+	return ec._ActualPaymentsReport(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNActualPaymentsReport2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐActualPaymentsReport(ctx context.Context, sel ast.SelectionSet, v *model.ActualPaymentsReport) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ActualPaymentsReport(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNAuthPayload2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐAuthPayload(ctx context.Context, sel ast.SelectionSet, v model.AuthPayload) graphql.Marshaler {
