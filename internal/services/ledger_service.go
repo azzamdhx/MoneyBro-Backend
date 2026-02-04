@@ -303,14 +303,32 @@ func (s *LedgerService) GetMonthlyObligationByReferenceType(userID uuid.UUID, st
 		return 0, err
 	}
 
-	var total int64
+	// Group by reference_id to avoid counting the same payment multiple times
+	paymentMap := make(map[uuid.UUID]int64)
+
 	for _, tx := range transactions {
+		if tx.ReferenceID == nil {
+			continue
+		}
+
+		// Calculate the payment amount from liability debit for this transaction
+		var txAmount int64
 		for _, entry := range tx.Entries {
 			if entry.Account.AccountType == models.AccountTypeLiability {
-				total += entry.Debit
+				txAmount += entry.Debit
 			}
 		}
+
+		// Only add if we haven't seen this reference_id yet, or add to existing
+		paymentMap[*tx.ReferenceID] = txAmount
 	}
+
+	// Sum up unique payments
+	var total int64
+	for _, amount := range paymentMap {
+		total += amount
+	}
+
 	return total, nil
 }
 
