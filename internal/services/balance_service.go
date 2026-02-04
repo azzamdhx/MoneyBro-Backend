@@ -173,12 +173,11 @@ func (s *BalanceService) GetBalance(userID uuid.UUID, filter BalanceFilterInput)
 	}
 	report.Installment.Total = actualLiabilityPayments
 
-	// Get debt payments from ledger for the period
-	debtPayments, err := s.ledgerService.GetActualPaymentsByDateRangeAndReferenceType(
+	// Get debt payments from transactions for the period
+	debtPayments, err := s.ledgerService.GetMonthlyObligationByReferenceType(
 		userID,
 		startDate.Format("2006-01-02"),
 		endDate.Format("2006-01-02"),
-		models.AccountTypeLiability,
 		"debt_payment",
 	)
 	if err != nil {
