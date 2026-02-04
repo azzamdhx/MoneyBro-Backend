@@ -400,6 +400,38 @@ type TwoFAPayload struct {
 	User  *User  `json:"user"`
 }
 
+type UpcomingDebtPayment struct {
+	DebtID          string `json:"debtId"`
+	PersonName      string `json:"personName"`
+	MonthlyPayment  int    `json:"monthlyPayment"`
+	DueDate         string `json:"dueDate"`
+	RemainingAmount int    `json:"remainingAmount"`
+	PaymentType     string `json:"paymentType"`
+}
+
+type UpcomingInstallmentPayment struct {
+	InstallmentID     string `json:"installmentId"`
+	Name              string `json:"name"`
+	MonthlyPayment    int    `json:"monthlyPayment"`
+	DueDay            int    `json:"dueDay"`
+	DueDate           string `json:"dueDate"`
+	RemainingAmount   int    `json:"remainingAmount"`
+	RemainingPayments int    `json:"remainingPayments"`
+}
+
+type UpcomingPaymentsFilter struct {
+	Month int `json:"month"`
+	Year  int `json:"year"`
+}
+
+type UpcomingPaymentsReport struct {
+	Installments     []*UpcomingInstallmentPayment `json:"installments"`
+	Debts            []*UpcomingDebtPayment        `json:"debts"`
+	TotalInstallment int                           `json:"totalInstallment"`
+	TotalDebt        int                           `json:"totalDebt"`
+	TotalPayments    int                           `json:"totalPayments"`
+}
+
 type UpdateAccountInput struct {
 	Name string `json:"name"`
 }

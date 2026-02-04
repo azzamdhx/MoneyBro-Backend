@@ -30,6 +30,7 @@ type Query {
   balance(filter: BalanceFilterInput!): BalanceReport!
   
   dashboard: Dashboard!
+  upcomingPayments(filter: UpcomingPaymentsFilter!): UpcomingPaymentsReport!
   
   accounts: [Account!]!
   account(id: UUID!): Account

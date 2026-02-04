@@ -1011,6 +1011,21 @@ func (r *queryResolver) Dashboard(ctx context.Context) (*model.Dashboard, error)
 	return dashboardToModel(dash), nil
 }
 
+// UpcomingPayments is the resolver for the upcomingPayments field.
+func (r *queryResolver) UpcomingPayments(ctx context.Context, filter model.UpcomingPaymentsFilter) (*model.UpcomingPaymentsReport, error) {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
+		return nil, utils.ErrUnauthorized
+	}
+
+	report, err := r.Services.UpcomingPayments.GetUpcomingPayments(userID, filter.Month, filter.Year)
+	if err != nil {
+		return nil, err
+	}
+
+	return upcomingPaymentsReportToModel(report), nil
+}
+
 // Accounts is the resolver for the accounts field.
 func (r *queryResolver) Accounts(ctx context.Context) ([]*model.Account, error) {
 	userID, ok := middleware.GetUserID(ctx)
@@ -1106,18 +1121,3 @@ func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//    it when you're done.
-//  - You have helper methods in this file. Move them out to keep these resolver files clean.
-/*
-	func (r *mutationResolver) Resend2faCode(ctx context.Context, tempToken string) (bool, error) {
-	if err := r.Services.Auth.Resend2FACode(ctx, tempToken); err != nil {
-		return false, err
-	}
-	return true, nil
-}
-*/

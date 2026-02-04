@@ -1,0 +1,31 @@
+type UpcomingPaymentsReport {
+  installments: [UpcomingInstallmentPayment!]!
+  debts: [UpcomingDebtPayment!]!
+  totalInstallment: Int!
+  totalDebt: Int!
+  totalPayments: Int!
+}
+
+type UpcomingInstallmentPayment {
+  installmentId: ID!
+  name: String!
+  monthlyPayment: Int!
+  dueDay: Int!
+  dueDate: String!
+  remainingAmount: Int!
+  remainingPayments: Int!
+}
+
+type UpcomingDebtPayment {
+  debtId: ID!
+  personName: String!
+  monthlyPayment: Int!
+  dueDate: String!
+  remainingAmount: Int!
+  paymentType: String!
+}
+
+input UpcomingPaymentsFilter {
+  month: Int!
+  year: Int!
+}
