@@ -296,3 +296,20 @@ func (s *LedgerService) GetActualPaymentsByDateRangeAndReferenceType(userID uuid
 	}
 	return total, nil
 }
+
+func (s *LedgerService) GetMonthlyObligationByReferenceType(userID uuid.UUID, startDate, endDate, referenceType string) (int64, error) {
+	transactions, err := s.transactionRepo.GetByUserIDAndDateRangeAndReferenceType(userID, startDate, endDate, referenceType)
+	if err != nil {
+		return 0, err
+	}
+
+	var total int64
+	for _, tx := range transactions {
+		for _, entry := range tx.Entries {
+			if entry.Account.AccountType == models.AccountTypeLiability {
+				total += entry.Debit
+			}
+		}
+	}
+	return total, nil
+}

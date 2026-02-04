@@ -43,6 +43,15 @@ func (r *transactionRepository) GetByUserIDAndDateRange(userID uuid.UUID, startD
 	return transactions, err
 }
 
+func (r *transactionRepository) GetByUserIDAndDateRangeAndReferenceType(userID uuid.UUID, startDate, endDate, referenceType string) ([]models.Transaction, error) {
+	var transactions []models.Transaction
+	err := r.db.Preload("Entries").Preload("Entries.Account").
+		Where("user_id = ? AND transaction_date BETWEEN ? AND ? AND reference_type = ?", userID, startDate, endDate, referenceType).
+		Order("transaction_date DESC, created_at DESC").
+		Find(&transactions).Error
+	return transactions, err
+}
+
 func (r *transactionRepository) GetByReference(referenceID uuid.UUID, referenceType string) (*models.Transaction, error) {
 	var transaction models.Transaction
 	err := r.db.Preload("Entries").Preload("Entries.Account").

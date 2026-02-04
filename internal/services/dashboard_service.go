@@ -67,28 +67,43 @@ func (s *DashboardService) GetDashboard(userID uuid.UUID) (*Dashboard, error) {
 	if err != nil {
 		return nil, err
 	}
-	var totalMonthlyDebt int64
 	for _, debt := range debts {
 		dashboard.TotalActiveDebt += debt.RemainingAmount()
-		if debt.MonthlyPayment != nil {
-			totalMonthlyDebt += *debt.MonthlyPayment
-		}
 	}
+
+	now := time.Now()
+	startOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	endOfMonth := startOfMonth.AddDate(0, 1, -1)
 
 	installmentActiveStatus := models.InstallmentStatusActive
 	installments, err := s.repos.Installment.GetByUserID(userID, &installmentActiveStatus)
 	if err != nil {
 		return nil, err
 	}
-	var totalMonthlyInstallment int64
 	for _, inst := range installments {
 		dashboard.TotalActiveInstallment += inst.RemainingAmount()
-		totalMonthlyInstallment += inst.MonthlyPayment
 	}
 
-	now := time.Now()
-	startOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
-	endOfMonth := startOfMonth.AddDate(0, 1, -1)
+	// Get monthly obligation from transactions (by period date, includes completed installments)
+	totalMonthlyInstallment, err := s.ledgerService.GetMonthlyObligationByReferenceType(
+		userID,
+		startOfMonth.Format("2006-01-02"),
+		endOfMonth.Format("2006-01-02"),
+		"installment_payment",
+	)
+	if err != nil {
+		totalMonthlyInstallment = 0
+	}
+
+	totalMonthlyDebt, err := s.ledgerService.GetMonthlyObligationByReferenceType(
+		userID,
+		startOfMonth.Format("2006-01-02"),
+		endOfMonth.Format("2006-01-02"),
+		"debt_payment",
+	)
+	if err != nil {
+		totalMonthlyDebt = 0
+	}
 
 	expenses, err := s.repos.Expense.GetByUserIDAndDateRange(
 		userID,

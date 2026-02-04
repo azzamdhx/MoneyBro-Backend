@@ -196,6 +196,7 @@ type TransactionRepository interface {
 	GetByID(id uuid.UUID) (*models.Transaction, error)
 	GetByUserID(userID uuid.UUID) ([]models.Transaction, error)
 	GetByUserIDAndDateRange(userID uuid.UUID, startDate, endDate string) ([]models.Transaction, error)
+	GetByUserIDAndDateRangeAndReferenceType(userID uuid.UUID, startDate, endDate, referenceType string) ([]models.Transaction, error)
 	GetByReference(referenceID uuid.UUID, referenceType string) (*models.Transaction, error)
 	Delete(id uuid.UUID) error
 	DeleteByReference(referenceID uuid.UUID, referenceType string) error
