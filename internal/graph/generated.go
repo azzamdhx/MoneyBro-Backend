@@ -191,6 +191,18 @@ type ComplexityRoot struct {
 		Total      func(childComplexity int) int
 	}
 
+	ExpenseByCategoryGroup struct {
+		Category    func(childComplexity int) int
+		Count       func(childComplexity int) int
+		TotalAmount func(childComplexity int) int
+	}
+
+	ExpenseSummary struct {
+		ByCategory func(childComplexity int) int
+		Count      func(childComplexity int) int
+		Total      func(childComplexity int) int
+	}
+
 	ExpenseTemplate struct {
 		Category     func(childComplexity int) int
 		CreatedAt    func(childComplexity int) int
@@ -201,6 +213,11 @@ type ComplexityRoot struct {
 		RecurringDay func(childComplexity int) int
 		Total        func(childComplexity int) int
 		UnitPrice    func(childComplexity int) int
+	}
+
+	ExpensesWithSummary struct {
+		Items   func(childComplexity int) int
+		Summary func(childComplexity int) int
 	}
 
 	Income struct {
@@ -222,6 +239,18 @@ type ComplexityRoot struct {
 		Total      func(childComplexity int) int
 	}
 
+	IncomeByCategoryGroup struct {
+		Category    func(childComplexity int) int
+		Count       func(childComplexity int) int
+		TotalAmount func(childComplexity int) int
+	}
+
+	IncomeByTypeGroup struct {
+		Count       func(childComplexity int) int
+		IncomeType  func(childComplexity int) int
+		TotalAmount func(childComplexity int) int
+	}
+
 	IncomeCategory struct {
 		CreatedAt   func(childComplexity int) int
 		ID          func(childComplexity int) int
@@ -237,10 +266,22 @@ type ComplexityRoot struct {
 		TotalAmount func(childComplexity int) int
 	}
 
+	IncomeSummary struct {
+		ByCategory func(childComplexity int) int
+		ByType     func(childComplexity int) int
+		Count      func(childComplexity int) int
+		Total      func(childComplexity int) int
+	}
+
 	IncomeTypeSummary struct {
 		IncomeCount func(childComplexity int) int
 		IncomeType  func(childComplexity int) int
 		TotalAmount func(childComplexity int) int
+	}
+
+	IncomesWithSummary struct {
+		Items   func(childComplexity int) int
+		Summary func(childComplexity int) int
 	}
 
 	Installment struct {
@@ -492,7 +533,7 @@ type QueryResolver interface {
 	CheckEmailAvailability(ctx context.Context, email string) (bool, error)
 	Categories(ctx context.Context) ([]*model.Category, error)
 	Category(ctx context.Context, id uuid.UUID) (*model.Category, error)
-	Expenses(ctx context.Context, filter *model.ExpenseFilter) ([]*model.Expense, error)
+	Expenses(ctx context.Context, filter *model.ExpenseFilter) (*model.ExpensesWithSummary, error)
 	Expense(ctx context.Context, id uuid.UUID) (*model.Expense, error)
 	ExpenseTemplates(ctx context.Context) ([]*model.ExpenseTemplate, error)
 	ExpenseTemplate(ctx context.Context, id uuid.UUID) (*model.ExpenseTemplate, error)
@@ -502,7 +543,7 @@ type QueryResolver interface {
 	Debt(ctx context.Context, id uuid.UUID) (*model.Debt, error)
 	IncomeCategories(ctx context.Context) ([]*model.IncomeCategory, error)
 	IncomeCategory(ctx context.Context, id uuid.UUID) (*model.IncomeCategory, error)
-	Incomes(ctx context.Context, filter *model.IncomeFilter) ([]*model.Income, error)
+	Incomes(ctx context.Context, filter *model.IncomeFilter) (*model.IncomesWithSummary, error)
 	Income(ctx context.Context, id uuid.UUID) (*model.Income, error)
 	RecurringIncomes(ctx context.Context, isActive *bool) ([]*model.RecurringIncome, error)
 	RecurringIncome(ctx context.Context, id uuid.UUID) (*model.RecurringIncome, error)
@@ -1134,6 +1175,44 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.ExpenseBreakdown.Total(childComplexity), true
 
+	case "ExpenseByCategoryGroup.category":
+		if e.complexity.ExpenseByCategoryGroup.Category == nil {
+			break
+		}
+
+		return e.complexity.ExpenseByCategoryGroup.Category(childComplexity), true
+	case "ExpenseByCategoryGroup.count":
+		if e.complexity.ExpenseByCategoryGroup.Count == nil {
+			break
+		}
+
+		return e.complexity.ExpenseByCategoryGroup.Count(childComplexity), true
+	case "ExpenseByCategoryGroup.totalAmount":
+		if e.complexity.ExpenseByCategoryGroup.TotalAmount == nil {
+			break
+		}
+
+		return e.complexity.ExpenseByCategoryGroup.TotalAmount(childComplexity), true
+
+	case "ExpenseSummary.byCategory":
+		if e.complexity.ExpenseSummary.ByCategory == nil {
+			break
+		}
+
+		return e.complexity.ExpenseSummary.ByCategory(childComplexity), true
+	case "ExpenseSummary.count":
+		if e.complexity.ExpenseSummary.Count == nil {
+			break
+		}
+
+		return e.complexity.ExpenseSummary.Count(childComplexity), true
+	case "ExpenseSummary.total":
+		if e.complexity.ExpenseSummary.Total == nil {
+			break
+		}
+
+		return e.complexity.ExpenseSummary.Total(childComplexity), true
+
 	case "ExpenseTemplate.category":
 		if e.complexity.ExpenseTemplate.Category == nil {
 			break
@@ -1188,6 +1267,19 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.ExpenseTemplate.UnitPrice(childComplexity), true
+
+	case "ExpensesWithSummary.items":
+		if e.complexity.ExpensesWithSummary.Items == nil {
+			break
+		}
+
+		return e.complexity.ExpensesWithSummary.Items(childComplexity), true
+	case "ExpensesWithSummary.summary":
+		if e.complexity.ExpensesWithSummary.Summary == nil {
+			break
+		}
+
+		return e.complexity.ExpensesWithSummary.Summary(childComplexity), true
 
 	case "Income.amount":
 		if e.complexity.Income.Amount == nil {
@@ -1269,6 +1361,44 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.IncomeBreakdown.Total(childComplexity), true
 
+	case "IncomeByCategoryGroup.category":
+		if e.complexity.IncomeByCategoryGroup.Category == nil {
+			break
+		}
+
+		return e.complexity.IncomeByCategoryGroup.Category(childComplexity), true
+	case "IncomeByCategoryGroup.count":
+		if e.complexity.IncomeByCategoryGroup.Count == nil {
+			break
+		}
+
+		return e.complexity.IncomeByCategoryGroup.Count(childComplexity), true
+	case "IncomeByCategoryGroup.totalAmount":
+		if e.complexity.IncomeByCategoryGroup.TotalAmount == nil {
+			break
+		}
+
+		return e.complexity.IncomeByCategoryGroup.TotalAmount(childComplexity), true
+
+	case "IncomeByTypeGroup.count":
+		if e.complexity.IncomeByTypeGroup.Count == nil {
+			break
+		}
+
+		return e.complexity.IncomeByTypeGroup.Count(childComplexity), true
+	case "IncomeByTypeGroup.incomeType":
+		if e.complexity.IncomeByTypeGroup.IncomeType == nil {
+			break
+		}
+
+		return e.complexity.IncomeByTypeGroup.IncomeType(childComplexity), true
+	case "IncomeByTypeGroup.totalAmount":
+		if e.complexity.IncomeByTypeGroup.TotalAmount == nil {
+			break
+		}
+
+		return e.complexity.IncomeByTypeGroup.TotalAmount(childComplexity), true
+
 	case "IncomeCategory.createdAt":
 		if e.complexity.IncomeCategory.CreatedAt == nil {
 			break
@@ -1325,6 +1455,31 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.IncomeCategorySummary.TotalAmount(childComplexity), true
 
+	case "IncomeSummary.byCategory":
+		if e.complexity.IncomeSummary.ByCategory == nil {
+			break
+		}
+
+		return e.complexity.IncomeSummary.ByCategory(childComplexity), true
+	case "IncomeSummary.byType":
+		if e.complexity.IncomeSummary.ByType == nil {
+			break
+		}
+
+		return e.complexity.IncomeSummary.ByType(childComplexity), true
+	case "IncomeSummary.count":
+		if e.complexity.IncomeSummary.Count == nil {
+			break
+		}
+
+		return e.complexity.IncomeSummary.Count(childComplexity), true
+	case "IncomeSummary.total":
+		if e.complexity.IncomeSummary.Total == nil {
+			break
+		}
+
+		return e.complexity.IncomeSummary.Total(childComplexity), true
+
 	case "IncomeTypeSummary.incomeCount":
 		if e.complexity.IncomeTypeSummary.IncomeCount == nil {
 			break
@@ -1343,6 +1498,19 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.IncomeTypeSummary.TotalAmount(childComplexity), true
+
+	case "IncomesWithSummary.items":
+		if e.complexity.IncomesWithSummary.Items == nil {
+			break
+		}
+
+		return e.complexity.IncomesWithSummary.Items(childComplexity), true
+	case "IncomesWithSummary.summary":
+		if e.complexity.IncomesWithSummary.Summary == nil {
+			break
+		}
+
+		return e.complexity.IncomesWithSummary.Summary(childComplexity), true
 
 	case "Installment.actualAmount":
 		if e.complexity.Installment.ActualAmount == nil {
@@ -6724,6 +6892,202 @@ func (ec *executionContext) fieldContext_ExpenseBreakdown_byCategory(_ context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _ExpenseByCategoryGroup_category(ctx context.Context, field graphql.CollectedField, obj *model.ExpenseByCategoryGroup) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ExpenseByCategoryGroup_category,
+		func(ctx context.Context) (any, error) {
+			return obj.Category, nil
+		},
+		nil,
+		ec.marshalNCategory2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCategory,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ExpenseByCategoryGroup_category(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExpenseByCategoryGroup",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Category_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Category_name(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Category_createdAt(ctx, field)
+			case "expenses":
+				return ec.fieldContext_Category_expenses(ctx, field)
+			case "expenseCount":
+				return ec.fieldContext_Category_expenseCount(ctx, field)
+			case "totalSpent":
+				return ec.fieldContext_Category_totalSpent(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Category", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ExpenseByCategoryGroup_totalAmount(ctx context.Context, field graphql.CollectedField, obj *model.ExpenseByCategoryGroup) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ExpenseByCategoryGroup_totalAmount,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalAmount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ExpenseByCategoryGroup_totalAmount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExpenseByCategoryGroup",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ExpenseByCategoryGroup_count(ctx context.Context, field graphql.CollectedField, obj *model.ExpenseByCategoryGroup) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ExpenseByCategoryGroup_count,
+		func(ctx context.Context) (any, error) {
+			return obj.Count, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ExpenseByCategoryGroup_count(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExpenseByCategoryGroup",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ExpenseSummary_total(ctx context.Context, field graphql.CollectedField, obj *model.ExpenseSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ExpenseSummary_total,
+		func(ctx context.Context) (any, error) {
+			return obj.Total, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ExpenseSummary_total(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExpenseSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ExpenseSummary_count(ctx context.Context, field graphql.CollectedField, obj *model.ExpenseSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ExpenseSummary_count,
+		func(ctx context.Context) (any, error) {
+			return obj.Count, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ExpenseSummary_count(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExpenseSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ExpenseSummary_byCategory(ctx context.Context, field graphql.CollectedField, obj *model.ExpenseSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ExpenseSummary_byCategory,
+		func(ctx context.Context) (any, error) {
+			return obj.ByCategory, nil
+		},
+		nil,
+		ec.marshalNExpenseByCategoryGroup2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseByCategoryGroupᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ExpenseSummary_byCategory(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExpenseSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "category":
+				return ec.fieldContext_ExpenseByCategoryGroup_category(ctx, field)
+			case "totalAmount":
+				return ec.fieldContext_ExpenseByCategoryGroup_totalAmount(ctx, field)
+			case "count":
+				return ec.fieldContext_ExpenseByCategoryGroup_count(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ExpenseByCategoryGroup", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ExpenseTemplate_id(ctx context.Context, field graphql.CollectedField, obj *model.ExpenseTemplate) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -6994,6 +7358,92 @@ func (ec *executionContext) fieldContext_ExpenseTemplate_category(_ context.Cont
 				return ec.fieldContext_Category_totalSpent(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Category", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ExpensesWithSummary_items(ctx context.Context, field graphql.CollectedField, obj *model.ExpensesWithSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ExpensesWithSummary_items,
+		func(ctx context.Context) (any, error) {
+			return obj.Items, nil
+		},
+		nil,
+		ec.marshalNExpense2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ExpensesWithSummary_items(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExpensesWithSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Expense_id(ctx, field)
+			case "itemName":
+				return ec.fieldContext_Expense_itemName(ctx, field)
+			case "unitPrice":
+				return ec.fieldContext_Expense_unitPrice(ctx, field)
+			case "quantity":
+				return ec.fieldContext_Expense_quantity(ctx, field)
+			case "total":
+				return ec.fieldContext_Expense_total(ctx, field)
+			case "notes":
+				return ec.fieldContext_Expense_notes(ctx, field)
+			case "expenseDate":
+				return ec.fieldContext_Expense_expenseDate(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Expense_createdAt(ctx, field)
+			case "category":
+				return ec.fieldContext_Expense_category(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Expense", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ExpensesWithSummary_summary(ctx context.Context, field graphql.CollectedField, obj *model.ExpensesWithSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ExpensesWithSummary_summary,
+		func(ctx context.Context) (any, error) {
+			return obj.Summary, nil
+		},
+		nil,
+		ec.marshalNExpenseSummary2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseSummary,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ExpensesWithSummary_summary(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExpensesWithSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "total":
+				return ec.fieldContext_ExpenseSummary_total(ctx, field)
+			case "count":
+				return ec.fieldContext_ExpenseSummary_count(ctx, field)
+			case "byCategory":
+				return ec.fieldContext_ExpenseSummary_byCategory(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ExpenseSummary", field.Name)
 		},
 	}
 	return fc, nil
@@ -7406,6 +7856,194 @@ func (ec *executionContext) fieldContext_IncomeBreakdown_byType(_ context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _IncomeByCategoryGroup_category(ctx context.Context, field graphql.CollectedField, obj *model.IncomeByCategoryGroup) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_IncomeByCategoryGroup_category,
+		func(ctx context.Context) (any, error) {
+			return obj.Category, nil
+		},
+		nil,
+		ec.marshalNIncomeCategory2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeCategory,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_IncomeByCategoryGroup_category(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "IncomeByCategoryGroup",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_IncomeCategory_id(ctx, field)
+			case "name":
+				return ec.fieldContext_IncomeCategory_name(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_IncomeCategory_createdAt(ctx, field)
+			case "incomes":
+				return ec.fieldContext_IncomeCategory_incomes(ctx, field)
+			case "incomeCount":
+				return ec.fieldContext_IncomeCategory_incomeCount(ctx, field)
+			case "totalIncome":
+				return ec.fieldContext_IncomeCategory_totalIncome(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type IncomeCategory", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _IncomeByCategoryGroup_totalAmount(ctx context.Context, field graphql.CollectedField, obj *model.IncomeByCategoryGroup) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_IncomeByCategoryGroup_totalAmount,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalAmount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_IncomeByCategoryGroup_totalAmount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "IncomeByCategoryGroup",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _IncomeByCategoryGroup_count(ctx context.Context, field graphql.CollectedField, obj *model.IncomeByCategoryGroup) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_IncomeByCategoryGroup_count,
+		func(ctx context.Context) (any, error) {
+			return obj.Count, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_IncomeByCategoryGroup_count(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "IncomeByCategoryGroup",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _IncomeByTypeGroup_incomeType(ctx context.Context, field graphql.CollectedField, obj *model.IncomeByTypeGroup) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_IncomeByTypeGroup_incomeType,
+		func(ctx context.Context) (any, error) {
+			return obj.IncomeType, nil
+		},
+		nil,
+		ec.marshalNIncomeType2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeType,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_IncomeByTypeGroup_incomeType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "IncomeByTypeGroup",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type IncomeType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _IncomeByTypeGroup_totalAmount(ctx context.Context, field graphql.CollectedField, obj *model.IncomeByTypeGroup) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_IncomeByTypeGroup_totalAmount,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalAmount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_IncomeByTypeGroup_totalAmount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "IncomeByTypeGroup",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _IncomeByTypeGroup_count(ctx context.Context, field graphql.CollectedField, obj *model.IncomeByTypeGroup) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_IncomeByTypeGroup_count,
+		func(ctx context.Context) (any, error) {
+			return obj.Count, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_IncomeByTypeGroup_count(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "IncomeByTypeGroup",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _IncomeCategory_id(ctx context.Context, field graphql.CollectedField, obj *model.IncomeCategory) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -7701,6 +8339,138 @@ func (ec *executionContext) fieldContext_IncomeCategorySummary_incomeCount(_ con
 	return fc, nil
 }
 
+func (ec *executionContext) _IncomeSummary_total(ctx context.Context, field graphql.CollectedField, obj *model.IncomeSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_IncomeSummary_total,
+		func(ctx context.Context) (any, error) {
+			return obj.Total, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_IncomeSummary_total(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "IncomeSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _IncomeSummary_count(ctx context.Context, field graphql.CollectedField, obj *model.IncomeSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_IncomeSummary_count,
+		func(ctx context.Context) (any, error) {
+			return obj.Count, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_IncomeSummary_count(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "IncomeSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _IncomeSummary_byCategory(ctx context.Context, field graphql.CollectedField, obj *model.IncomeSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_IncomeSummary_byCategory,
+		func(ctx context.Context) (any, error) {
+			return obj.ByCategory, nil
+		},
+		nil,
+		ec.marshalNIncomeByCategoryGroup2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeByCategoryGroupᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_IncomeSummary_byCategory(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "IncomeSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "category":
+				return ec.fieldContext_IncomeByCategoryGroup_category(ctx, field)
+			case "totalAmount":
+				return ec.fieldContext_IncomeByCategoryGroup_totalAmount(ctx, field)
+			case "count":
+				return ec.fieldContext_IncomeByCategoryGroup_count(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type IncomeByCategoryGroup", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _IncomeSummary_byType(ctx context.Context, field graphql.CollectedField, obj *model.IncomeSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_IncomeSummary_byType,
+		func(ctx context.Context) (any, error) {
+			return obj.ByType, nil
+		},
+		nil,
+		ec.marshalNIncomeByTypeGroup2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeByTypeGroupᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_IncomeSummary_byType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "IncomeSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "incomeType":
+				return ec.fieldContext_IncomeByTypeGroup_incomeType(ctx, field)
+			case "totalAmount":
+				return ec.fieldContext_IncomeByTypeGroup_totalAmount(ctx, field)
+			case "count":
+				return ec.fieldContext_IncomeByTypeGroup_count(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type IncomeByTypeGroup", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _IncomeTypeSummary_incomeType(ctx context.Context, field graphql.CollectedField, obj *model.IncomeTypeSummary) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -7783,6 +8553,94 @@ func (ec *executionContext) fieldContext_IncomeTypeSummary_incomeCount(_ context
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _IncomesWithSummary_items(ctx context.Context, field graphql.CollectedField, obj *model.IncomesWithSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_IncomesWithSummary_items,
+		func(ctx context.Context) (any, error) {
+			return obj.Items, nil
+		},
+		nil,
+		ec.marshalNIncome2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_IncomesWithSummary_items(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "IncomesWithSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Income_id(ctx, field)
+			case "sourceName":
+				return ec.fieldContext_Income_sourceName(ctx, field)
+			case "amount":
+				return ec.fieldContext_Income_amount(ctx, field)
+			case "incomeType":
+				return ec.fieldContext_Income_incomeType(ctx, field)
+			case "incomeDate":
+				return ec.fieldContext_Income_incomeDate(ctx, field)
+			case "isRecurring":
+				return ec.fieldContext_Income_isRecurring(ctx, field)
+			case "notes":
+				return ec.fieldContext_Income_notes(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Income_createdAt(ctx, field)
+			case "category":
+				return ec.fieldContext_Income_category(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Income", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _IncomesWithSummary_summary(ctx context.Context, field graphql.CollectedField, obj *model.IncomesWithSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_IncomesWithSummary_summary,
+		func(ctx context.Context) (any, error) {
+			return obj.Summary, nil
+		},
+		nil,
+		ec.marshalNIncomeSummary2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeSummary,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_IncomesWithSummary_summary(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "IncomesWithSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "total":
+				return ec.fieldContext_IncomeSummary_total(ctx, field)
+			case "count":
+				return ec.fieldContext_IncomeSummary_count(ctx, field)
+			case "byCategory":
+				return ec.fieldContext_IncomeSummary_byCategory(ctx, field)
+			case "byType":
+				return ec.fieldContext_IncomeSummary_byType(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type IncomeSummary", field.Name)
 		},
 	}
 	return fc, nil
@@ -11429,7 +12287,7 @@ func (ec *executionContext) _Query_expenses(ctx context.Context, field graphql.C
 			return ec.resolvers.Query().Expenses(ctx, fc.Args["filter"].(*model.ExpenseFilter))
 		},
 		nil,
-		ec.marshalNExpense2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseᚄ,
+		ec.marshalNExpensesWithSummary2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpensesWithSummary,
 		true,
 		true,
 	)
@@ -11443,26 +12301,12 @@ func (ec *executionContext) fieldContext_Query_expenses(ctx context.Context, fie
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "id":
-				return ec.fieldContext_Expense_id(ctx, field)
-			case "itemName":
-				return ec.fieldContext_Expense_itemName(ctx, field)
-			case "unitPrice":
-				return ec.fieldContext_Expense_unitPrice(ctx, field)
-			case "quantity":
-				return ec.fieldContext_Expense_quantity(ctx, field)
-			case "total":
-				return ec.fieldContext_Expense_total(ctx, field)
-			case "notes":
-				return ec.fieldContext_Expense_notes(ctx, field)
-			case "expenseDate":
-				return ec.fieldContext_Expense_expenseDate(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Expense_createdAt(ctx, field)
-			case "category":
-				return ec.fieldContext_Expense_category(ctx, field)
+			case "items":
+				return ec.fieldContext_ExpensesWithSummary_items(ctx, field)
+			case "summary":
+				return ec.fieldContext_ExpensesWithSummary_summary(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Expense", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type ExpensesWithSummary", field.Name)
 		},
 	}
 	defer func() {
@@ -12067,7 +12911,7 @@ func (ec *executionContext) _Query_incomes(ctx context.Context, field graphql.Co
 			return ec.resolvers.Query().Incomes(ctx, fc.Args["filter"].(*model.IncomeFilter))
 		},
 		nil,
-		ec.marshalNIncome2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeᚄ,
+		ec.marshalNIncomesWithSummary2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomesWithSummary,
 		true,
 		true,
 	)
@@ -12081,26 +12925,12 @@ func (ec *executionContext) fieldContext_Query_incomes(ctx context.Context, fiel
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "id":
-				return ec.fieldContext_Income_id(ctx, field)
-			case "sourceName":
-				return ec.fieldContext_Income_sourceName(ctx, field)
-			case "amount":
-				return ec.fieldContext_Income_amount(ctx, field)
-			case "incomeType":
-				return ec.fieldContext_Income_incomeType(ctx, field)
-			case "incomeDate":
-				return ec.fieldContext_Income_incomeDate(ctx, field)
-			case "isRecurring":
-				return ec.fieldContext_Income_isRecurring(ctx, field)
-			case "notes":
-				return ec.fieldContext_Income_notes(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Income_createdAt(ctx, field)
-			case "category":
-				return ec.fieldContext_Income_category(ctx, field)
+			case "items":
+				return ec.fieldContext_IncomesWithSummary_items(ctx, field)
+			case "summary":
+				return ec.fieldContext_IncomesWithSummary_summary(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Income", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type IncomesWithSummary", field.Name)
 		},
 	}
 	defer func() {
@@ -18470,6 +19300,104 @@ func (ec *executionContext) _ExpenseBreakdown(ctx context.Context, sel ast.Selec
 	return out
 }
 
+var expenseByCategoryGroupImplementors = []string{"ExpenseByCategoryGroup"}
+
+func (ec *executionContext) _ExpenseByCategoryGroup(ctx context.Context, sel ast.SelectionSet, obj *model.ExpenseByCategoryGroup) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, expenseByCategoryGroupImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ExpenseByCategoryGroup")
+		case "category":
+			out.Values[i] = ec._ExpenseByCategoryGroup_category(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalAmount":
+			out.Values[i] = ec._ExpenseByCategoryGroup_totalAmount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "count":
+			out.Values[i] = ec._ExpenseByCategoryGroup_count(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var expenseSummaryImplementors = []string{"ExpenseSummary"}
+
+func (ec *executionContext) _ExpenseSummary(ctx context.Context, sel ast.SelectionSet, obj *model.ExpenseSummary) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, expenseSummaryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ExpenseSummary")
+		case "total":
+			out.Values[i] = ec._ExpenseSummary_total(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "count":
+			out.Values[i] = ec._ExpenseSummary_count(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "byCategory":
+			out.Values[i] = ec._ExpenseSummary_byCategory(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var expenseTemplateImplementors = []string{"ExpenseTemplate"}
 
 func (ec *executionContext) _ExpenseTemplate(ctx context.Context, sel ast.SelectionSet, obj *model.ExpenseTemplate) graphql.Marshaler {
@@ -18517,6 +19445,50 @@ func (ec *executionContext) _ExpenseTemplate(ctx context.Context, sel ast.Select
 			}
 		case "category":
 			out.Values[i] = ec._ExpenseTemplate_category(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var expensesWithSummaryImplementors = []string{"ExpensesWithSummary"}
+
+func (ec *executionContext) _ExpensesWithSummary(ctx context.Context, sel ast.SelectionSet, obj *model.ExpensesWithSummary) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, expensesWithSummaryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ExpensesWithSummary")
+		case "items":
+			out.Values[i] = ec._ExpensesWithSummary_items(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "summary":
+			out.Values[i] = ec._ExpensesWithSummary_summary(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -18673,6 +19645,104 @@ func (ec *executionContext) _IncomeBreakdown(ctx context.Context, sel ast.Select
 	return out
 }
 
+var incomeByCategoryGroupImplementors = []string{"IncomeByCategoryGroup"}
+
+func (ec *executionContext) _IncomeByCategoryGroup(ctx context.Context, sel ast.SelectionSet, obj *model.IncomeByCategoryGroup) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, incomeByCategoryGroupImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("IncomeByCategoryGroup")
+		case "category":
+			out.Values[i] = ec._IncomeByCategoryGroup_category(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalAmount":
+			out.Values[i] = ec._IncomeByCategoryGroup_totalAmount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "count":
+			out.Values[i] = ec._IncomeByCategoryGroup_count(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var incomeByTypeGroupImplementors = []string{"IncomeByTypeGroup"}
+
+func (ec *executionContext) _IncomeByTypeGroup(ctx context.Context, sel ast.SelectionSet, obj *model.IncomeByTypeGroup) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, incomeByTypeGroupImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("IncomeByTypeGroup")
+		case "incomeType":
+			out.Values[i] = ec._IncomeByTypeGroup_incomeType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalAmount":
+			out.Values[i] = ec._IncomeByTypeGroup_totalAmount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "count":
+			out.Values[i] = ec._IncomeByTypeGroup_count(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var incomeCategoryImplementors = []string{"IncomeCategory"}
 
 func (ec *executionContext) _IncomeCategory(ctx context.Context, sel ast.SelectionSet, obj *model.IncomeCategory) graphql.Marshaler {
@@ -18786,6 +19856,60 @@ func (ec *executionContext) _IncomeCategorySummary(ctx context.Context, sel ast.
 	return out
 }
 
+var incomeSummaryImplementors = []string{"IncomeSummary"}
+
+func (ec *executionContext) _IncomeSummary(ctx context.Context, sel ast.SelectionSet, obj *model.IncomeSummary) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, incomeSummaryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("IncomeSummary")
+		case "total":
+			out.Values[i] = ec._IncomeSummary_total(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "count":
+			out.Values[i] = ec._IncomeSummary_count(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "byCategory":
+			out.Values[i] = ec._IncomeSummary_byCategory(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "byType":
+			out.Values[i] = ec._IncomeSummary_byType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var incomeTypeSummaryImplementors = []string{"IncomeTypeSummary"}
 
 func (ec *executionContext) _IncomeTypeSummary(ctx context.Context, sel ast.SelectionSet, obj *model.IncomeTypeSummary) graphql.Marshaler {
@@ -18809,6 +19933,50 @@ func (ec *executionContext) _IncomeTypeSummary(ctx context.Context, sel ast.Sele
 			}
 		case "incomeCount":
 			out.Values[i] = ec._IncomeTypeSummary_incomeCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var incomesWithSummaryImplementors = []string{"IncomesWithSummary"}
+
+func (ec *executionContext) _IncomesWithSummary(ctx context.Context, sel ast.SelectionSet, obj *model.IncomesWithSummary) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, incomesWithSummaryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("IncomesWithSummary")
+		case "items":
+			out.Values[i] = ec._IncomesWithSummary_items(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "summary":
+			out.Values[i] = ec._IncomesWithSummary_summary(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -21641,6 +22809,70 @@ func (ec *executionContext) marshalNExpenseBreakdown2ᚖgithubᚗcomᚋazzamdhx�
 	return ec._ExpenseBreakdown(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNExpenseByCategoryGroup2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseByCategoryGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ExpenseByCategoryGroup) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNExpenseByCategoryGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseByCategoryGroup(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNExpenseByCategoryGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseByCategoryGroup(ctx context.Context, sel ast.SelectionSet, v *model.ExpenseByCategoryGroup) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ExpenseByCategoryGroup(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNExpenseSummary2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseSummary(ctx context.Context, sel ast.SelectionSet, v *model.ExpenseSummary) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ExpenseSummary(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNExpenseTemplate2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplate(ctx context.Context, sel ast.SelectionSet, v model.ExpenseTemplate) graphql.Marshaler {
 	return ec._ExpenseTemplate(ctx, sel, &v)
 }
@@ -21697,6 +22929,20 @@ func (ec *executionContext) marshalNExpenseTemplate2ᚖgithubᚗcomᚋazzamdhx�
 		return graphql.Null
 	}
 	return ec._ExpenseTemplate(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNExpensesWithSummary2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpensesWithSummary(ctx context.Context, sel ast.SelectionSet, v model.ExpensesWithSummary) graphql.Marshaler {
+	return ec._ExpensesWithSummary(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNExpensesWithSummary2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpensesWithSummary(ctx context.Context, sel ast.SelectionSet, v *model.ExpensesWithSummary) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ExpensesWithSummary(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v any) (float64, error) {
@@ -21802,6 +23048,114 @@ func (ec *executionContext) marshalNIncomeBreakdown2ᚖgithubᚗcomᚋazzamdhx�
 		return graphql.Null
 	}
 	return ec._IncomeBreakdown(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNIncomeByCategoryGroup2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeByCategoryGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.IncomeByCategoryGroup) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNIncomeByCategoryGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeByCategoryGroup(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNIncomeByCategoryGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeByCategoryGroup(ctx context.Context, sel ast.SelectionSet, v *model.IncomeByCategoryGroup) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._IncomeByCategoryGroup(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNIncomeByTypeGroup2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeByTypeGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.IncomeByTypeGroup) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNIncomeByTypeGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeByTypeGroup(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNIncomeByTypeGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeByTypeGroup(ctx context.Context, sel ast.SelectionSet, v *model.IncomeByTypeGroup) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._IncomeByTypeGroup(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNIncomeCategory2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeCategory(ctx context.Context, sel ast.SelectionSet, v model.IncomeCategory) graphql.Marshaler {
@@ -21916,6 +23270,16 @@ func (ec *executionContext) marshalNIncomeCategorySummary2ᚖgithubᚗcomᚋazza
 	return ec._IncomeCategorySummary(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNIncomeSummary2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeSummary(ctx context.Context, sel ast.SelectionSet, v *model.IncomeSummary) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._IncomeSummary(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNIncomeType2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeType(ctx context.Context, v any) (model.IncomeType, error) {
 	var res model.IncomeType
 	err := res.UnmarshalGQL(v)
@@ -21978,6 +23342,20 @@ func (ec *executionContext) marshalNIncomeTypeSummary2ᚖgithubᚗcomᚋazzamdhx
 		return graphql.Null
 	}
 	return ec._IncomeTypeSummary(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNIncomesWithSummary2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomesWithSummary(ctx context.Context, sel ast.SelectionSet, v model.IncomesWithSummary) graphql.Marshaler {
+	return ec._IncomesWithSummary(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNIncomesWithSummary2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomesWithSummary(ctx context.Context, sel ast.SelectionSet, v *model.IncomesWithSummary) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._IncomesWithSummary(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNInstallment2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐInstallment(ctx context.Context, sel ast.SelectionSet, v model.Installment) graphql.Marshaler {

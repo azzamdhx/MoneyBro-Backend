@@ -32,6 +32,30 @@ type Income {
   category: IncomeCategory!
 }
 
+type IncomeByCategoryGroup {
+  category: IncomeCategory!
+  totalAmount: Int!
+  count: Int!
+}
+
+type IncomeByTypeGroup {
+  incomeType: IncomeType!
+  totalAmount: Int!
+  count: Int!
+}
+
+type IncomeSummary {
+  total: Int!
+  count: Int!
+  byCategory: [IncomeByCategoryGroup!]!
+  byType: [IncomeByTypeGroup!]!
+}
+
+type IncomesWithSummary {
+  items: [Income!]!
+  summary: IncomeSummary!
+}
+
 type RecurringIncome {
   id: UUID!
   sourceName: String!

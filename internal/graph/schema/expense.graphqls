@@ -11,6 +11,23 @@ type Expense {
   category: Category!
 }
 
+type ExpenseByCategoryGroup {
+  category: Category!
+  totalAmount: Int!
+  count: Int!
+}
+
+type ExpenseSummary {
+  total: Int!
+  count: Int!
+  byCategory: [ExpenseByCategoryGroup!]!
+}
+
+type ExpensesWithSummary {
+  items: [Expense!]!
+  summary: ExpenseSummary!
+}
+
 type ExpenseTemplate {
   id: UUID!
   itemName: String!

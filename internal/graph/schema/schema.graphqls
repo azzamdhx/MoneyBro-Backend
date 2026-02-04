@@ -9,7 +9,7 @@ type Query {
   categories: [Category!]!
   category(id: UUID!): Category
   
-  expenses(filter: ExpenseFilter): [Expense!]!
+  expenses(filter: ExpenseFilter): ExpensesWithSummary!
   expense(id: UUID!): Expense
   expenseTemplates: [ExpenseTemplate!]!
   expenseTemplate(id: UUID!): ExpenseTemplate
@@ -22,7 +22,7 @@ type Query {
   
   incomeCategories: [IncomeCategory!]!
   incomeCategory(id: UUID!): IncomeCategory
-  incomes(filter: IncomeFilter): [Income!]!
+  incomes(filter: IncomeFilter): IncomesWithSummary!
   income(id: UUID!): Income
   recurringIncomes(isActive: Boolean): [RecurringIncome!]!
   recurringIncome(id: UUID!): RecurringIncome

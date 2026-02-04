@@ -748,7 +748,7 @@ func (r *queryResolver) Category(ctx context.Context, id uuid.UUID) (*model.Cate
 }
 
 // Expenses is the resolver for the expenses field.
-func (r *queryResolver) Expenses(ctx context.Context, filter *model.ExpenseFilter) ([]*model.Expense, error) {
+func (r *queryResolver) Expenses(ctx context.Context, filter *model.ExpenseFilter) (*model.ExpensesWithSummary, error) {
 	userID, ok := middleware.GetUserID(ctx)
 	if !ok {
 		return nil, utils.ErrUnauthorized
@@ -771,11 +771,20 @@ func (r *queryResolver) Expenses(ctx context.Context, filter *model.ExpenseFilte
 	if err != nil {
 		return nil, err
 	}
-	result := make([]*model.Expense, len(exps))
+
+	// Convert to model
+	items := make([]*model.Expense, len(exps))
 	for i, e := range exps {
-		result[i] = expenseToModel(&e)
+		items[i] = expenseToModel(&e)
 	}
-	return result, nil
+
+	// Calculate summary
+	summary := calculateExpenseSummary(exps)
+
+	return &model.ExpensesWithSummary{
+		Items:   items,
+		Summary: summary,
+	}, nil
 }
 
 // Expense is the resolver for the expense field.
@@ -902,7 +911,7 @@ func (r *queryResolver) IncomeCategory(ctx context.Context, id uuid.UUID) (*mode
 }
 
 // Incomes is the resolver for the incomes field.
-func (r *queryResolver) Incomes(ctx context.Context, filter *model.IncomeFilter) ([]*model.Income, error) {
+func (r *queryResolver) Incomes(ctx context.Context, filter *model.IncomeFilter) (*model.IncomesWithSummary, error) {
 	userID, ok := middleware.GetUserID(ctx)
 	if !ok {
 		return nil, utils.ErrUnauthorized
@@ -929,11 +938,20 @@ func (r *queryResolver) Incomes(ctx context.Context, filter *model.IncomeFilter)
 	if err != nil {
 		return nil, err
 	}
-	result := make([]*model.Income, len(incomes))
+
+	// Convert to model
+	items := make([]*model.Income, len(incomes))
 	for i, inc := range incomes {
-		result[i] = incomeToModel(&inc)
+		items[i] = incomeToModel(&inc)
 	}
-	return result, nil
+
+	// Calculate summary
+	summary := calculateIncomeSummary(incomes)
+
+	return &model.IncomesWithSummary{
+		Items:   items,
+		Summary: summary,
+	}, nil
 }
 
 // Income is the resolver for the income field.

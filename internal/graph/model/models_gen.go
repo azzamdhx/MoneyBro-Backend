@@ -241,10 +241,22 @@ type ExpenseBreakdown struct {
 	ByCategory []*CategorySummary `json:"byCategory"`
 }
 
+type ExpenseByCategoryGroup struct {
+	Category    *Category `json:"category"`
+	TotalAmount int       `json:"totalAmount"`
+	Count       int       `json:"count"`
+}
+
 type ExpenseFilter struct {
 	CategoryID *uuid.UUID `json:"categoryId,omitempty"`
 	StartDate  *time.Time `json:"startDate,omitempty"`
 	EndDate    *time.Time `json:"endDate,omitempty"`
+}
+
+type ExpenseSummary struct {
+	Total      int                       `json:"total"`
+	Count      int                       `json:"count"`
+	ByCategory []*ExpenseByCategoryGroup `json:"byCategory"`
 }
 
 type ExpenseTemplate struct {
@@ -257,6 +269,11 @@ type ExpenseTemplate struct {
 	Notes        *string   `json:"notes,omitempty"`
 	CreatedAt    time.Time `json:"createdAt"`
 	Category     *Category `json:"category"`
+}
+
+type ExpensesWithSummary struct {
+	Items   []*Expense      `json:"items"`
+	Summary *ExpenseSummary `json:"summary"`
 }
 
 type ForgotPasswordInput struct {
@@ -282,6 +299,18 @@ type IncomeBreakdown struct {
 	ByType     []*IncomeTypeSummary     `json:"byType"`
 }
 
+type IncomeByCategoryGroup struct {
+	Category    *IncomeCategory `json:"category"`
+	TotalAmount int             `json:"totalAmount"`
+	Count       int             `json:"count"`
+}
+
+type IncomeByTypeGroup struct {
+	IncomeType  IncomeType `json:"incomeType"`
+	TotalAmount int        `json:"totalAmount"`
+	Count       int        `json:"count"`
+}
+
 type IncomeCategory struct {
 	ID          uuid.UUID `json:"id"`
 	Name        string    `json:"name"`
@@ -304,10 +333,22 @@ type IncomeFilter struct {
 	EndDate    *time.Time  `json:"endDate,omitempty"`
 }
 
+type IncomeSummary struct {
+	Total      int                      `json:"total"`
+	Count      int                      `json:"count"`
+	ByCategory []*IncomeByCategoryGroup `json:"byCategory"`
+	ByType     []*IncomeByTypeGroup     `json:"byType"`
+}
+
 type IncomeTypeSummary struct {
 	IncomeType  IncomeType `json:"incomeType"`
 	TotalAmount int        `json:"totalAmount"`
 	IncomeCount int        `json:"incomeCount"`
+}
+
+type IncomesWithSummary struct {
+	Items   []*Income      `json:"items"`
+	Summary *IncomeSummary `json:"summary"`
 }
 
 type Installment struct {

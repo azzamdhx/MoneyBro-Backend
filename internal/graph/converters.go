@@ -435,3 +435,97 @@ func actualPaymentsReportToModel(report *services.ActualPaymentsReport) *model.A
 		TotalPayments:    float64(report.TotalPayments),
 	}
 }
+
+func calculateExpenseSummary(expenses []models.Expense) *model.ExpenseSummary {
+	var total int64
+	count := len(expenses)
+	categoryMap := make(map[string]*model.ExpenseByCategoryGroup)
+
+	for _, exp := range expenses {
+		total += exp.Total()
+
+		// Group by category
+		if exp.Category != nil {
+			catID := exp.Category.ID.String()
+			if group, exists := categoryMap[catID]; exists {
+				group.TotalAmount += int(exp.Total())
+				group.Count++
+			} else {
+				categoryMap[catID] = &model.ExpenseByCategoryGroup{
+					Category:    categoryToModel(exp.Category),
+					TotalAmount: int(exp.Total()),
+					Count:       1,
+				}
+			}
+		}
+	}
+
+	// Convert map to slice
+	byCategory := make([]*model.ExpenseByCategoryGroup, 0, len(categoryMap))
+	for _, group := range categoryMap {
+		byCategory = append(byCategory, group)
+	}
+
+	return &model.ExpenseSummary{
+		Total:      int(total),
+		Count:      count,
+		ByCategory: byCategory,
+	}
+}
+
+func calculateIncomeSummary(incomes []models.Income) *model.IncomeSummary {
+	var total int64
+	count := len(incomes)
+	categoryMap := make(map[string]*model.IncomeByCategoryGroup)
+	typeMap := make(map[model.IncomeType]*model.IncomeByTypeGroup)
+
+	for _, inc := range incomes {
+		total += inc.Amount
+
+		// Group by category
+		if inc.Category != nil {
+			catID := inc.Category.ID.String()
+			if group, exists := categoryMap[catID]; exists {
+				group.TotalAmount += int(inc.Amount)
+				group.Count++
+			} else {
+				categoryMap[catID] = &model.IncomeByCategoryGroup{
+					Category:    incomeCategoryToModel(inc.Category),
+					TotalAmount: int(inc.Amount),
+					Count:       1,
+				}
+			}
+		}
+
+		// Group by type
+		incomeType := model.IncomeType(inc.IncomeType)
+		if group, exists := typeMap[incomeType]; exists {
+			group.TotalAmount += int(inc.Amount)
+			group.Count++
+		} else {
+			typeMap[incomeType] = &model.IncomeByTypeGroup{
+				IncomeType:  incomeType,
+				TotalAmount: int(inc.Amount),
+				Count:       1,
+			}
+		}
+	}
+
+	// Convert maps to slices
+	byCategory := make([]*model.IncomeByCategoryGroup, 0, len(categoryMap))
+	for _, group := range categoryMap {
+		byCategory = append(byCategory, group)
+	}
+
+	byType := make([]*model.IncomeByTypeGroup, 0, len(typeMap))
+	for _, group := range typeMap {
+		byType = append(byType, group)
+	}
+
+	return &model.IncomeSummary{
+		Total:      int(total),
+		Count:      count,
+		ByCategory: byCategory,
+		ByType:     byType,
+	}
+}
