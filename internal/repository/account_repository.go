@@ -37,6 +37,12 @@ func (r *accountRepository) GetByUserIDAndType(userID uuid.UUID, accountType mod
 	return accounts, err
 }
 
+func (r *accountRepository) GetByUserIDAndTypeAndReferenceType(userID uuid.UUID, accountType models.AccountType, referenceType string) ([]models.Account, error) {
+	var accounts []models.Account
+	err := r.db.Where("user_id = ? AND account_type = ? AND reference_type = ?", userID, accountType, referenceType).Order("name").Find(&accounts).Error
+	return accounts, err
+}
+
 func (r *accountRepository) GetDefaultByUserID(userID uuid.UUID) (*models.Account, error) {
 	var account models.Account
 	err := r.db.Where("user_id = ? AND is_default = ?", userID, true).First(&account).Error

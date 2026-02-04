@@ -361,10 +361,13 @@ func migrateInstallmentPayments(db *gorm.DB) error {
 			continue
 		}
 
+		// Calculate period date based on installment start_date + (payment_number - 1) months
+		periodDate := payment.Installment.StartDate.AddDate(0, payment.PaymentNumber-1, 0)
+
 		tx := models.Transaction{
 			ID:              uuid.New(),
 			UserID:          payment.Installment.UserID,
-			TransactionDate: payment.PaidAt,
+			TransactionDate: periodDate,
 			Description:     fmt.Sprintf("Installment Payment: %s #%d", payment.Installment.Name, payment.PaymentNumber),
 			ReferenceID:     &payment.ID,
 			ReferenceType:   strPtr("installment_payment"),

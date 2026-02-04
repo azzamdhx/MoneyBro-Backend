@@ -279,3 +279,20 @@ func (s *LedgerService) GetActualPaymentsByDateRange(userID uuid.UUID, startDate
 	}
 	return total, nil
 }
+
+func (s *LedgerService) GetActualPaymentsByDateRangeAndReferenceType(userID uuid.UUID, startDate, endDate string, accountType models.AccountType, referenceType string) (int64, error) {
+	accounts, err := s.accountRepo.GetByUserIDAndTypeAndReferenceType(userID, accountType, referenceType)
+	if err != nil {
+		return 0, err
+	}
+
+	var total int64
+	for _, account := range accounts {
+		debit, _, err := s.entryRepo.SumByAccountIDAndDateRange(account.ID, startDate, endDate)
+		if err != nil {
+			return 0, err
+		}
+		total += debit
+	}
+	return total, nil
+}

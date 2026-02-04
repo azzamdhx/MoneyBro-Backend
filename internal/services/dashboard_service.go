@@ -123,20 +123,29 @@ func (s *DashboardService) GetDashboard(userID uuid.UUID) (*Dashboard, error) {
 		dashboard.TotalIncomeThisMonth += inc.Amount
 	}
 
-	// Get actual installment payments this month from ledger
-	actualInstallmentPayment, err := s.ledgerService.GetActualPaymentsByDateRange(
+	// Get actual installment payments this month from ledger (only installment reference_type)
+	actualInstallmentPayment, err := s.ledgerService.GetActualPaymentsByDateRangeAndReferenceType(
 		userID,
 		startOfMonth.Format("2006-01-02"),
 		endOfMonth.Format("2006-01-02"),
 		models.AccountTypeLiability,
+		"installment",
 	)
 	if err != nil {
 		actualInstallmentPayment = 0
 	}
 
-	// For now, we track all liability payments together
-	// In a more detailed implementation, we could separate installment vs debt payments
-	actualDebtPayment := int64(0)
+	// Get actual debt payments this month from ledger (only debt reference_type)
+	actualDebtPayment, err := s.ledgerService.GetActualPaymentsByDateRangeAndReferenceType(
+		userID,
+		startOfMonth.Format("2006-01-02"),
+		endOfMonth.Format("2006-01-02"),
+		models.AccountTypeLiability,
+		"debt",
+	)
+	if err != nil {
+		actualDebtPayment = 0
+	}
 
 	// Calculate balance summary using actual payments
 	netBalance := dashboard.TotalIncomeThisMonth - dashboard.TotalExpenseThisMonth - actualInstallmentPayment - actualDebtPayment

@@ -203,9 +203,12 @@ func (s *InstallmentService) createPaymentLedgerEntry(userID uuid.UUID, installm
 		{AccountID: cashAccount.ID, Debit: 0, Credit: payment.Amount},
 	}
 
+	// Calculate period date based on installment start_date + (payment_number - 1) months
+	periodDate := installment.StartDate.AddDate(0, payment.PaymentNumber-1, 0)
+
 	_, err = s.ledgerService.CreateJournalEntry(
 		userID,
-		payment.PaidAt,
+		periodDate,
 		"Installment Payment: "+installment.Name,
 		entries,
 		&payment.ID,

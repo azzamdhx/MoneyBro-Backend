@@ -181,6 +181,7 @@ type AccountRepository interface {
 	GetByID(id uuid.UUID) (*models.Account, error)
 	GetByUserID(userID uuid.UUID) ([]models.Account, error)
 	GetByUserIDAndType(userID uuid.UUID, accountType models.AccountType) ([]models.Account, error)
+	GetByUserIDAndTypeAndReferenceType(userID uuid.UUID, accountType models.AccountType, referenceType string) ([]models.Account, error)
 	GetDefaultByUserID(userID uuid.UUID) (*models.Account, error)
 	GetByReference(referenceID uuid.UUID, referenceType string) (*models.Account, error)
 	Update(account *models.Account) error
