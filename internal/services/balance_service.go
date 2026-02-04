@@ -161,20 +161,31 @@ func (s *BalanceService) GetBalance(userID uuid.UUID, filter BalanceFilterInput)
 		report.Expense.ByCategory = append(report.Expense.ByCategory, *summary)
 	}
 
-	// Get actual liability payments from ledger for the period
-	actualLiabilityPayments, err := s.ledgerService.GetActualPaymentsByDateRange(
+	// Get installment payments from ledger for the period
+	installmentPayments, err := s.ledgerService.GetActualPaymentsByDateRangeAndReferenceType(
 		userID,
 		startDate.Format("2006-01-02"),
 		endDate.Format("2006-01-02"),
 		models.AccountTypeLiability,
+		"installment_payment",
 	)
 	if err != nil {
-		actualLiabilityPayments = 0
+		installmentPayments = 0
 	}
+	report.Installment.Total = installmentPayments
 
-	// For now, we track all liability payments together
-	report.Installment.Total = actualLiabilityPayments
-	report.Debt.Total = 0
+	// Get debt payments from ledger for the period
+	debtPayments, err := s.ledgerService.GetActualPaymentsByDateRangeAndReferenceType(
+		userID,
+		startDate.Format("2006-01-02"),
+		endDate.Format("2006-01-02"),
+		models.AccountTypeLiability,
+		"debt_payment",
+	)
+	if err != nil {
+		debtPayments = 0
+	}
+	report.Debt.Total = debtPayments
 
 	// Get counts from active installments and debts
 	installmentActiveStatus := models.InstallmentStatusActive
