@@ -15,19 +15,13 @@ type EmailService struct {
 	client       *resend.Client
 	fromEmail    string
 	templatesDir string
-	logoData     []byte
 }
 
 func NewEmailService(apiKey, templatesDir string) *EmailService {
-	// Load logo
-	logoPath := filepath.Join(templatesDir, "primary-logo.png")
-	logoData, _ := os.ReadFile(logoPath)
-
 	return &EmailService{
 		client:       resend.NewClient(apiKey),
 		fromEmail:    "MoneyBro <noreply@moneybro-noreply.idramaflix.com>",
 		templatesDir: templatesDir,
-		logoData:     logoData,
 	}
 }
 
@@ -38,25 +32,12 @@ type EmailParams struct {
 }
 
 func (s *EmailService) Send(ctx context.Context, params EmailParams) error {
-	req := &resend.SendEmailRequest{
+	_, err := s.client.Emails.SendWithContext(ctx, &resend.SendEmailRequest{
 		From:    s.fromEmail,
 		To:      []string{params.To},
 		Subject: params.Subject,
 		Html:    params.HTML,
-	}
-
-	// Add logo as inline attachment if available
-	if len(s.logoData) > 0 {
-		req.Attachments = []*resend.Attachment{
-			{
-				Filename:  "logo.png",
-				Content:   s.logoData,
-				ContentId: "logo",
-			},
-		}
-	}
-
-	_, err := s.client.Emails.SendWithContext(ctx, req)
+	})
 	return err
 }
 
