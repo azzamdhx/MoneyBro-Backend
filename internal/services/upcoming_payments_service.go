@@ -61,7 +61,7 @@ func (s *UpcomingPaymentsService) GetUpcomingPayments(userID uuid.UUID, month, y
 
 	// Filter installments that have payments due in the specified month
 	for _, inst := range installments {
-		if isDueInMonth(inst.DueDay, month, year, inst.StartDate) {
+		if isDueInMonth(inst.DueDay, month, year, inst.StartDate, inst.Tenor) {
 			dueDate := calculateDueDate(inst.DueDay, month, year)
 
 			payment := UpcomingInstallmentPayment{
@@ -116,15 +116,23 @@ func (s *UpcomingPaymentsService) GetUpcomingPayments(userID uuid.UUID, month, y
 }
 
 // isDueInMonth checks if an installment is due in the specified month
-func isDueInMonth(dueDay, month, year int, startDate time.Time) bool {
-	// Check if the installment has started by the target month
+func isDueInMonth(dueDay, month, year int, startDate time.Time, tenor int) bool {
 	targetMonth := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
+
+	// Check if the installment has started by the target month
 	if startDate.After(targetMonth.AddDate(0, 1, -1)) {
 		return false
 	}
 
 	// If startDate is in the future relative to target month, not due yet
 	if startDate.Year() > year || (startDate.Year() == year && int(startDate.Month()) > month) {
+		return false
+	}
+
+	// Check if the installment has ended before the target month
+	// End month is startDate + (tenor - 1) months (since first payment is in start month)
+	endDate := time.Date(startDate.Year(), startDate.Month(), 1, 0, 0, 0, 0, time.UTC).AddDate(0, tenor, 0)
+	if targetMonth.After(endDate) || targetMonth.Equal(endDate) {
 		return false
 	}
 

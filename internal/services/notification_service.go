@@ -74,6 +74,11 @@ func (s *NotificationService) sendInstallmentRemindersForUser(ctx context.Contex
 				continue
 			}
 
+			// Check if the installment is still within its payment period
+			if !isInstallmentDueInMonth(inst.StartDate, inst.Tenor, int(now.Month()), now.Year()) {
+				continue
+			}
+
 			exists, err := s.repos.NotificationLog.ExistsForToday(inst.UserID, inst.ID, models.NotificationTypeInstallmentReminder)
 			if err != nil {
 				log.Printf("Error checking notification log: %v", err)
@@ -153,4 +158,28 @@ func (s *NotificationService) sendDebtRemindersForUser(ctx context.Context, user
 			log.Printf("Sent debt reminder to %s for %s (due in %d days)", user.Email, debt.PersonName, daysAhead)
 		}
 	}
+}
+
+// isInstallmentDueInMonth checks if an installment has a payment due in the specified month
+func isInstallmentDueInMonth(startDate time.Time, tenor int, month int, year int) bool {
+	targetMonth := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
+
+	// Check if the installment has started by the target month
+	if startDate.After(targetMonth.AddDate(0, 1, -1)) {
+		return false
+	}
+
+	// If startDate is in the future relative to target month, not due yet
+	if startDate.Year() > year || (startDate.Year() == year && int(startDate.Month()) > month) {
+		return false
+	}
+
+	// Check if the installment has ended before the target month
+	// End month is startDate + (tenor - 1) months (since first payment is in start month)
+	endDate := time.Date(startDate.Year(), startDate.Month(), 1, 0, 0, 0, 0, time.UTC).AddDate(0, tenor, 0)
+	if targetMonth.After(endDate) || targetMonth.Equal(endDate) {
+		return false
+	}
+
+	return true
 }
