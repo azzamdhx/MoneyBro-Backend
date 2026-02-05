@@ -49,7 +49,7 @@ func (s *CategoryService) GetByID(id uuid.UUID) (*models.Category, error) {
 }
 
 func (s *CategoryService) GetByUserID(userID uuid.UUID) ([]models.Category, error) {
-	return s.categoryRepo.GetByUserID(userID)
+	return s.categoryRepo.GetByUserIDWithStats(userID)
 }
 
 func (s *CategoryService) Update(id uuid.UUID, name string) (*models.Category, error) {
@@ -72,5 +72,9 @@ func (s *CategoryService) Update(id uuid.UUID, name string) (*models.Category, e
 }
 
 func (s *CategoryService) Delete(id uuid.UUID) error {
+	// Delete linked account first
+	if err := s.accountService.DeleteAccountByReference(id, "category"); err != nil {
+		return err
+	}
 	return s.categoryRepo.Delete(id)
 }

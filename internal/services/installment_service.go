@@ -126,10 +126,22 @@ func (s *InstallmentService) Update(id uuid.UUID, input CreateInstallmentInput, 
 }
 
 func (s *InstallmentService) Delete(id uuid.UUID) error {
+	// Get installment with payments to cleanup transactions
+	installment, err := s.installmentRepo.GetByID(id)
+	if err != nil {
+		return err
+	}
+
+	// Delete all payment transactions first (before CASCADE deletes payments)
+	for _, payment := range installment.Payments {
+		_ = s.ledgerService.DeleteByReference(payment.ID, "installment_payment")
+	}
+
 	// Delete linked account
 	if err := s.accountService.DeleteAccountByReference(id, "installment"); err != nil {
 		return err
 	}
+
 	return s.installmentRepo.Delete(id)
 }
 

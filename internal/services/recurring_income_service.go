@@ -12,18 +12,18 @@ import (
 
 type RecurringIncomeService struct {
 	recurringIncomeRepo repository.RecurringIncomeRepository
-	incomeRepo          repository.IncomeRepository
+	incomeService       *IncomeService
 	incomeCategoryRepo  repository.IncomeCategoryRepository
 }
 
 func NewRecurringIncomeService(
 	recurringIncomeRepo repository.RecurringIncomeRepository,
-	incomeRepo repository.IncomeRepository,
+	incomeService *IncomeService,
 	incomeCategoryRepo repository.IncomeCategoryRepository,
 ) *RecurringIncomeService {
 	return &RecurringIncomeService{
 		recurringIncomeRepo: recurringIncomeRepo,
-		incomeRepo:          incomeRepo,
+		incomeService:       incomeService,
 		incomeCategoryRepo:  incomeCategoryRepo,
 	}
 }
@@ -158,26 +158,16 @@ func (s *RecurringIncomeService) CreateIncomeFromRecurring(userID uuid.UUID, rec
 		return nil, errors.New("recurring income not found")
 	}
 
-	date := time.Now()
-	if incomeDate != nil {
-		date = *incomeDate
-	}
-
-	income := &models.Income{
-		ID:          uuid.New(),
-		UserID:      userID,
+	// Use IncomeService.Create() to ensure ledger entry is created
+	input := CreateIncomeInput{
 		CategoryID:  recurring.CategoryID,
 		SourceName:  recurring.SourceName,
 		Amount:      recurring.Amount,
 		IncomeType:  recurring.IncomeType,
-		IncomeDate:  date,
+		IncomeDate:  incomeDate,
 		IsRecurring: true,
 		Notes:       recurring.Notes,
 	}
 
-	if err := s.incomeRepo.Create(income); err != nil {
-		return nil, err
-	}
-
-	return s.incomeRepo.GetByID(income.ID)
+	return s.incomeService.Create(userID, input)
 }

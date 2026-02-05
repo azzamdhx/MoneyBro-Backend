@@ -57,7 +57,18 @@ func (r *userRepository) Delete(id uuid.UUID) error {
 func (r *userRepository) DeleteAllUserData(userID uuid.UUID) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		// Delete in order to respect foreign key constraints
-		// First delete payment records
+
+		// First delete transaction_entries (references transactions and accounts)
+		if err := tx.Exec("DELETE FROM transaction_entries WHERE transaction_id IN (SELECT id FROM transactions WHERE user_id = ?)", userID).Error; err != nil {
+			return err
+		}
+
+		// Delete transactions (audit trail)
+		if err := tx.Exec("DELETE FROM transactions WHERE user_id = ?", userID).Error; err != nil {
+			return err
+		}
+
+		// Delete payment records
 		if err := tx.Exec("DELETE FROM installment_payments WHERE installment_id IN (SELECT id FROM installments WHERE user_id = ?)", userID).Error; err != nil {
 			return err
 		}
@@ -88,6 +99,14 @@ func (r *userRepository) DeleteAllUserData(userID uuid.UUID) error {
 			return err
 		}
 		if err := tx.Exec("DELETE FROM password_reset_tokens WHERE user_id = ?", userID).Error; err != nil {
+			return err
+		}
+		if err := tx.Exec("DELETE FROM two_fa_codes WHERE user_id = ?", userID).Error; err != nil {
+			return err
+		}
+
+		// Delete accounts (ledger accounts)
+		if err := tx.Exec("DELETE FROM accounts WHERE user_id = ?", userID).Error; err != nil {
 			return err
 		}
 

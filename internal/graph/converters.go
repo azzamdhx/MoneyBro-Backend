@@ -22,9 +22,11 @@ func userToModel(u *models.User) *model.User {
 
 func categoryToModel(c *models.Category) *model.Category {
 	return &model.Category{
-		ID:        c.ID,
-		Name:      c.Name,
-		CreatedAt: c.CreatedAt,
+		ID:           c.ID,
+		Name:         c.Name,
+		CreatedAt:    c.CreatedAt,
+		ExpenseCount: c.ExpenseCount,
+		TotalSpent:   int(c.TotalSpent),
 	}
 }
 

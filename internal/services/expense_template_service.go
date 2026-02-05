@@ -11,20 +11,20 @@ import (
 )
 
 type ExpenseTemplateService struct {
-	templateRepo repository.ExpenseTemplateRepository
-	expenseRepo  repository.ExpenseRepository
-	categoryRepo repository.CategoryRepository
+	templateRepo   repository.ExpenseTemplateRepository
+	expenseService *ExpenseService
+	categoryRepo   repository.CategoryRepository
 }
 
 func NewExpenseTemplateService(
 	templateRepo repository.ExpenseTemplateRepository,
-	expenseRepo repository.ExpenseRepository,
+	expenseService *ExpenseService,
 	categoryRepo repository.CategoryRepository,
 ) *ExpenseTemplateService {
 	return &ExpenseTemplateService{
-		templateRepo: templateRepo,
-		expenseRepo:  expenseRepo,
-		categoryRepo: categoryRepo,
+		templateRepo:   templateRepo,
+		expenseService: expenseService,
+		categoryRepo:   categoryRepo,
 	}
 }
 
@@ -111,9 +111,8 @@ func (s *ExpenseTemplateService) CreateExpenseFromTemplate(userID uuid.UUID, tem
 		return nil, errors.New("template not found")
 	}
 
-	expense := &models.Expense{
-		ID:          uuid.New(),
-		UserID:      userID,
+	// Use ExpenseService.Create() to ensure ledger entry is created
+	input := CreateExpenseInput{
 		CategoryID:  template.CategoryID,
 		ItemName:    template.ItemName,
 		UnitPrice:   template.UnitPrice,
@@ -122,9 +121,5 @@ func (s *ExpenseTemplateService) CreateExpenseFromTemplate(userID uuid.UUID, tem
 		ExpenseDate: expenseDate,
 	}
 
-	if err := s.expenseRepo.Create(expense); err != nil {
-		return nil, err
-	}
-
-	return s.expenseRepo.GetByID(expense.ID)
+	return s.expenseService.Create(userID, input)
 }

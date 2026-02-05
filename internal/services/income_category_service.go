@@ -72,5 +72,9 @@ func (s *IncomeCategoryService) Update(id uuid.UUID, name string) (*models.Incom
 }
 
 func (s *IncomeCategoryService) Delete(id uuid.UUID) error {
+	// Delete linked account first
+	if err := s.accountService.DeleteAccountByReference(id, "income_category"); err != nil {
+		return err
+	}
 	return s.incomeCategoryRepo.Delete(id)
 }

@@ -143,10 +143,22 @@ func (s *DebtService) Update(id uuid.UUID, input CreateDebtInput, status *models
 }
 
 func (s *DebtService) Delete(id uuid.UUID) error {
+	// Get debt with payments to cleanup transactions
+	debt, err := s.debtRepo.GetByID(id)
+	if err != nil {
+		return err
+	}
+
+	// Delete all payment transactions first (before CASCADE deletes payments)
+	for _, payment := range debt.Payments {
+		_ = s.ledgerService.DeleteByReference(payment.ID, "debt_payment")
+	}
+
 	// Delete linked account
 	if err := s.accountService.DeleteAccountByReference(id, "debt"); err != nil {
 		return err
 	}
+
 	return s.debtRepo.Delete(id)
 }
 

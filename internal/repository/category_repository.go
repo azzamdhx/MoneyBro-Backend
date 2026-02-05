@@ -34,6 +34,21 @@ func (r *categoryRepository) GetByUserID(userID uuid.UUID) ([]models.Category, e
 	return categories, err
 }
 
+func (r *categoryRepository) GetByUserIDWithStats(userID uuid.UUID) ([]models.Category, error) {
+	var categories []models.Category
+	err := r.db.Raw(`
+		SELECT c.*, 
+			   COUNT(e.id) as expense_count, 
+			   COALESCE(SUM(e.unit_price * e.quantity), 0) as total_spent
+		FROM categories c
+		LEFT JOIN expenses e ON e.category_id = c.id
+		WHERE c.user_id = ?
+		GROUP BY c.id
+		ORDER BY c.name ASC
+	`, userID).Scan(&categories).Error
+	return categories, err
+}
+
 func (r *categoryRepository) Update(category *models.Category) error {
 	return r.db.Save(category).Error
 }

@@ -56,6 +56,16 @@ func (r *expenseRepository) GetByUserIDAndDateRange(userID uuid.UUID, startDate,
 	return expenses, err
 }
 
+func (r *expenseRepository) GetRecentByUserID(userID uuid.UUID, limit int) ([]models.Expense, error) {
+	var expenses []models.Expense
+	err := r.db.Preload("Category").
+		Where("user_id = ?", userID).
+		Order("created_at DESC").
+		Limit(limit).
+		Find(&expenses).Error
+	return expenses, err
+}
+
 func (r *expenseRepository) Update(expense *models.Expense) error {
 	return r.db.Save(expense).Error
 }

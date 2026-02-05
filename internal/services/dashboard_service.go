@@ -184,15 +184,11 @@ func (s *DashboardService) GetDashboard(userID uuid.UUID) (*Dashboard, error) {
 		}
 	}
 
-	allExpenses, err := s.repos.Expense.GetByUserID(userID, nil)
+	recentExpenses, err := s.repos.Expense.GetRecentByUserID(userID, 10)
 	if err != nil {
 		return nil, err
 	}
-	limit := 10
-	if len(allExpenses) < limit {
-		limit = len(allExpenses)
-	}
-	dashboard.RecentExpenses = allExpenses[:limit]
+	dashboard.RecentExpenses = recentExpenses
 
 	return dashboard, nil
 }

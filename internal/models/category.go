@@ -13,6 +13,10 @@ type Category struct {
 	CreatedAt time.Time `gorm:"default:now()" json:"created_at"`
 
 	User *User `gorm:"foreignKey:UserID" json:"user,omitempty"`
+
+	// Computed fields (not stored in DB)
+	ExpenseCount int   `gorm:"-" json:"expense_count"`
+	TotalSpent   int64 `gorm:"-" json:"total_spent"`
 }
 
 func (Category) TableName() string {

@@ -63,6 +63,7 @@ type CategoryRepository interface {
 	Create(category *models.Category) error
 	GetByID(id uuid.UUID) (*models.Category, error)
 	GetByUserID(userID uuid.UUID) ([]models.Category, error)
+	GetByUserIDWithStats(userID uuid.UUID) ([]models.Category, error)
 	Update(category *models.Category) error
 	Delete(id uuid.UUID) error
 }
@@ -72,6 +73,7 @@ type ExpenseRepository interface {
 	GetByID(id uuid.UUID) (*models.Expense, error)
 	GetByUserID(userID uuid.UUID, filter *ExpenseFilter) ([]models.Expense, error)
 	GetByUserIDAndDateRange(userID uuid.UUID, startDate, endDate string) ([]models.Expense, error)
+	GetRecentByUserID(userID uuid.UUID, limit int) ([]models.Expense, error)
 	Update(expense *models.Expense) error
 	Delete(id uuid.UUID) error
 }
