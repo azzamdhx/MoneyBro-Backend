@@ -8,44 +8,44 @@ import (
 )
 
 type Repositories struct {
-	User               UserRepository
-	Category           CategoryRepository
-	Expense            ExpenseRepository
-	ExpenseTemplate    ExpenseTemplateRepository
-	Installment        InstallmentRepository
-	InstallmentPayment InstallmentPaymentRepository
-	Debt               DebtRepository
-	DebtPayment        DebtPaymentRepository
-	NotificationLog    NotificationLogRepository
-	IncomeCategory     IncomeCategoryRepository
-	Income             IncomeRepository
-	RecurringIncome    RecurringIncomeRepository
-	PasswordResetToken PasswordResetTokenRepository
-	TwoFACode          TwoFACodeRepository
-	Account            AccountRepository
-	Transaction        TransactionRepository
-	TransactionEntry   TransactionEntryRepository
+	User                 UserRepository
+	Category             CategoryRepository
+	Expense              ExpenseRepository
+	ExpenseTemplateGroup ExpenseTemplateGroupRepository
+	Installment          InstallmentRepository
+	InstallmentPayment   InstallmentPaymentRepository
+	Debt                 DebtRepository
+	DebtPayment          DebtPaymentRepository
+	NotificationLog      NotificationLogRepository
+	IncomeCategory       IncomeCategoryRepository
+	Income               IncomeRepository
+	RecurringIncome      RecurringIncomeRepository
+	PasswordResetToken   PasswordResetTokenRepository
+	TwoFACode            TwoFACodeRepository
+	Account              AccountRepository
+	Transaction          TransactionRepository
+	TransactionEntry     TransactionEntryRepository
 }
 
 func NewRepositories(db *gorm.DB) *Repositories {
 	return &Repositories{
-		User:               NewUserRepository(db),
-		Category:           NewCategoryRepository(db),
-		Expense:            NewExpenseRepository(db),
-		ExpenseTemplate:    NewExpenseTemplateRepository(db),
-		Installment:        NewInstallmentRepository(db),
-		InstallmentPayment: NewInstallmentPaymentRepository(db),
-		Debt:               NewDebtRepository(db),
-		DebtPayment:        NewDebtPaymentRepository(db),
-		NotificationLog:    NewNotificationLogRepository(db),
-		IncomeCategory:     NewIncomeCategoryRepository(db),
-		Income:             NewIncomeRepository(db),
-		RecurringIncome:    NewRecurringIncomeRepository(db),
-		PasswordResetToken: NewPasswordResetTokenRepository(db),
-		TwoFACode:          NewTwoFACodeRepository(db),
-		Account:            NewAccountRepository(db),
-		Transaction:        NewTransactionRepository(db),
-		TransactionEntry:   NewTransactionEntryRepository(db),
+		User:                 NewUserRepository(db),
+		Category:             NewCategoryRepository(db),
+		Expense:              NewExpenseRepository(db),
+		ExpenseTemplateGroup: NewExpenseTemplateGroupRepository(db),
+		Installment:          NewInstallmentRepository(db),
+		InstallmentPayment:   NewInstallmentPaymentRepository(db),
+		Debt:                 NewDebtRepository(db),
+		DebtPayment:          NewDebtPaymentRepository(db),
+		NotificationLog:      NewNotificationLogRepository(db),
+		IncomeCategory:       NewIncomeCategoryRepository(db),
+		Income:               NewIncomeRepository(db),
+		RecurringIncome:      NewRecurringIncomeRepository(db),
+		PasswordResetToken:   NewPasswordResetTokenRepository(db),
+		TwoFACode:            NewTwoFACodeRepository(db),
+		Account:              NewAccountRepository(db),
+		Transaction:          NewTransactionRepository(db),
+		TransactionEntry:     NewTransactionEntryRepository(db),
 	}
 }
 
@@ -84,12 +84,16 @@ type ExpenseFilter struct {
 	EndDate    *string
 }
 
-type ExpenseTemplateRepository interface {
-	Create(template *models.ExpenseTemplate) error
-	GetByID(id uuid.UUID) (*models.ExpenseTemplate, error)
-	GetByUserID(userID uuid.UUID) ([]models.ExpenseTemplate, error)
-	Update(template *models.ExpenseTemplate) error
+type ExpenseTemplateGroupRepository interface {
+	Create(group *models.ExpenseTemplateGroup) error
+	GetByID(id uuid.UUID) (*models.ExpenseTemplateGroup, error)
+	GetByUserID(userID uuid.UUID) ([]models.ExpenseTemplateGroup, error)
+	Update(group *models.ExpenseTemplateGroup) error
 	Delete(id uuid.UUID) error
+	AddItem(item *models.ExpenseTemplateItem) error
+	UpdateItem(item *models.ExpenseTemplateItem) error
+	DeleteItem(itemID uuid.UUID) error
+	GetItemByID(itemID uuid.UUID) (*models.ExpenseTemplateItem, error)
 }
 
 type InstallmentRepository interface {

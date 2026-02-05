@@ -11,8 +11,8 @@ type Query {
   
   expenses(filter: ExpenseFilter): ExpensesWithSummary!
   expense(id: UUID!): Expense
-  expenseTemplates: [ExpenseTemplate!]!
-  expenseTemplate(id: UUID!): ExpenseTemplate
+  expenseTemplateGroups: [ExpenseTemplateGroup!]!
+  expenseTemplateGroup(id: UUID!): ExpenseTemplateGroup
   
   installments(status: InstallmentStatus): [Installment!]!
   installment(id: UUID!): Installment
@@ -61,10 +61,13 @@ type Mutation {
   updateExpense(id: UUID!, input: UpdateExpenseInput!): Expense!
   deleteExpense(id: UUID!): Boolean!
   
-  createExpenseTemplate(input: CreateExpenseTemplateInput!): ExpenseTemplate!
-  updateExpenseTemplate(id: UUID!, input: UpdateExpenseTemplateInput!): ExpenseTemplate!
-  deleteExpenseTemplate(id: UUID!): Boolean!
-  createExpenseFromTemplate(templateId: UUID!, expenseDate: Date): Expense!
+  createExpenseTemplateGroup(input: CreateExpenseTemplateGroupInput!): ExpenseTemplateGroup!
+  updateExpenseTemplateGroup(id: UUID!, input: UpdateExpenseTemplateGroupInput!): ExpenseTemplateGroup!
+  deleteExpenseTemplateGroup(id: UUID!): Boolean!
+  addExpenseTemplateItem(groupId: UUID!, input: CreateExpenseTemplateItemInput!): ExpenseTemplateGroup!
+  updateExpenseTemplateItem(itemId: UUID!, input: UpdateExpenseTemplateItemInput!): ExpenseTemplateItem!
+  deleteExpenseTemplateItem(itemId: UUID!): Boolean!
+  createExpensesFromTemplateGroup(groupId: UUID!, expenseDate: Date): [Expense!]!
   
   createInstallment(input: CreateInstallmentInput!): Installment!
   updateInstallment(id: UUID!, input: UpdateInstallmentInput!): Installment!

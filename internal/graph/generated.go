@@ -203,16 +203,24 @@ type ComplexityRoot struct {
 		Total      func(childComplexity int) int
 	}
 
-	ExpenseTemplate struct {
-		Category     func(childComplexity int) int
+	ExpenseTemplateGroup struct {
 		CreatedAt    func(childComplexity int) int
 		ID           func(childComplexity int) int
-		ItemName     func(childComplexity int) int
+		Items        func(childComplexity int) int
+		Name         func(childComplexity int) int
 		Notes        func(childComplexity int) int
-		Quantity     func(childComplexity int) int
 		RecurringDay func(childComplexity int) int
 		Total        func(childComplexity int) int
-		UnitPrice    func(childComplexity int) int
+	}
+
+	ExpenseTemplateItem struct {
+		Category  func(childComplexity int) int
+		CreatedAt func(childComplexity int) int
+		ID        func(childComplexity int) int
+		ItemName  func(childComplexity int) int
+		Quantity  func(childComplexity int) int
+		Total     func(childComplexity int) int
+		UnitPrice func(childComplexity int) int
 	}
 
 	ExpensesWithSummary struct {
@@ -322,50 +330,53 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateCategory             func(childComplexity int, input model.CreateCategoryInput) int
-		CreateDebt                 func(childComplexity int, input model.CreateDebtInput) int
-		CreateExpense              func(childComplexity int, input model.CreateExpenseInput) int
-		CreateExpenseFromTemplate  func(childComplexity int, templateID uuid.UUID, expenseDate *time.Time) int
-		CreateExpenseTemplate      func(childComplexity int, input model.CreateExpenseTemplateInput) int
-		CreateIncome               func(childComplexity int, input model.CreateIncomeInput) int
-		CreateIncomeCategory       func(childComplexity int, input model.CreateIncomeCategoryInput) int
-		CreateIncomeFromRecurring  func(childComplexity int, recurringID uuid.UUID, incomeDate *time.Time) int
-		CreateInstallment          func(childComplexity int, input model.CreateInstallmentInput) int
-		CreateRecurringIncome      func(childComplexity int, input model.CreateRecurringIncomeInput) int
-		CreateWalletAccount        func(childComplexity int, input model.CreateAccountInput) int
-		DeleteAccount              func(childComplexity int, input model.DeleteAccountInput) int
-		DeleteCategory             func(childComplexity int, id uuid.UUID) int
-		DeleteDebt                 func(childComplexity int, id uuid.UUID) int
-		DeleteExpense              func(childComplexity int, id uuid.UUID) int
-		DeleteExpenseTemplate      func(childComplexity int, id uuid.UUID) int
-		DeleteIncome               func(childComplexity int, id uuid.UUID) int
-		DeleteIncomeCategory       func(childComplexity int, id uuid.UUID) int
-		DeleteInstallment          func(childComplexity int, id uuid.UUID) int
-		DeleteRecurringIncome      func(childComplexity int, id uuid.UUID) int
-		DeleteWalletAccount        func(childComplexity int, id uuid.UUID) int
-		Disable2fa                 func(childComplexity int, password string) int
-		Enable2fa                  func(childComplexity int, password string) int
-		ForgotPassword             func(childComplexity int, input model.ForgotPasswordInput) int
-		Login                      func(childComplexity int, input model.LoginInput) int
-		MarkDebtComplete           func(childComplexity int, id uuid.UUID) int
-		MarkInstallmentComplete    func(childComplexity int, id uuid.UUID) int
-		RecordDebtPayment          func(childComplexity int, input model.RecordDebtPaymentInput) int
-		RecordInstallmentPayment   func(childComplexity int, input model.RecordInstallmentPaymentInput) int
-		Register                   func(childComplexity int, input model.RegisterInput) int
-		Resend2FACode              func(childComplexity int, tempToken string) int
-		ResetPassword              func(childComplexity int, input model.ResetPasswordInput) int
-		UpdateCategory             func(childComplexity int, id uuid.UUID, input model.UpdateCategoryInput) int
-		UpdateDebt                 func(childComplexity int, id uuid.UUID, input model.UpdateDebtInput) int
-		UpdateExpense              func(childComplexity int, id uuid.UUID, input model.UpdateExpenseInput) int
-		UpdateExpenseTemplate      func(childComplexity int, id uuid.UUID, input model.UpdateExpenseTemplateInput) int
-		UpdateIncome               func(childComplexity int, id uuid.UUID, input model.UpdateIncomeInput) int
-		UpdateIncomeCategory       func(childComplexity int, id uuid.UUID, input model.UpdateIncomeCategoryInput) int
-		UpdateInstallment          func(childComplexity int, id uuid.UUID, input model.UpdateInstallmentInput) int
-		UpdateNotificationSettings func(childComplexity int, input model.UpdateNotificationSettingsInput) int
-		UpdateProfile              func(childComplexity int, input model.UpdateProfileInput) int
-		UpdateRecurringIncome      func(childComplexity int, id uuid.UUID, input model.UpdateRecurringIncomeInput) int
-		UpdateWalletAccount        func(childComplexity int, id uuid.UUID, input model.UpdateAccountInput) int
-		Verify2fa                  func(childComplexity int, input model.Verify2FAInput) int
+		AddExpenseTemplateItem          func(childComplexity int, groupID uuid.UUID, input model.CreateExpenseTemplateItemInput) int
+		CreateCategory                  func(childComplexity int, input model.CreateCategoryInput) int
+		CreateDebt                      func(childComplexity int, input model.CreateDebtInput) int
+		CreateExpense                   func(childComplexity int, input model.CreateExpenseInput) int
+		CreateExpenseTemplateGroup      func(childComplexity int, input model.CreateExpenseTemplateGroupInput) int
+		CreateExpensesFromTemplateGroup func(childComplexity int, groupID uuid.UUID, expenseDate *time.Time) int
+		CreateIncome                    func(childComplexity int, input model.CreateIncomeInput) int
+		CreateIncomeCategory            func(childComplexity int, input model.CreateIncomeCategoryInput) int
+		CreateIncomeFromRecurring       func(childComplexity int, recurringID uuid.UUID, incomeDate *time.Time) int
+		CreateInstallment               func(childComplexity int, input model.CreateInstallmentInput) int
+		CreateRecurringIncome           func(childComplexity int, input model.CreateRecurringIncomeInput) int
+		CreateWalletAccount             func(childComplexity int, input model.CreateAccountInput) int
+		DeleteAccount                   func(childComplexity int, input model.DeleteAccountInput) int
+		DeleteCategory                  func(childComplexity int, id uuid.UUID) int
+		DeleteDebt                      func(childComplexity int, id uuid.UUID) int
+		DeleteExpense                   func(childComplexity int, id uuid.UUID) int
+		DeleteExpenseTemplateGroup      func(childComplexity int, id uuid.UUID) int
+		DeleteExpenseTemplateItem       func(childComplexity int, itemID uuid.UUID) int
+		DeleteIncome                    func(childComplexity int, id uuid.UUID) int
+		DeleteIncomeCategory            func(childComplexity int, id uuid.UUID) int
+		DeleteInstallment               func(childComplexity int, id uuid.UUID) int
+		DeleteRecurringIncome           func(childComplexity int, id uuid.UUID) int
+		DeleteWalletAccount             func(childComplexity int, id uuid.UUID) int
+		Disable2fa                      func(childComplexity int, password string) int
+		Enable2fa                       func(childComplexity int, password string) int
+		ForgotPassword                  func(childComplexity int, input model.ForgotPasswordInput) int
+		Login                           func(childComplexity int, input model.LoginInput) int
+		MarkDebtComplete                func(childComplexity int, id uuid.UUID) int
+		MarkInstallmentComplete         func(childComplexity int, id uuid.UUID) int
+		RecordDebtPayment               func(childComplexity int, input model.RecordDebtPaymentInput) int
+		RecordInstallmentPayment        func(childComplexity int, input model.RecordInstallmentPaymentInput) int
+		Register                        func(childComplexity int, input model.RegisterInput) int
+		Resend2FACode                   func(childComplexity int, tempToken string) int
+		ResetPassword                   func(childComplexity int, input model.ResetPasswordInput) int
+		UpdateCategory                  func(childComplexity int, id uuid.UUID, input model.UpdateCategoryInput) int
+		UpdateDebt                      func(childComplexity int, id uuid.UUID, input model.UpdateDebtInput) int
+		UpdateExpense                   func(childComplexity int, id uuid.UUID, input model.UpdateExpenseInput) int
+		UpdateExpenseTemplateGroup      func(childComplexity int, id uuid.UUID, input model.UpdateExpenseTemplateGroupInput) int
+		UpdateExpenseTemplateItem       func(childComplexity int, itemID uuid.UUID, input model.UpdateExpenseTemplateItemInput) int
+		UpdateIncome                    func(childComplexity int, id uuid.UUID, input model.UpdateIncomeInput) int
+		UpdateIncomeCategory            func(childComplexity int, id uuid.UUID, input model.UpdateIncomeCategoryInput) int
+		UpdateInstallment               func(childComplexity int, id uuid.UUID, input model.UpdateInstallmentInput) int
+		UpdateNotificationSettings      func(childComplexity int, input model.UpdateNotificationSettingsInput) int
+		UpdateProfile                   func(childComplexity int, input model.UpdateProfileInput) int
+		UpdateRecurringIncome           func(childComplexity int, id uuid.UUID, input model.UpdateRecurringIncomeInput) int
+		UpdateWalletAccount             func(childComplexity int, id uuid.UUID, input model.UpdateAccountInput) int
+		Verify2fa                       func(childComplexity int, input model.Verify2FAInput) int
 	}
 
 	NotificationLog struct {
@@ -390,8 +401,8 @@ type ComplexityRoot struct {
 		Debt                   func(childComplexity int, id uuid.UUID) int
 		Debts                  func(childComplexity int, status *model.DebtStatus) int
 		Expense                func(childComplexity int, id uuid.UUID) int
-		ExpenseTemplate        func(childComplexity int, id uuid.UUID) int
-		ExpenseTemplates       func(childComplexity int) int
+		ExpenseTemplateGroup   func(childComplexity int, id uuid.UUID) int
+		ExpenseTemplateGroups  func(childComplexity int) int
 		Expenses               func(childComplexity int, filter *model.ExpenseFilter) int
 		Income                 func(childComplexity int, id uuid.UUID) int
 		IncomeCategories       func(childComplexity int) int
@@ -500,10 +511,13 @@ type MutationResolver interface {
 	CreateExpense(ctx context.Context, input model.CreateExpenseInput) (*model.Expense, error)
 	UpdateExpense(ctx context.Context, id uuid.UUID, input model.UpdateExpenseInput) (*model.Expense, error)
 	DeleteExpense(ctx context.Context, id uuid.UUID) (bool, error)
-	CreateExpenseTemplate(ctx context.Context, input model.CreateExpenseTemplateInput) (*model.ExpenseTemplate, error)
-	UpdateExpenseTemplate(ctx context.Context, id uuid.UUID, input model.UpdateExpenseTemplateInput) (*model.ExpenseTemplate, error)
-	DeleteExpenseTemplate(ctx context.Context, id uuid.UUID) (bool, error)
-	CreateExpenseFromTemplate(ctx context.Context, templateID uuid.UUID, expenseDate *time.Time) (*model.Expense, error)
+	CreateExpenseTemplateGroup(ctx context.Context, input model.CreateExpenseTemplateGroupInput) (*model.ExpenseTemplateGroup, error)
+	UpdateExpenseTemplateGroup(ctx context.Context, id uuid.UUID, input model.UpdateExpenseTemplateGroupInput) (*model.ExpenseTemplateGroup, error)
+	DeleteExpenseTemplateGroup(ctx context.Context, id uuid.UUID) (bool, error)
+	AddExpenseTemplateItem(ctx context.Context, groupID uuid.UUID, input model.CreateExpenseTemplateItemInput) (*model.ExpenseTemplateGroup, error)
+	UpdateExpenseTemplateItem(ctx context.Context, itemID uuid.UUID, input model.UpdateExpenseTemplateItemInput) (*model.ExpenseTemplateItem, error)
+	DeleteExpenseTemplateItem(ctx context.Context, itemID uuid.UUID) (bool, error)
+	CreateExpensesFromTemplateGroup(ctx context.Context, groupID uuid.UUID, expenseDate *time.Time) ([]*model.Expense, error)
 	CreateInstallment(ctx context.Context, input model.CreateInstallmentInput) (*model.Installment, error)
 	UpdateInstallment(ctx context.Context, id uuid.UUID, input model.UpdateInstallmentInput) (*model.Installment, error)
 	DeleteInstallment(ctx context.Context, id uuid.UUID) (bool, error)
@@ -535,8 +549,8 @@ type QueryResolver interface {
 	Category(ctx context.Context, id uuid.UUID) (*model.Category, error)
 	Expenses(ctx context.Context, filter *model.ExpenseFilter) (*model.ExpensesWithSummary, error)
 	Expense(ctx context.Context, id uuid.UUID) (*model.Expense, error)
-	ExpenseTemplates(ctx context.Context) ([]*model.ExpenseTemplate, error)
-	ExpenseTemplate(ctx context.Context, id uuid.UUID) (*model.ExpenseTemplate, error)
+	ExpenseTemplateGroups(ctx context.Context) ([]*model.ExpenseTemplateGroup, error)
+	ExpenseTemplateGroup(ctx context.Context, id uuid.UUID) (*model.ExpenseTemplateGroup, error)
 	Installments(ctx context.Context, status *model.InstallmentStatus) ([]*model.Installment, error)
 	Installment(ctx context.Context, id uuid.UUID) (*model.Installment, error)
 	Debts(ctx context.Context, status *model.DebtStatus) ([]*model.Debt, error)
@@ -1213,60 +1227,91 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.ExpenseSummary.Total(childComplexity), true
 
-	case "ExpenseTemplate.category":
-		if e.complexity.ExpenseTemplate.Category == nil {
+	case "ExpenseTemplateGroup.createdAt":
+		if e.complexity.ExpenseTemplateGroup.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.ExpenseTemplate.Category(childComplexity), true
-	case "ExpenseTemplate.createdAt":
-		if e.complexity.ExpenseTemplate.CreatedAt == nil {
+		return e.complexity.ExpenseTemplateGroup.CreatedAt(childComplexity), true
+	case "ExpenseTemplateGroup.id":
+		if e.complexity.ExpenseTemplateGroup.ID == nil {
 			break
 		}
 
-		return e.complexity.ExpenseTemplate.CreatedAt(childComplexity), true
-	case "ExpenseTemplate.id":
-		if e.complexity.ExpenseTemplate.ID == nil {
+		return e.complexity.ExpenseTemplateGroup.ID(childComplexity), true
+	case "ExpenseTemplateGroup.items":
+		if e.complexity.ExpenseTemplateGroup.Items == nil {
 			break
 		}
 
-		return e.complexity.ExpenseTemplate.ID(childComplexity), true
-	case "ExpenseTemplate.itemName":
-		if e.complexity.ExpenseTemplate.ItemName == nil {
+		return e.complexity.ExpenseTemplateGroup.Items(childComplexity), true
+	case "ExpenseTemplateGroup.name":
+		if e.complexity.ExpenseTemplateGroup.Name == nil {
 			break
 		}
 
-		return e.complexity.ExpenseTemplate.ItemName(childComplexity), true
-	case "ExpenseTemplate.notes":
-		if e.complexity.ExpenseTemplate.Notes == nil {
+		return e.complexity.ExpenseTemplateGroup.Name(childComplexity), true
+	case "ExpenseTemplateGroup.notes":
+		if e.complexity.ExpenseTemplateGroup.Notes == nil {
 			break
 		}
 
-		return e.complexity.ExpenseTemplate.Notes(childComplexity), true
-	case "ExpenseTemplate.quantity":
-		if e.complexity.ExpenseTemplate.Quantity == nil {
+		return e.complexity.ExpenseTemplateGroup.Notes(childComplexity), true
+	case "ExpenseTemplateGroup.recurringDay":
+		if e.complexity.ExpenseTemplateGroup.RecurringDay == nil {
 			break
 		}
 
-		return e.complexity.ExpenseTemplate.Quantity(childComplexity), true
-	case "ExpenseTemplate.recurringDay":
-		if e.complexity.ExpenseTemplate.RecurringDay == nil {
+		return e.complexity.ExpenseTemplateGroup.RecurringDay(childComplexity), true
+	case "ExpenseTemplateGroup.total":
+		if e.complexity.ExpenseTemplateGroup.Total == nil {
 			break
 		}
 
-		return e.complexity.ExpenseTemplate.RecurringDay(childComplexity), true
-	case "ExpenseTemplate.total":
-		if e.complexity.ExpenseTemplate.Total == nil {
+		return e.complexity.ExpenseTemplateGroup.Total(childComplexity), true
+
+	case "ExpenseTemplateItem.category":
+		if e.complexity.ExpenseTemplateItem.Category == nil {
 			break
 		}
 
-		return e.complexity.ExpenseTemplate.Total(childComplexity), true
-	case "ExpenseTemplate.unitPrice":
-		if e.complexity.ExpenseTemplate.UnitPrice == nil {
+		return e.complexity.ExpenseTemplateItem.Category(childComplexity), true
+	case "ExpenseTemplateItem.createdAt":
+		if e.complexity.ExpenseTemplateItem.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.ExpenseTemplate.UnitPrice(childComplexity), true
+		return e.complexity.ExpenseTemplateItem.CreatedAt(childComplexity), true
+	case "ExpenseTemplateItem.id":
+		if e.complexity.ExpenseTemplateItem.ID == nil {
+			break
+		}
+
+		return e.complexity.ExpenseTemplateItem.ID(childComplexity), true
+	case "ExpenseTemplateItem.itemName":
+		if e.complexity.ExpenseTemplateItem.ItemName == nil {
+			break
+		}
+
+		return e.complexity.ExpenseTemplateItem.ItemName(childComplexity), true
+	case "ExpenseTemplateItem.quantity":
+		if e.complexity.ExpenseTemplateItem.Quantity == nil {
+			break
+		}
+
+		return e.complexity.ExpenseTemplateItem.Quantity(childComplexity), true
+	case "ExpenseTemplateItem.total":
+		if e.complexity.ExpenseTemplateItem.Total == nil {
+			break
+		}
+
+		return e.complexity.ExpenseTemplateItem.Total(childComplexity), true
+	case "ExpenseTemplateItem.unitPrice":
+		if e.complexity.ExpenseTemplateItem.UnitPrice == nil {
+			break
+		}
+
+		return e.complexity.ExpenseTemplateItem.UnitPrice(childComplexity), true
 
 	case "ExpensesWithSummary.items":
 		if e.complexity.ExpensesWithSummary.Items == nil {
@@ -1683,6 +1728,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.LedgerSummary.TotalLiabilities(childComplexity), true
 
+	case "Mutation.addExpenseTemplateItem":
+		if e.complexity.Mutation.AddExpenseTemplateItem == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_addExpenseTemplateItem_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AddExpenseTemplateItem(childComplexity, args["groupId"].(uuid.UUID), args["input"].(model.CreateExpenseTemplateItemInput)), true
 	case "Mutation.createCategory":
 		if e.complexity.Mutation.CreateCategory == nil {
 			break
@@ -1716,28 +1772,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.CreateExpense(childComplexity, args["input"].(model.CreateExpenseInput)), true
-	case "Mutation.createExpenseFromTemplate":
-		if e.complexity.Mutation.CreateExpenseFromTemplate == nil {
+	case "Mutation.createExpenseTemplateGroup":
+		if e.complexity.Mutation.CreateExpenseTemplateGroup == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_createExpenseFromTemplate_args(ctx, rawArgs)
+		args, err := ec.field_Mutation_createExpenseTemplateGroup_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateExpenseFromTemplate(childComplexity, args["templateId"].(uuid.UUID), args["expenseDate"].(*time.Time)), true
-	case "Mutation.createExpenseTemplate":
-		if e.complexity.Mutation.CreateExpenseTemplate == nil {
+		return e.complexity.Mutation.CreateExpenseTemplateGroup(childComplexity, args["input"].(model.CreateExpenseTemplateGroupInput)), true
+	case "Mutation.createExpensesFromTemplateGroup":
+		if e.complexity.Mutation.CreateExpensesFromTemplateGroup == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_createExpenseTemplate_args(ctx, rawArgs)
+		args, err := ec.field_Mutation_createExpensesFromTemplateGroup_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateExpenseTemplate(childComplexity, args["input"].(model.CreateExpenseTemplateInput)), true
+		return e.complexity.Mutation.CreateExpensesFromTemplateGroup(childComplexity, args["groupId"].(uuid.UUID), args["expenseDate"].(*time.Time)), true
 	case "Mutation.createIncome":
 		if e.complexity.Mutation.CreateIncome == nil {
 			break
@@ -1848,17 +1904,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.DeleteExpense(childComplexity, args["id"].(uuid.UUID)), true
-	case "Mutation.deleteExpenseTemplate":
-		if e.complexity.Mutation.DeleteExpenseTemplate == nil {
+	case "Mutation.deleteExpenseTemplateGroup":
+		if e.complexity.Mutation.DeleteExpenseTemplateGroup == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_deleteExpenseTemplate_args(ctx, rawArgs)
+		args, err := ec.field_Mutation_deleteExpenseTemplateGroup_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteExpenseTemplate(childComplexity, args["id"].(uuid.UUID)), true
+		return e.complexity.Mutation.DeleteExpenseTemplateGroup(childComplexity, args["id"].(uuid.UUID)), true
+	case "Mutation.deleteExpenseTemplateItem":
+		if e.complexity.Mutation.DeleteExpenseTemplateItem == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteExpenseTemplateItem_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteExpenseTemplateItem(childComplexity, args["itemId"].(uuid.UUID)), true
 	case "Mutation.deleteIncome":
 		if e.complexity.Mutation.DeleteIncome == nil {
 			break
@@ -2068,17 +2135,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.UpdateExpense(childComplexity, args["id"].(uuid.UUID), args["input"].(model.UpdateExpenseInput)), true
-	case "Mutation.updateExpenseTemplate":
-		if e.complexity.Mutation.UpdateExpenseTemplate == nil {
+	case "Mutation.updateExpenseTemplateGroup":
+		if e.complexity.Mutation.UpdateExpenseTemplateGroup == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_updateExpenseTemplate_args(ctx, rawArgs)
+		args, err := ec.field_Mutation_updateExpenseTemplateGroup_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateExpenseTemplate(childComplexity, args["id"].(uuid.UUID), args["input"].(model.UpdateExpenseTemplateInput)), true
+		return e.complexity.Mutation.UpdateExpenseTemplateGroup(childComplexity, args["id"].(uuid.UUID), args["input"].(model.UpdateExpenseTemplateGroupInput)), true
+	case "Mutation.updateExpenseTemplateItem":
+		if e.complexity.Mutation.UpdateExpenseTemplateItem == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateExpenseTemplateItem_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateExpenseTemplateItem(childComplexity, args["itemId"].(uuid.UUID), args["input"].(model.UpdateExpenseTemplateItemInput)), true
 	case "Mutation.updateIncome":
 		if e.complexity.Mutation.UpdateIncome == nil {
 			break
@@ -2322,23 +2400,23 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.Expense(childComplexity, args["id"].(uuid.UUID)), true
-	case "Query.expenseTemplate":
-		if e.complexity.Query.ExpenseTemplate == nil {
+	case "Query.expenseTemplateGroup":
+		if e.complexity.Query.ExpenseTemplateGroup == nil {
 			break
 		}
 
-		args, err := ec.field_Query_expenseTemplate_args(ctx, rawArgs)
+		args, err := ec.field_Query_expenseTemplateGroup_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Query.ExpenseTemplate(childComplexity, args["id"].(uuid.UUID)), true
-	case "Query.expenseTemplates":
-		if e.complexity.Query.ExpenseTemplates == nil {
+		return e.complexity.Query.ExpenseTemplateGroup(childComplexity, args["id"].(uuid.UUID)), true
+	case "Query.expenseTemplateGroups":
+		if e.complexity.Query.ExpenseTemplateGroups == nil {
 			break
 		}
 
-		return e.complexity.Query.ExpenseTemplates(childComplexity), true
+		return e.complexity.Query.ExpenseTemplateGroups(childComplexity), true
 	case "Query.expenses":
 		if e.complexity.Query.Expenses == nil {
 			break
@@ -2795,7 +2873,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCreateCategoryInput,
 		ec.unmarshalInputCreateDebtInput,
 		ec.unmarshalInputCreateExpenseInput,
-		ec.unmarshalInputCreateExpenseTemplateInput,
+		ec.unmarshalInputCreateExpenseTemplateGroupInput,
+		ec.unmarshalInputCreateExpenseTemplateItemInput,
 		ec.unmarshalInputCreateIncomeCategoryInput,
 		ec.unmarshalInputCreateIncomeInput,
 		ec.unmarshalInputCreateInstallmentInput,
@@ -2815,7 +2894,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputUpdateCategoryInput,
 		ec.unmarshalInputUpdateDebtInput,
 		ec.unmarshalInputUpdateExpenseInput,
-		ec.unmarshalInputUpdateExpenseTemplateInput,
+		ec.unmarshalInputUpdateExpenseTemplateGroupInput,
+		ec.unmarshalInputUpdateExpenseTemplateItemInput,
 		ec.unmarshalInputUpdateIncomeCategoryInput,
 		ec.unmarshalInputUpdateIncomeInput,
 		ec.unmarshalInputUpdateInstallmentInput,
@@ -2952,6 +3032,22 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // region    ***************************** args.gotpl *****************************
 
+func (ec *executionContext) field_Mutation_addExpenseTemplateItem_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "groupId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
+	if err != nil {
+		return nil, err
+	}
+	args["groupId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateExpenseTemplateItemInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCreateExpenseTemplateItemInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_createCategory_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -2974,26 +3070,10 @@ func (ec *executionContext) field_Mutation_createDebt_args(ctx context.Context, 
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_createExpenseFromTemplate_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Mutation_createExpenseTemplateGroup_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "templateId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
-	if err != nil {
-		return nil, err
-	}
-	args["templateId"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "expenseDate", ec.unmarshalODate2ᚖtimeᚐTime)
-	if err != nil {
-		return nil, err
-	}
-	args["expenseDate"] = arg1
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_createExpenseTemplate_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateExpenseTemplateInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCreateExpenseTemplateInput)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateExpenseTemplateGroupInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCreateExpenseTemplateGroupInput)
 	if err != nil {
 		return nil, err
 	}
@@ -3009,6 +3089,22 @@ func (ec *executionContext) field_Mutation_createExpense_args(ctx context.Contex
 		return nil, err
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createExpensesFromTemplateGroup_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "groupId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
+	if err != nil {
+		return nil, err
+	}
+	args["groupId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "expenseDate", ec.unmarshalODate2ᚖtimeᚐTime)
+	if err != nil {
+		return nil, err
+	}
+	args["expenseDate"] = arg1
 	return args, nil
 }
 
@@ -3116,7 +3212,7 @@ func (ec *executionContext) field_Mutation_deleteDebt_args(ctx context.Context, 
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_deleteExpenseTemplate_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Mutation_deleteExpenseTemplateGroup_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
@@ -3124,6 +3220,17 @@ func (ec *executionContext) field_Mutation_deleteExpenseTemplate_args(ctx contex
 		return nil, err
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteExpenseTemplateItem_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "itemId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
+	if err != nil {
+		return nil, err
+	}
+	args["itemId"] = arg0
 	return args, nil
 }
 
@@ -3346,7 +3453,7 @@ func (ec *executionContext) field_Mutation_updateDebt_args(ctx context.Context, 
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_updateExpenseTemplate_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Mutation_updateExpenseTemplateGroup_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
@@ -3354,7 +3461,23 @@ func (ec *executionContext) field_Mutation_updateExpenseTemplate_args(ctx contex
 		return nil, err
 	}
 	args["id"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateExpenseTemplateInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐUpdateExpenseTemplateInput)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateExpenseTemplateGroupInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐUpdateExpenseTemplateGroupInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateExpenseTemplateItem_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "itemId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
+	if err != nil {
+		return nil, err
+	}
+	args["itemId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateExpenseTemplateItemInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐUpdateExpenseTemplateItemInput)
 	if err != nil {
 		return nil, err
 	}
@@ -3590,7 +3713,7 @@ func (ec *executionContext) field_Query_debts_args(ctx context.Context, rawArgs 
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_expenseTemplate_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Query_expenseTemplateGroup_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
@@ -7088,12 +7211,12 @@ func (ec *executionContext) fieldContext_ExpenseSummary_byCategory(_ context.Con
 	return fc, nil
 }
 
-func (ec *executionContext) _ExpenseTemplate_id(ctx context.Context, field graphql.CollectedField, obj *model.ExpenseTemplate) (ret graphql.Marshaler) {
+func (ec *executionContext) _ExpenseTemplateGroup_id(ctx context.Context, field graphql.CollectedField, obj *model.ExpenseTemplateGroup) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ExpenseTemplate_id,
+		ec.fieldContext_ExpenseTemplateGroup_id,
 		func(ctx context.Context) (any, error) {
 			return obj.ID, nil
 		},
@@ -7104,9 +7227,9 @@ func (ec *executionContext) _ExpenseTemplate_id(ctx context.Context, field graph
 	)
 }
 
-func (ec *executionContext) fieldContext_ExpenseTemplate_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_ExpenseTemplateGroup_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "ExpenseTemplate",
+		Object:     "ExpenseTemplateGroup",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -7117,14 +7240,14 @@ func (ec *executionContext) fieldContext_ExpenseTemplate_id(_ context.Context, f
 	return fc, nil
 }
 
-func (ec *executionContext) _ExpenseTemplate_itemName(ctx context.Context, field graphql.CollectedField, obj *model.ExpenseTemplate) (ret graphql.Marshaler) {
+func (ec *executionContext) _ExpenseTemplateGroup_name(ctx context.Context, field graphql.CollectedField, obj *model.ExpenseTemplateGroup) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ExpenseTemplate_itemName,
+		ec.fieldContext_ExpenseTemplateGroup_name,
 		func(ctx context.Context) (any, error) {
-			return obj.ItemName, nil
+			return obj.Name, nil
 		},
 		nil,
 		ec.marshalNString2string,
@@ -7133,9 +7256,9 @@ func (ec *executionContext) _ExpenseTemplate_itemName(ctx context.Context, field
 	)
 }
 
-func (ec *executionContext) fieldContext_ExpenseTemplate_itemName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_ExpenseTemplateGroup_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "ExpenseTemplate",
+		Object:     "ExpenseTemplateGroup",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -7146,99 +7269,12 @@ func (ec *executionContext) fieldContext_ExpenseTemplate_itemName(_ context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _ExpenseTemplate_unitPrice(ctx context.Context, field graphql.CollectedField, obj *model.ExpenseTemplate) (ret graphql.Marshaler) {
+func (ec *executionContext) _ExpenseTemplateGroup_recurringDay(ctx context.Context, field graphql.CollectedField, obj *model.ExpenseTemplateGroup) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ExpenseTemplate_unitPrice,
-		func(ctx context.Context) (any, error) {
-			return obj.UnitPrice, nil
-		},
-		nil,
-		ec.marshalNInt2int,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_ExpenseTemplate_unitPrice(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ExpenseTemplate",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ExpenseTemplate_quantity(ctx context.Context, field graphql.CollectedField, obj *model.ExpenseTemplate) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_ExpenseTemplate_quantity,
-		func(ctx context.Context) (any, error) {
-			return obj.Quantity, nil
-		},
-		nil,
-		ec.marshalNInt2int,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_ExpenseTemplate_quantity(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ExpenseTemplate",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ExpenseTemplate_total(ctx context.Context, field graphql.CollectedField, obj *model.ExpenseTemplate) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_ExpenseTemplate_total,
-		func(ctx context.Context) (any, error) {
-			return obj.Total, nil
-		},
-		nil,
-		ec.marshalNInt2int,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_ExpenseTemplate_total(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ExpenseTemplate",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ExpenseTemplate_recurringDay(ctx context.Context, field graphql.CollectedField, obj *model.ExpenseTemplate) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_ExpenseTemplate_recurringDay,
+		ec.fieldContext_ExpenseTemplateGroup_recurringDay,
 		func(ctx context.Context) (any, error) {
 			return obj.RecurringDay, nil
 		},
@@ -7249,9 +7285,9 @@ func (ec *executionContext) _ExpenseTemplate_recurringDay(ctx context.Context, f
 	)
 }
 
-func (ec *executionContext) fieldContext_ExpenseTemplate_recurringDay(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_ExpenseTemplateGroup_recurringDay(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "ExpenseTemplate",
+		Object:     "ExpenseTemplateGroup",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -7262,12 +7298,12 @@ func (ec *executionContext) fieldContext_ExpenseTemplate_recurringDay(_ context.
 	return fc, nil
 }
 
-func (ec *executionContext) _ExpenseTemplate_notes(ctx context.Context, field graphql.CollectedField, obj *model.ExpenseTemplate) (ret graphql.Marshaler) {
+func (ec *executionContext) _ExpenseTemplateGroup_notes(ctx context.Context, field graphql.CollectedField, obj *model.ExpenseTemplateGroup) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ExpenseTemplate_notes,
+		ec.fieldContext_ExpenseTemplateGroup_notes,
 		func(ctx context.Context) (any, error) {
 			return obj.Notes, nil
 		},
@@ -7278,9 +7314,9 @@ func (ec *executionContext) _ExpenseTemplate_notes(ctx context.Context, field gr
 	)
 }
 
-func (ec *executionContext) fieldContext_ExpenseTemplate_notes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_ExpenseTemplateGroup_notes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "ExpenseTemplate",
+		Object:     "ExpenseTemplateGroup",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -7291,12 +7327,41 @@ func (ec *executionContext) fieldContext_ExpenseTemplate_notes(_ context.Context
 	return fc, nil
 }
 
-func (ec *executionContext) _ExpenseTemplate_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.ExpenseTemplate) (ret graphql.Marshaler) {
+func (ec *executionContext) _ExpenseTemplateGroup_total(ctx context.Context, field graphql.CollectedField, obj *model.ExpenseTemplateGroup) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ExpenseTemplate_createdAt,
+		ec.fieldContext_ExpenseTemplateGroup_total,
+		func(ctx context.Context) (any, error) {
+			return obj.Total, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ExpenseTemplateGroup_total(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExpenseTemplateGroup",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ExpenseTemplateGroup_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.ExpenseTemplateGroup) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ExpenseTemplateGroup_createdAt,
 		func(ctx context.Context) (any, error) {
 			return obj.CreatedAt, nil
 		},
@@ -7307,9 +7372,9 @@ func (ec *executionContext) _ExpenseTemplate_createdAt(ctx context.Context, fiel
 	)
 }
 
-func (ec *executionContext) fieldContext_ExpenseTemplate_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_ExpenseTemplateGroup_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "ExpenseTemplate",
+		Object:     "ExpenseTemplateGroup",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -7320,12 +7385,231 @@ func (ec *executionContext) fieldContext_ExpenseTemplate_createdAt(_ context.Con
 	return fc, nil
 }
 
-func (ec *executionContext) _ExpenseTemplate_category(ctx context.Context, field graphql.CollectedField, obj *model.ExpenseTemplate) (ret graphql.Marshaler) {
+func (ec *executionContext) _ExpenseTemplateGroup_items(ctx context.Context, field graphql.CollectedField, obj *model.ExpenseTemplateGroup) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_ExpenseTemplate_category,
+		ec.fieldContext_ExpenseTemplateGroup_items,
+		func(ctx context.Context) (any, error) {
+			return obj.Items, nil
+		},
+		nil,
+		ec.marshalNExpenseTemplateItem2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplateItemᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ExpenseTemplateGroup_items(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExpenseTemplateGroup",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_ExpenseTemplateItem_id(ctx, field)
+			case "itemName":
+				return ec.fieldContext_ExpenseTemplateItem_itemName(ctx, field)
+			case "unitPrice":
+				return ec.fieldContext_ExpenseTemplateItem_unitPrice(ctx, field)
+			case "quantity":
+				return ec.fieldContext_ExpenseTemplateItem_quantity(ctx, field)
+			case "total":
+				return ec.fieldContext_ExpenseTemplateItem_total(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_ExpenseTemplateItem_createdAt(ctx, field)
+			case "category":
+				return ec.fieldContext_ExpenseTemplateItem_category(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ExpenseTemplateItem", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ExpenseTemplateItem_id(ctx context.Context, field graphql.CollectedField, obj *model.ExpenseTemplateItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ExpenseTemplateItem_id,
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ExpenseTemplateItem_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExpenseTemplateItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type UUID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ExpenseTemplateItem_itemName(ctx context.Context, field graphql.CollectedField, obj *model.ExpenseTemplateItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ExpenseTemplateItem_itemName,
+		func(ctx context.Context) (any, error) {
+			return obj.ItemName, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ExpenseTemplateItem_itemName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExpenseTemplateItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ExpenseTemplateItem_unitPrice(ctx context.Context, field graphql.CollectedField, obj *model.ExpenseTemplateItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ExpenseTemplateItem_unitPrice,
+		func(ctx context.Context) (any, error) {
+			return obj.UnitPrice, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ExpenseTemplateItem_unitPrice(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExpenseTemplateItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ExpenseTemplateItem_quantity(ctx context.Context, field graphql.CollectedField, obj *model.ExpenseTemplateItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ExpenseTemplateItem_quantity,
+		func(ctx context.Context) (any, error) {
+			return obj.Quantity, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ExpenseTemplateItem_quantity(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExpenseTemplateItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ExpenseTemplateItem_total(ctx context.Context, field graphql.CollectedField, obj *model.ExpenseTemplateItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ExpenseTemplateItem_total,
+		func(ctx context.Context) (any, error) {
+			return obj.Total, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ExpenseTemplateItem_total(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExpenseTemplateItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ExpenseTemplateItem_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.ExpenseTemplateItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ExpenseTemplateItem_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ExpenseTemplateItem_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExpenseTemplateItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ExpenseTemplateItem_category(ctx context.Context, field graphql.CollectedField, obj *model.ExpenseTemplateItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ExpenseTemplateItem_category,
 		func(ctx context.Context) (any, error) {
 			return obj.Category, nil
 		},
@@ -7336,9 +7620,9 @@ func (ec *executionContext) _ExpenseTemplate_category(ctx context.Context, field
 	)
 }
 
-func (ec *executionContext) fieldContext_ExpenseTemplate_category(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_ExpenseTemplateItem_category(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "ExpenseTemplate",
+		Object:     "ExpenseTemplateItem",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -10339,24 +10623,24 @@ func (ec *executionContext) fieldContext_Mutation_deleteExpense(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_createExpenseTemplate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_createExpenseTemplateGroup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_createExpenseTemplate,
+		ec.fieldContext_Mutation_createExpenseTemplateGroup,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().CreateExpenseTemplate(ctx, fc.Args["input"].(model.CreateExpenseTemplateInput))
+			return ec.resolvers.Mutation().CreateExpenseTemplateGroup(ctx, fc.Args["input"].(model.CreateExpenseTemplateGroupInput))
 		},
 		nil,
-		ec.marshalNExpenseTemplate2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplate,
+		ec.marshalNExpenseTemplateGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplateGroup,
 		true,
 		true,
 	)
 }
 
-func (ec *executionContext) fieldContext_Mutation_createExpenseTemplate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_createExpenseTemplateGroup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -10365,25 +10649,21 @@ func (ec *executionContext) fieldContext_Mutation_createExpenseTemplate(ctx cont
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_ExpenseTemplate_id(ctx, field)
-			case "itemName":
-				return ec.fieldContext_ExpenseTemplate_itemName(ctx, field)
-			case "unitPrice":
-				return ec.fieldContext_ExpenseTemplate_unitPrice(ctx, field)
-			case "quantity":
-				return ec.fieldContext_ExpenseTemplate_quantity(ctx, field)
-			case "total":
-				return ec.fieldContext_ExpenseTemplate_total(ctx, field)
+				return ec.fieldContext_ExpenseTemplateGroup_id(ctx, field)
+			case "name":
+				return ec.fieldContext_ExpenseTemplateGroup_name(ctx, field)
 			case "recurringDay":
-				return ec.fieldContext_ExpenseTemplate_recurringDay(ctx, field)
+				return ec.fieldContext_ExpenseTemplateGroup_recurringDay(ctx, field)
 			case "notes":
-				return ec.fieldContext_ExpenseTemplate_notes(ctx, field)
+				return ec.fieldContext_ExpenseTemplateGroup_notes(ctx, field)
+			case "total":
+				return ec.fieldContext_ExpenseTemplateGroup_total(ctx, field)
 			case "createdAt":
-				return ec.fieldContext_ExpenseTemplate_createdAt(ctx, field)
-			case "category":
-				return ec.fieldContext_ExpenseTemplate_category(ctx, field)
+				return ec.fieldContext_ExpenseTemplateGroup_createdAt(ctx, field)
+			case "items":
+				return ec.fieldContext_ExpenseTemplateGroup_items(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type ExpenseTemplate", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type ExpenseTemplateGroup", field.Name)
 		},
 	}
 	defer func() {
@@ -10393,31 +10673,31 @@ func (ec *executionContext) fieldContext_Mutation_createExpenseTemplate(ctx cont
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createExpenseTemplate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_createExpenseTemplateGroup_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_updateExpenseTemplate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_updateExpenseTemplateGroup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_updateExpenseTemplate,
+		ec.fieldContext_Mutation_updateExpenseTemplateGroup,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UpdateExpenseTemplate(ctx, fc.Args["id"].(uuid.UUID), fc.Args["input"].(model.UpdateExpenseTemplateInput))
+			return ec.resolvers.Mutation().UpdateExpenseTemplateGroup(ctx, fc.Args["id"].(uuid.UUID), fc.Args["input"].(model.UpdateExpenseTemplateGroupInput))
 		},
 		nil,
-		ec.marshalNExpenseTemplate2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplate,
+		ec.marshalNExpenseTemplateGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplateGroup,
 		true,
 		true,
 	)
 }
 
-func (ec *executionContext) fieldContext_Mutation_updateExpenseTemplate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_updateExpenseTemplateGroup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -10426,25 +10706,21 @@ func (ec *executionContext) fieldContext_Mutation_updateExpenseTemplate(ctx cont
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_ExpenseTemplate_id(ctx, field)
-			case "itemName":
-				return ec.fieldContext_ExpenseTemplate_itemName(ctx, field)
-			case "unitPrice":
-				return ec.fieldContext_ExpenseTemplate_unitPrice(ctx, field)
-			case "quantity":
-				return ec.fieldContext_ExpenseTemplate_quantity(ctx, field)
-			case "total":
-				return ec.fieldContext_ExpenseTemplate_total(ctx, field)
+				return ec.fieldContext_ExpenseTemplateGroup_id(ctx, field)
+			case "name":
+				return ec.fieldContext_ExpenseTemplateGroup_name(ctx, field)
 			case "recurringDay":
-				return ec.fieldContext_ExpenseTemplate_recurringDay(ctx, field)
+				return ec.fieldContext_ExpenseTemplateGroup_recurringDay(ctx, field)
 			case "notes":
-				return ec.fieldContext_ExpenseTemplate_notes(ctx, field)
+				return ec.fieldContext_ExpenseTemplateGroup_notes(ctx, field)
+			case "total":
+				return ec.fieldContext_ExpenseTemplateGroup_total(ctx, field)
 			case "createdAt":
-				return ec.fieldContext_ExpenseTemplate_createdAt(ctx, field)
-			case "category":
-				return ec.fieldContext_ExpenseTemplate_category(ctx, field)
+				return ec.fieldContext_ExpenseTemplateGroup_createdAt(ctx, field)
+			case "items":
+				return ec.fieldContext_ExpenseTemplateGroup_items(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type ExpenseTemplate", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type ExpenseTemplateGroup", field.Name)
 		},
 	}
 	defer func() {
@@ -10454,22 +10730,22 @@ func (ec *executionContext) fieldContext_Mutation_updateExpenseTemplate(ctx cont
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_updateExpenseTemplate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_updateExpenseTemplateGroup_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_deleteExpenseTemplate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_deleteExpenseTemplateGroup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_deleteExpenseTemplate,
+		ec.fieldContext_Mutation_deleteExpenseTemplateGroup,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().DeleteExpenseTemplate(ctx, fc.Args["id"].(uuid.UUID))
+			return ec.resolvers.Mutation().DeleteExpenseTemplateGroup(ctx, fc.Args["id"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -10478,7 +10754,7 @@ func (ec *executionContext) _Mutation_deleteExpenseTemplate(ctx context.Context,
 	)
 }
 
-func (ec *executionContext) fieldContext_Mutation_deleteExpenseTemplate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_deleteExpenseTemplateGroup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -10495,31 +10771,186 @@ func (ec *executionContext) fieldContext_Mutation_deleteExpenseTemplate(ctx cont
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_deleteExpenseTemplate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_deleteExpenseTemplateGroup_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_createExpenseFromTemplate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_addExpenseTemplateItem(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_createExpenseFromTemplate,
+		ec.fieldContext_Mutation_addExpenseTemplateItem,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().CreateExpenseFromTemplate(ctx, fc.Args["templateId"].(uuid.UUID), fc.Args["expenseDate"].(*time.Time))
+			return ec.resolvers.Mutation().AddExpenseTemplateItem(ctx, fc.Args["groupId"].(uuid.UUID), fc.Args["input"].(model.CreateExpenseTemplateItemInput))
 		},
 		nil,
-		ec.marshalNExpense2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpense,
+		ec.marshalNExpenseTemplateGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplateGroup,
 		true,
 		true,
 	)
 }
 
-func (ec *executionContext) fieldContext_Mutation_createExpenseFromTemplate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_addExpenseTemplateItem(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_ExpenseTemplateGroup_id(ctx, field)
+			case "name":
+				return ec.fieldContext_ExpenseTemplateGroup_name(ctx, field)
+			case "recurringDay":
+				return ec.fieldContext_ExpenseTemplateGroup_recurringDay(ctx, field)
+			case "notes":
+				return ec.fieldContext_ExpenseTemplateGroup_notes(ctx, field)
+			case "total":
+				return ec.fieldContext_ExpenseTemplateGroup_total(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_ExpenseTemplateGroup_createdAt(ctx, field)
+			case "items":
+				return ec.fieldContext_ExpenseTemplateGroup_items(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ExpenseTemplateGroup", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_addExpenseTemplateItem_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateExpenseTemplateItem(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_updateExpenseTemplateItem,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().UpdateExpenseTemplateItem(ctx, fc.Args["itemId"].(uuid.UUID), fc.Args["input"].(model.UpdateExpenseTemplateItemInput))
+		},
+		nil,
+		ec.marshalNExpenseTemplateItem2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplateItem,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateExpenseTemplateItem(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_ExpenseTemplateItem_id(ctx, field)
+			case "itemName":
+				return ec.fieldContext_ExpenseTemplateItem_itemName(ctx, field)
+			case "unitPrice":
+				return ec.fieldContext_ExpenseTemplateItem_unitPrice(ctx, field)
+			case "quantity":
+				return ec.fieldContext_ExpenseTemplateItem_quantity(ctx, field)
+			case "total":
+				return ec.fieldContext_ExpenseTemplateItem_total(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_ExpenseTemplateItem_createdAt(ctx, field)
+			case "category":
+				return ec.fieldContext_ExpenseTemplateItem_category(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ExpenseTemplateItem", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateExpenseTemplateItem_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteExpenseTemplateItem(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_deleteExpenseTemplateItem,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().DeleteExpenseTemplateItem(ctx, fc.Args["itemId"].(uuid.UUID))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteExpenseTemplateItem(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteExpenseTemplateItem_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createExpensesFromTemplateGroup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_createExpensesFromTemplateGroup,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().CreateExpensesFromTemplateGroup(ctx, fc.Args["groupId"].(uuid.UUID), fc.Args["expenseDate"].(*time.Time))
+		},
+		nil,
+		ec.marshalNExpense2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createExpensesFromTemplateGroup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -10556,7 +10987,7 @@ func (ec *executionContext) fieldContext_Mutation_createExpenseFromTemplate(ctx 
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createExpenseFromTemplate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_createExpensesFromTemplateGroup_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -12384,23 +12815,23 @@ func (ec *executionContext) fieldContext_Query_expense(ctx context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_expenseTemplates(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_expenseTemplateGroups(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_expenseTemplates,
+		ec.fieldContext_Query_expenseTemplateGroups,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Query().ExpenseTemplates(ctx)
+			return ec.resolvers.Query().ExpenseTemplateGroups(ctx)
 		},
 		nil,
-		ec.marshalNExpenseTemplate2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplateᚄ,
+		ec.marshalNExpenseTemplateGroup2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplateGroupᚄ,
 		true,
 		true,
 	)
 }
 
-func (ec *executionContext) fieldContext_Query_expenseTemplates(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_expenseTemplateGroups(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -12409,48 +12840,44 @@ func (ec *executionContext) fieldContext_Query_expenseTemplates(_ context.Contex
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_ExpenseTemplate_id(ctx, field)
-			case "itemName":
-				return ec.fieldContext_ExpenseTemplate_itemName(ctx, field)
-			case "unitPrice":
-				return ec.fieldContext_ExpenseTemplate_unitPrice(ctx, field)
-			case "quantity":
-				return ec.fieldContext_ExpenseTemplate_quantity(ctx, field)
-			case "total":
-				return ec.fieldContext_ExpenseTemplate_total(ctx, field)
+				return ec.fieldContext_ExpenseTemplateGroup_id(ctx, field)
+			case "name":
+				return ec.fieldContext_ExpenseTemplateGroup_name(ctx, field)
 			case "recurringDay":
-				return ec.fieldContext_ExpenseTemplate_recurringDay(ctx, field)
+				return ec.fieldContext_ExpenseTemplateGroup_recurringDay(ctx, field)
 			case "notes":
-				return ec.fieldContext_ExpenseTemplate_notes(ctx, field)
+				return ec.fieldContext_ExpenseTemplateGroup_notes(ctx, field)
+			case "total":
+				return ec.fieldContext_ExpenseTemplateGroup_total(ctx, field)
 			case "createdAt":
-				return ec.fieldContext_ExpenseTemplate_createdAt(ctx, field)
-			case "category":
-				return ec.fieldContext_ExpenseTemplate_category(ctx, field)
+				return ec.fieldContext_ExpenseTemplateGroup_createdAt(ctx, field)
+			case "items":
+				return ec.fieldContext_ExpenseTemplateGroup_items(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type ExpenseTemplate", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type ExpenseTemplateGroup", field.Name)
 		},
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_expenseTemplate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_expenseTemplateGroup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_expenseTemplate,
+		ec.fieldContext_Query_expenseTemplateGroup,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().ExpenseTemplate(ctx, fc.Args["id"].(uuid.UUID))
+			return ec.resolvers.Query().ExpenseTemplateGroup(ctx, fc.Args["id"].(uuid.UUID))
 		},
 		nil,
-		ec.marshalOExpenseTemplate2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplate,
+		ec.marshalOExpenseTemplateGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplateGroup,
 		true,
 		false,
 	)
 }
 
-func (ec *executionContext) fieldContext_Query_expenseTemplate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_expenseTemplateGroup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -12459,25 +12886,21 @@ func (ec *executionContext) fieldContext_Query_expenseTemplate(ctx context.Conte
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_ExpenseTemplate_id(ctx, field)
-			case "itemName":
-				return ec.fieldContext_ExpenseTemplate_itemName(ctx, field)
-			case "unitPrice":
-				return ec.fieldContext_ExpenseTemplate_unitPrice(ctx, field)
-			case "quantity":
-				return ec.fieldContext_ExpenseTemplate_quantity(ctx, field)
-			case "total":
-				return ec.fieldContext_ExpenseTemplate_total(ctx, field)
+				return ec.fieldContext_ExpenseTemplateGroup_id(ctx, field)
+			case "name":
+				return ec.fieldContext_ExpenseTemplateGroup_name(ctx, field)
 			case "recurringDay":
-				return ec.fieldContext_ExpenseTemplate_recurringDay(ctx, field)
+				return ec.fieldContext_ExpenseTemplateGroup_recurringDay(ctx, field)
 			case "notes":
-				return ec.fieldContext_ExpenseTemplate_notes(ctx, field)
+				return ec.fieldContext_ExpenseTemplateGroup_notes(ctx, field)
+			case "total":
+				return ec.fieldContext_ExpenseTemplateGroup_total(ctx, field)
 			case "createdAt":
-				return ec.fieldContext_ExpenseTemplate_createdAt(ctx, field)
-			case "category":
-				return ec.fieldContext_ExpenseTemplate_category(ctx, field)
+				return ec.fieldContext_ExpenseTemplateGroup_createdAt(ctx, field)
+			case "items":
+				return ec.fieldContext_ExpenseTemplateGroup_items(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type ExpenseTemplate", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type ExpenseTemplateGroup", field.Name)
 		},
 	}
 	defer func() {
@@ -12487,7 +12910,7 @@ func (ec *executionContext) fieldContext_Query_expenseTemplate(ctx context.Conte
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_expenseTemplate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_expenseTemplateGroup_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -17009,14 +17432,62 @@ func (ec *executionContext) unmarshalInputCreateExpenseInput(ctx context.Context
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputCreateExpenseTemplateInput(ctx context.Context, obj any) (model.CreateExpenseTemplateInput, error) {
-	var it model.CreateExpenseTemplateInput
+func (ec *executionContext) unmarshalInputCreateExpenseTemplateGroupInput(ctx context.Context, obj any) (model.CreateExpenseTemplateGroupInput, error) {
+	var it model.CreateExpenseTemplateGroupInput
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"categoryId", "itemName", "unitPrice", "quantity", "recurringDay", "notes"}
+	fieldsInOrder := [...]string{"name", "recurringDay", "notes", "items"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "recurringDay":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("recurringDay"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RecurringDay = data
+		case "notes":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Notes = data
+		case "items":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("items"))
+			data, err := ec.unmarshalNCreateExpenseTemplateItemInput2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCreateExpenseTemplateItemInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Items = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputCreateExpenseTemplateItemInput(ctx context.Context, obj any) (model.CreateExpenseTemplateItemInput, error) {
+	var it model.CreateExpenseTemplateItemInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"categoryId", "itemName", "unitPrice", "quantity"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -17051,20 +17522,6 @@ func (ec *executionContext) unmarshalInputCreateExpenseTemplateInput(ctx context
 				return it, err
 			}
 			it.Quantity = data
-		case "recurringDay":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("recurringDay"))
-			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.RecurringDay = data
-		case "notes":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Notes = data
 		}
 	}
 
@@ -17906,14 +18363,55 @@ func (ec *executionContext) unmarshalInputUpdateExpenseInput(ctx context.Context
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputUpdateExpenseTemplateInput(ctx context.Context, obj any) (model.UpdateExpenseTemplateInput, error) {
-	var it model.UpdateExpenseTemplateInput
+func (ec *executionContext) unmarshalInputUpdateExpenseTemplateGroupInput(ctx context.Context, obj any) (model.UpdateExpenseTemplateGroupInput, error) {
+	var it model.UpdateExpenseTemplateGroupInput
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"categoryId", "itemName", "unitPrice", "quantity", "recurringDay", "notes"}
+	fieldsInOrder := [...]string{"name", "recurringDay", "notes"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "recurringDay":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("recurringDay"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RecurringDay = data
+		case "notes":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Notes = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpdateExpenseTemplateItemInput(ctx context.Context, obj any) (model.UpdateExpenseTemplateItemInput, error) {
+	var it model.UpdateExpenseTemplateItemInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"categoryId", "itemName", "unitPrice", "quantity"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -17948,20 +18446,6 @@ func (ec *executionContext) unmarshalInputUpdateExpenseTemplateInput(ctx context
 				return it, err
 			}
 			it.Quantity = data
-		case "recurringDay":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("recurringDay"))
-			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.RecurringDay = data
-		case "notes":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Notes = data
 		}
 	}
 
@@ -19398,53 +19882,112 @@ func (ec *executionContext) _ExpenseSummary(ctx context.Context, sel ast.Selecti
 	return out
 }
 
-var expenseTemplateImplementors = []string{"ExpenseTemplate"}
+var expenseTemplateGroupImplementors = []string{"ExpenseTemplateGroup"}
 
-func (ec *executionContext) _ExpenseTemplate(ctx context.Context, sel ast.SelectionSet, obj *model.ExpenseTemplate) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, expenseTemplateImplementors)
+func (ec *executionContext) _ExpenseTemplateGroup(ctx context.Context, sel ast.SelectionSet, obj *model.ExpenseTemplateGroup) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, expenseTemplateGroupImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("ExpenseTemplate")
+			out.Values[i] = graphql.MarshalString("ExpenseTemplateGroup")
 		case "id":
-			out.Values[i] = ec._ExpenseTemplate_id(ctx, field, obj)
+			out.Values[i] = ec._ExpenseTemplateGroup_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "itemName":
-			out.Values[i] = ec._ExpenseTemplate_itemName(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "unitPrice":
-			out.Values[i] = ec._ExpenseTemplate_unitPrice(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "quantity":
-			out.Values[i] = ec._ExpenseTemplate_quantity(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "total":
-			out.Values[i] = ec._ExpenseTemplate_total(ctx, field, obj)
+		case "name":
+			out.Values[i] = ec._ExpenseTemplateGroup_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "recurringDay":
-			out.Values[i] = ec._ExpenseTemplate_recurringDay(ctx, field, obj)
+			out.Values[i] = ec._ExpenseTemplateGroup_recurringDay(ctx, field, obj)
 		case "notes":
-			out.Values[i] = ec._ExpenseTemplate_notes(ctx, field, obj)
+			out.Values[i] = ec._ExpenseTemplateGroup_notes(ctx, field, obj)
+		case "total":
+			out.Values[i] = ec._ExpenseTemplateGroup_total(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "createdAt":
-			out.Values[i] = ec._ExpenseTemplate_createdAt(ctx, field, obj)
+			out.Values[i] = ec._ExpenseTemplateGroup_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "items":
+			out.Values[i] = ec._ExpenseTemplateGroup_items(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var expenseTemplateItemImplementors = []string{"ExpenseTemplateItem"}
+
+func (ec *executionContext) _ExpenseTemplateItem(ctx context.Context, sel ast.SelectionSet, obj *model.ExpenseTemplateItem) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, expenseTemplateItemImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ExpenseTemplateItem")
+		case "id":
+			out.Values[i] = ec._ExpenseTemplateItem_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "itemName":
+			out.Values[i] = ec._ExpenseTemplateItem_itemName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "unitPrice":
+			out.Values[i] = ec._ExpenseTemplateItem_unitPrice(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "quantity":
+			out.Values[i] = ec._ExpenseTemplateItem_quantity(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "total":
+			out.Values[i] = ec._ExpenseTemplateItem_total(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._ExpenseTemplateItem_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "category":
-			out.Values[i] = ec._ExpenseTemplate_category(ctx, field, obj)
+			out.Values[i] = ec._ExpenseTemplateItem_category(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -20380,30 +20923,51 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "createExpenseTemplate":
+		case "createExpenseTemplateGroup":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createExpenseTemplate(ctx, field)
+				return ec._Mutation_createExpenseTemplateGroup(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "updateExpenseTemplate":
+		case "updateExpenseTemplateGroup":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updateExpenseTemplate(ctx, field)
+				return ec._Mutation_updateExpenseTemplateGroup(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "deleteExpenseTemplate":
+		case "deleteExpenseTemplateGroup":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_deleteExpenseTemplate(ctx, field)
+				return ec._Mutation_deleteExpenseTemplateGroup(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "createExpenseFromTemplate":
+		case "addExpenseTemplateItem":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createExpenseFromTemplate(ctx, field)
+				return ec._Mutation_addExpenseTemplateItem(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updateExpenseTemplateItem":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateExpenseTemplateItem(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deleteExpenseTemplateItem":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteExpenseTemplateItem(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createExpensesFromTemplateGroup":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createExpensesFromTemplateGroup(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -20798,7 +21362,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "expenseTemplates":
+		case "expenseTemplateGroups":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -20807,7 +21371,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_expenseTemplates(ctx, field)
+				res = ec._Query_expenseTemplateGroups(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -20820,7 +21384,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "expenseTemplate":
+		case "expenseTemplateGroup":
 			field := field
 
 			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
@@ -20829,7 +21393,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_expenseTemplate(ctx, field)
+				res = ec._Query_expenseTemplateGroup(ctx, field)
 				return res
 			}
 
@@ -22545,9 +23109,34 @@ func (ec *executionContext) unmarshalNCreateExpenseInput2githubᚗcomᚋazzamdhx
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNCreateExpenseTemplateInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCreateExpenseTemplateInput(ctx context.Context, v any) (model.CreateExpenseTemplateInput, error) {
-	res, err := ec.unmarshalInputCreateExpenseTemplateInput(ctx, v)
+func (ec *executionContext) unmarshalNCreateExpenseTemplateGroupInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCreateExpenseTemplateGroupInput(ctx context.Context, v any) (model.CreateExpenseTemplateGroupInput, error) {
+	res, err := ec.unmarshalInputCreateExpenseTemplateGroupInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNCreateExpenseTemplateItemInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCreateExpenseTemplateItemInput(ctx context.Context, v any) (model.CreateExpenseTemplateItemInput, error) {
+	res, err := ec.unmarshalInputCreateExpenseTemplateItemInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNCreateExpenseTemplateItemInput2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCreateExpenseTemplateItemInputᚄ(ctx context.Context, v any) ([]*model.CreateExpenseTemplateItemInput, error) {
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]*model.CreateExpenseTemplateItemInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNCreateExpenseTemplateItemInput2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCreateExpenseTemplateItemInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalNCreateExpenseTemplateItemInput2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCreateExpenseTemplateItemInput(ctx context.Context, v any) (*model.CreateExpenseTemplateItemInput, error) {
+	res, err := ec.unmarshalInputCreateExpenseTemplateItemInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNCreateIncomeCategoryInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCreateIncomeCategoryInput(ctx context.Context, v any) (model.CreateIncomeCategoryInput, error) {
@@ -22873,11 +23462,11 @@ func (ec *executionContext) marshalNExpenseSummary2ᚖgithubᚗcomᚋazzamdhxᚋ
 	return ec._ExpenseSummary(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNExpenseTemplate2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplate(ctx context.Context, sel ast.SelectionSet, v model.ExpenseTemplate) graphql.Marshaler {
-	return ec._ExpenseTemplate(ctx, sel, &v)
+func (ec *executionContext) marshalNExpenseTemplateGroup2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplateGroup(ctx context.Context, sel ast.SelectionSet, v model.ExpenseTemplateGroup) graphql.Marshaler {
+	return ec._ExpenseTemplateGroup(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNExpenseTemplate2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplateᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ExpenseTemplate) graphql.Marshaler {
+func (ec *executionContext) marshalNExpenseTemplateGroup2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplateGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ExpenseTemplateGroup) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -22901,7 +23490,7 @@ func (ec *executionContext) marshalNExpenseTemplate2ᚕᚖgithubᚗcomᚋazzamdh
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNExpenseTemplate2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplate(ctx, sel, v[i])
+			ret[i] = ec.marshalNExpenseTemplateGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplateGroup(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -22921,14 +23510,72 @@ func (ec *executionContext) marshalNExpenseTemplate2ᚕᚖgithubᚗcomᚋazzamdh
 	return ret
 }
 
-func (ec *executionContext) marshalNExpenseTemplate2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplate(ctx context.Context, sel ast.SelectionSet, v *model.ExpenseTemplate) graphql.Marshaler {
+func (ec *executionContext) marshalNExpenseTemplateGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplateGroup(ctx context.Context, sel ast.SelectionSet, v *model.ExpenseTemplateGroup) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
-	return ec._ExpenseTemplate(ctx, sel, v)
+	return ec._ExpenseTemplateGroup(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNExpenseTemplateItem2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplateItem(ctx context.Context, sel ast.SelectionSet, v model.ExpenseTemplateItem) graphql.Marshaler {
+	return ec._ExpenseTemplateItem(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNExpenseTemplateItem2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplateItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ExpenseTemplateItem) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNExpenseTemplateItem2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplateItem(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNExpenseTemplateItem2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplateItem(ctx context.Context, sel ast.SelectionSet, v *model.ExpenseTemplateItem) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ExpenseTemplateItem(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNExpensesWithSummary2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpensesWithSummary(ctx context.Context, sel ast.SelectionSet, v model.ExpensesWithSummary) graphql.Marshaler {
@@ -23954,8 +24601,13 @@ func (ec *executionContext) unmarshalNUpdateExpenseInput2githubᚗcomᚋazzamdhx
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNUpdateExpenseTemplateInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐUpdateExpenseTemplateInput(ctx context.Context, v any) (model.UpdateExpenseTemplateInput, error) {
-	res, err := ec.unmarshalInputUpdateExpenseTemplateInput(ctx, v)
+func (ec *executionContext) unmarshalNUpdateExpenseTemplateGroupInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐUpdateExpenseTemplateGroupInput(ctx context.Context, v any) (model.UpdateExpenseTemplateGroupInput, error) {
+	res, err := ec.unmarshalInputUpdateExpenseTemplateGroupInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpdateExpenseTemplateItemInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐUpdateExpenseTemplateItemInput(ctx context.Context, v any) (model.UpdateExpenseTemplateItemInput, error) {
+	res, err := ec.unmarshalInputUpdateExpenseTemplateItemInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -24377,11 +25029,11 @@ func (ec *executionContext) unmarshalOExpenseFilter2ᚖgithubᚗcomᚋazzamdhx�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOExpenseTemplate2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplate(ctx context.Context, sel ast.SelectionSet, v *model.ExpenseTemplate) graphql.Marshaler {
+func (ec *executionContext) marshalOExpenseTemplateGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplateGroup(ctx context.Context, sel ast.SelectionSet, v *model.ExpenseTemplateGroup) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	return ec._ExpenseTemplate(ctx, sel, v)
+	return ec._ExpenseTemplateGroup(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOFloat2ᚖfloat64(ctx context.Context, v any) (*float64, error) {

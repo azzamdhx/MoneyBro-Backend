@@ -28,14 +28,23 @@ type ExpensesWithSummary {
   summary: ExpenseSummary!
 }
 
-type ExpenseTemplate {
+type ExpenseTemplateGroup {
+  id: UUID!
+  name: String!
+  recurringDay: Int
+  notes: String
+  total: Int!
+  createdAt: Time!
+  
+  items: [ExpenseTemplateItem!]!
+}
+
+type ExpenseTemplateItem {
   id: UUID!
   itemName: String!
   unitPrice: Int!
   quantity: Int!
   total: Int!
-  recurringDay: Int
-  notes: String
   createdAt: Time!
   
   category: Category!
@@ -65,20 +74,29 @@ input UpdateExpenseInput {
   expenseDate: Date
 }
 
-input CreateExpenseTemplateInput {
+input CreateExpenseTemplateGroupInput {
+  name: String!
+  recurringDay: Int
+  notes: String
+  items: [CreateExpenseTemplateItemInput!]!
+}
+
+input CreateExpenseTemplateItemInput {
   categoryId: UUID!
   itemName: String!
   unitPrice: Int!
   quantity: Int!
+}
+
+input UpdateExpenseTemplateGroupInput {
+  name: String
   recurringDay: Int
   notes: String
 }
 
-input UpdateExpenseTemplateInput {
+input UpdateExpenseTemplateItemInput {
   categoryId: UUID
   itemName: String
   unitPrice: Int
   quantity: Int
-  recurringDay: Int
-  notes: String
 }

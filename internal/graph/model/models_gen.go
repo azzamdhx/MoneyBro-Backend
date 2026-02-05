@@ -135,13 +135,18 @@ type CreateExpenseInput struct {
 	ExpenseDate *time.Time `json:"expenseDate,omitempty"`
 }
 
-type CreateExpenseTemplateInput struct {
-	CategoryID   uuid.UUID `json:"categoryId"`
-	ItemName     string    `json:"itemName"`
-	UnitPrice    int       `json:"unitPrice"`
-	Quantity     int       `json:"quantity"`
-	RecurringDay *int      `json:"recurringDay,omitempty"`
-	Notes        *string   `json:"notes,omitempty"`
+type CreateExpenseTemplateGroupInput struct {
+	Name         string                            `json:"name"`
+	RecurringDay *int                              `json:"recurringDay,omitempty"`
+	Notes        *string                           `json:"notes,omitempty"`
+	Items        []*CreateExpenseTemplateItemInput `json:"items"`
+}
+
+type CreateExpenseTemplateItemInput struct {
+	CategoryID uuid.UUID `json:"categoryId"`
+	ItemName   string    `json:"itemName"`
+	UnitPrice  int       `json:"unitPrice"`
+	Quantity   int       `json:"quantity"`
 }
 
 type CreateIncomeCategoryInput struct {
@@ -259,16 +264,24 @@ type ExpenseSummary struct {
 	ByCategory []*ExpenseByCategoryGroup `json:"byCategory"`
 }
 
-type ExpenseTemplate struct {
-	ID           uuid.UUID `json:"id"`
-	ItemName     string    `json:"itemName"`
-	UnitPrice    int       `json:"unitPrice"`
-	Quantity     int       `json:"quantity"`
-	Total        int       `json:"total"`
-	RecurringDay *int      `json:"recurringDay,omitempty"`
-	Notes        *string   `json:"notes,omitempty"`
-	CreatedAt    time.Time `json:"createdAt"`
-	Category     *Category `json:"category"`
+type ExpenseTemplateGroup struct {
+	ID           uuid.UUID              `json:"id"`
+	Name         string                 `json:"name"`
+	RecurringDay *int                   `json:"recurringDay,omitempty"`
+	Notes        *string                `json:"notes,omitempty"`
+	Total        int                    `json:"total"`
+	CreatedAt    time.Time              `json:"createdAt"`
+	Items        []*ExpenseTemplateItem `json:"items"`
+}
+
+type ExpenseTemplateItem struct {
+	ID        uuid.UUID `json:"id"`
+	ItemName  string    `json:"itemName"`
+	UnitPrice int       `json:"unitPrice"`
+	Quantity  int       `json:"quantity"`
+	Total     int       `json:"total"`
+	CreatedAt time.Time `json:"createdAt"`
+	Category  *Category `json:"category"`
 }
 
 type ExpensesWithSummary struct {
@@ -531,13 +544,17 @@ type UpdateExpenseInput struct {
 	ExpenseDate *time.Time `json:"expenseDate,omitempty"`
 }
 
-type UpdateExpenseTemplateInput struct {
-	CategoryID   *uuid.UUID `json:"categoryId,omitempty"`
-	ItemName     *string    `json:"itemName,omitempty"`
-	UnitPrice    *int       `json:"unitPrice,omitempty"`
-	Quantity     *int       `json:"quantity,omitempty"`
-	RecurringDay *int       `json:"recurringDay,omitempty"`
-	Notes        *string    `json:"notes,omitempty"`
+type UpdateExpenseTemplateGroupInput struct {
+	Name         *string `json:"name,omitempty"`
+	RecurringDay *int    `json:"recurringDay,omitempty"`
+	Notes        *string `json:"notes,omitempty"`
+}
+
+type UpdateExpenseTemplateItemInput struct {
+	CategoryID *uuid.UUID `json:"categoryId,omitempty"`
+	ItemName   *string    `json:"itemName,omitempty"`
+	UnitPrice  *int       `json:"unitPrice,omitempty"`
+	Quantity   *int       `json:"quantity,omitempty"`
 }
 
 type UpdateIncomeCategoryInput struct {

@@ -224,79 +224,106 @@ func (r *mutationResolver) DeleteExpense(ctx context.Context, id uuid.UUID) (boo
 	return err == nil, err
 }
 
-// CreateExpenseTemplate is the resolver for the createExpenseTemplate field.
-func (r *mutationResolver) CreateExpenseTemplate(ctx context.Context, input model.CreateExpenseTemplateInput) (*model.ExpenseTemplate, error) {
+// CreateExpenseTemplateGroup is the resolver for the createExpenseTemplateGroup field.
+func (r *mutationResolver) CreateExpenseTemplateGroup(ctx context.Context, input model.CreateExpenseTemplateGroupInput) (*model.ExpenseTemplateGroup, error) {
 	userID, ok := middleware.GetUserID(ctx)
 	if !ok {
 		return nil, utils.ErrUnauthorized
 	}
-	tmpl, err := r.Services.ExpenseTemplate.Create(userID, services.CreateExpenseTemplateInput{
-		CategoryID:   input.CategoryID,
-		ItemName:     input.ItemName,
-		UnitPrice:    int64(input.UnitPrice),
-		Quantity:     input.Quantity,
+	items := make([]services.CreateExpenseTemplateItemInput, len(input.Items))
+	for i, item := range input.Items {
+		items[i] = services.CreateExpenseTemplateItemInput{
+			CategoryID: item.CategoryID,
+			ItemName:   item.ItemName,
+			UnitPrice:  int64(item.UnitPrice),
+			Quantity:   item.Quantity,
+		}
+	}
+	group, err := r.Services.ExpenseTemplateGroup.Create(userID, services.CreateExpenseTemplateGroupInput{
+		Name:         input.Name,
+		RecurringDay: input.RecurringDay,
+		Notes:        input.Notes,
+		Items:        items,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return expenseTemplateGroupToModel(group), nil
+}
+
+// UpdateExpenseTemplateGroup is the resolver for the updateExpenseTemplateGroup field.
+func (r *mutationResolver) UpdateExpenseTemplateGroup(ctx context.Context, id uuid.UUID, input model.UpdateExpenseTemplateGroupInput) (*model.ExpenseTemplateGroup, error) {
+	group, err := r.Services.ExpenseTemplateGroup.Update(id, services.UpdateExpenseTemplateGroupInput{
+		Name:         input.Name,
 		RecurringDay: input.RecurringDay,
 		Notes:        input.Notes,
 	})
 	if err != nil {
 		return nil, err
 	}
-	return expenseTemplateToModel(tmpl), nil
+	return expenseTemplateGroupToModel(group), nil
 }
 
-// UpdateExpenseTemplate is the resolver for the updateExpenseTemplate field.
-func (r *mutationResolver) UpdateExpenseTemplate(ctx context.Context, id uuid.UUID, input model.UpdateExpenseTemplateInput) (*model.ExpenseTemplate, error) {
-	tmpl, err := r.Services.ExpenseTemplate.GetByID(id)
-	if err != nil {
-		return nil, err
-	}
-	categoryID := tmpl.CategoryID
-	if input.CategoryID != nil {
-		categoryID = *input.CategoryID
-	}
-	itemName := tmpl.ItemName
-	if input.ItemName != nil {
-		itemName = *input.ItemName
-	}
-	unitPrice := tmpl.UnitPrice
-	if input.UnitPrice != nil {
-		unitPrice = int64(*input.UnitPrice)
-	}
-	quantity := tmpl.Quantity
-	if input.Quantity != nil {
-		quantity = *input.Quantity
-	}
-	updated, err := r.Services.ExpenseTemplate.Update(id, services.CreateExpenseTemplateInput{
-		CategoryID:   categoryID,
-		ItemName:     itemName,
-		UnitPrice:    unitPrice,
-		Quantity:     quantity,
-		RecurringDay: input.RecurringDay,
-		Notes:        input.Notes,
-	})
-	if err != nil {
-		return nil, err
-	}
-	return expenseTemplateToModel(updated), nil
-}
-
-// DeleteExpenseTemplate is the resolver for the deleteExpenseTemplate field.
-func (r *mutationResolver) DeleteExpenseTemplate(ctx context.Context, id uuid.UUID) (bool, error) {
-	err := r.Services.ExpenseTemplate.Delete(id)
+// DeleteExpenseTemplateGroup is the resolver for the deleteExpenseTemplateGroup field.
+func (r *mutationResolver) DeleteExpenseTemplateGroup(ctx context.Context, id uuid.UUID) (bool, error) {
+	err := r.Services.ExpenseTemplateGroup.Delete(id)
 	return err == nil, err
 }
 
-// CreateExpenseFromTemplate is the resolver for the createExpenseFromTemplate field.
-func (r *mutationResolver) CreateExpenseFromTemplate(ctx context.Context, templateID uuid.UUID, expenseDate *time.Time) (*model.Expense, error) {
+// AddExpenseTemplateItem is the resolver for the addExpenseTemplateItem field.
+func (r *mutationResolver) AddExpenseTemplateItem(ctx context.Context, groupID uuid.UUID, input model.CreateExpenseTemplateItemInput) (*model.ExpenseTemplateGroup, error) {
+	group, err := r.Services.ExpenseTemplateGroup.AddItem(groupID, services.CreateExpenseTemplateItemInput{
+		CategoryID: input.CategoryID,
+		ItemName:   input.ItemName,
+		UnitPrice:  int64(input.UnitPrice),
+		Quantity:   input.Quantity,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return expenseTemplateGroupToModel(group), nil
+}
+
+// UpdateExpenseTemplateItem is the resolver for the updateExpenseTemplateItem field.
+func (r *mutationResolver) UpdateExpenseTemplateItem(ctx context.Context, itemID uuid.UUID, input model.UpdateExpenseTemplateItemInput) (*model.ExpenseTemplateItem, error) {
+	var unitPrice *int64
+	if input.UnitPrice != nil {
+		v := int64(*input.UnitPrice)
+		unitPrice = &v
+	}
+	item, err := r.Services.ExpenseTemplateGroup.UpdateItem(itemID, services.UpdateExpenseTemplateItemInput{
+		CategoryID: input.CategoryID,
+		ItemName:   input.ItemName,
+		UnitPrice:  unitPrice,
+		Quantity:   input.Quantity,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return expenseTemplateItemToModel(item), nil
+}
+
+// DeleteExpenseTemplateItem is the resolver for the deleteExpenseTemplateItem field.
+func (r *mutationResolver) DeleteExpenseTemplateItem(ctx context.Context, itemID uuid.UUID) (bool, error) {
+	err := r.Services.ExpenseTemplateGroup.DeleteItem(itemID)
+	return err == nil, err
+}
+
+// CreateExpensesFromTemplateGroup is the resolver for the createExpensesFromTemplateGroup field.
+func (r *mutationResolver) CreateExpensesFromTemplateGroup(ctx context.Context, groupID uuid.UUID, expenseDate *time.Time) ([]*model.Expense, error) {
 	userID, ok := middleware.GetUserID(ctx)
 	if !ok {
 		return nil, utils.ErrUnauthorized
 	}
-	exp, err := r.Services.ExpenseTemplate.CreateExpenseFromTemplate(userID, templateID, expenseDate)
+	expenses, err := r.Services.ExpenseTemplateGroup.CreateExpensesFromGroup(userID, groupID, expenseDate)
 	if err != nil {
 		return nil, err
 	}
-	return expenseToModel(exp), nil
+	result := make([]*model.Expense, len(expenses))
+	for i, exp := range expenses {
+		result[i] = expenseToModel(&exp)
+	}
+	return result, nil
 }
 
 // CreateInstallment is the resolver for the createInstallment field.
@@ -796,30 +823,30 @@ func (r *queryResolver) Expense(ctx context.Context, id uuid.UUID) (*model.Expen
 	return expenseToModel(exp), nil
 }
 
-// ExpenseTemplates is the resolver for the expenseTemplates field.
-func (r *queryResolver) ExpenseTemplates(ctx context.Context) ([]*model.ExpenseTemplate, error) {
+// ExpenseTemplateGroups is the resolver for the expenseTemplateGroups field.
+func (r *queryResolver) ExpenseTemplateGroups(ctx context.Context) ([]*model.ExpenseTemplateGroup, error) {
 	userID, ok := middleware.GetUserID(ctx)
 	if !ok {
 		return nil, utils.ErrUnauthorized
 	}
-	tmpls, err := r.Services.ExpenseTemplate.GetByUserID(userID)
+	groups, err := r.Services.ExpenseTemplateGroup.GetByUserID(userID)
 	if err != nil {
 		return nil, err
 	}
-	result := make([]*model.ExpenseTemplate, len(tmpls))
-	for i, t := range tmpls {
-		result[i] = expenseTemplateToModel(&t)
+	result := make([]*model.ExpenseTemplateGroup, len(groups))
+	for i, g := range groups {
+		result[i] = expenseTemplateGroupToModel(&g)
 	}
 	return result, nil
 }
 
-// ExpenseTemplate is the resolver for the expenseTemplate field.
-func (r *queryResolver) ExpenseTemplate(ctx context.Context, id uuid.UUID) (*model.ExpenseTemplate, error) {
-	tmpl, err := r.Services.ExpenseTemplate.GetByID(id)
+// ExpenseTemplateGroup is the resolver for the expenseTemplateGroup field.
+func (r *queryResolver) ExpenseTemplateGroup(ctx context.Context, id uuid.UUID) (*model.ExpenseTemplateGroup, error) {
+	group, err := r.Services.ExpenseTemplateGroup.GetByID(id)
 	if err != nil {
 		return nil, err
 	}
-	return expenseTemplateToModel(tmpl), nil
+	return expenseTemplateGroupToModel(group), nil
 }
 
 // Installments is the resolver for the installments field.

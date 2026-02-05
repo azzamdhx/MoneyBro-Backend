@@ -47,21 +47,38 @@ func expenseToModel(e *models.Expense) *model.Expense {
 	return exp
 }
 
-func expenseTemplateToModel(t *models.ExpenseTemplate) *model.ExpenseTemplate {
-	tmpl := &model.ExpenseTemplate{
-		ID:           t.ID,
-		ItemName:     t.ItemName,
-		UnitPrice:    int(t.UnitPrice),
-		Quantity:     t.Quantity,
-		Total:        int(t.Total()),
-		RecurringDay: t.RecurringDay,
-		Notes:        t.Notes,
-		CreatedAt:    t.CreatedAt,
+func expenseTemplateGroupToModel(g *models.ExpenseTemplateGroup) *model.ExpenseTemplateGroup {
+	group := &model.ExpenseTemplateGroup{
+		ID:           g.ID,
+		Name:         g.Name,
+		RecurringDay: g.RecurringDay,
+		Notes:        g.Notes,
+		Total:        int(g.Total()),
+		CreatedAt:    g.CreatedAt,
 	}
-	if t.Category != nil {
-		tmpl.Category = categoryToModel(t.Category)
+	if len(g.Items) > 0 {
+		items := make([]*model.ExpenseTemplateItem, len(g.Items))
+		for i, item := range g.Items {
+			items[i] = expenseTemplateItemToModel(&item)
+		}
+		group.Items = items
 	}
-	return tmpl
+	return group
+}
+
+func expenseTemplateItemToModel(i *models.ExpenseTemplateItem) *model.ExpenseTemplateItem {
+	item := &model.ExpenseTemplateItem{
+		ID:        i.ID,
+		ItemName:  i.ItemName,
+		UnitPrice: int(i.UnitPrice),
+		Quantity:  i.Quantity,
+		Total:     int(i.Total()),
+		CreatedAt: i.CreatedAt,
+	}
+	if i.Category != nil {
+		item.Category = categoryToModel(i.Category)
+	}
+	return item
 }
 
 func installmentToModel(i *models.Installment) *model.Installment {
