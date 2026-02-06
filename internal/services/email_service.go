@@ -20,7 +20,7 @@ type EmailService struct {
 func NewEmailService(apiKey, templatesDir string) *EmailService {
 	return &EmailService{
 		client:       resend.NewClient(apiKey),
-		fromEmail:    "MoneyBro <noreply@moneybro-noreply.idramaflix.com>",
+		fromEmail:    "MoneyBro <noreply@moneybro.my.id>",
 		templatesDir: templatesDir,
 	}
 }
