@@ -7,7 +7,6 @@ package graph
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/azzamdhx/moneybro/backend/internal/graph/model"
@@ -21,14 +20,14 @@ import (
 
 // Register is the resolver for the register field.
 func (r *mutationResolver) Register(ctx context.Context, input model.RegisterInput) (*model.AuthPayload, error) {
-	result, err := r.Services.Auth.Register(input.Email, input.Password, input.Name)
+	result, err := r.Services.Auth.Register(ctx, input.Email, input.Password, input.Name)
 	if err != nil {
 		return nil, err
 	}
-	token := result.Token
+
 	return &model.AuthPayload{
-		Token: &token,
-		User:  userToModel(result.User),
+		Requires2fa: true,
+		TempToken:   &result.TempToken,
 	}, nil
 }
 
@@ -54,6 +53,18 @@ func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*
 	}, nil
 }
 
+// VerifyRegistration is the resolver for the verifyRegistration field.
+func (r *mutationResolver) VerifyRegistration(ctx context.Context, input model.Verify2FAInput) (*model.TwoFAPayload, error) {
+	result, err := r.Services.Auth.VerifyRegistration(ctx, input.TempToken, input.Code)
+	if err != nil {
+		return nil, err
+	}
+	return &model.TwoFAPayload{
+		Token: result.Token,
+		User:  userToModel(result.User),
+	}, nil
+}
+
 // Verify2fa is the resolver for the verify2FA field.
 func (r *mutationResolver) Verify2fa(ctx context.Context, input model.Verify2FAInput) (*model.TwoFAPayload, error) {
 	result, err := r.Services.Auth.Verify2FA(ctx, input.TempToken, input.Code)
@@ -68,7 +79,10 @@ func (r *mutationResolver) Verify2fa(ctx context.Context, input model.Verify2FAI
 
 // Resend2FACode is the resolver for the resend2FACode field.
 func (r *mutationResolver) Resend2FACode(ctx context.Context, tempToken string) (bool, error) {
-	panic(fmt.Errorf("not implemented: Resend2FACode - resend2FACode"))
+	if err := r.Services.Auth.Resend2FACode(ctx, tempToken); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // Enable2fa is the resolver for the enable2FA field.

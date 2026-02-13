@@ -59,7 +59,7 @@ type TwoFAPayload struct {
 	User  *models.User
 }
 
-func (s *AuthService) Register(email, password, name string) (*AuthPayload, error) {
+func (s *AuthService) Register(ctx context.Context, email, password, name string) (*AuthPayload, error) {
 	if err := utils.ValidateEmail(email); err != nil {
 		return nil, err
 	}
@@ -99,12 +99,69 @@ func (s *AuthService) Register(email, password, name string) (*AuthPayload, erro
 		return nil, err
 	}
 
+	// Generate temp token for email verification
+	tempToken, err := utils.GenerateTempToken(user.ID.String(), s.jwtSecret)
+	if err != nil {
+		return nil, err
+	}
+
+	// Send OTP verification email
+	if err := s.send2FACode(ctx, user); err != nil {
+		return nil, err
+	}
+
+	return &AuthPayload{
+		Requires2FA: true,
+		TempToken:   tempToken,
+	}, nil
+}
+
+func (s *AuthService) VerifyRegistration(ctx context.Context, tempToken, code string) (*TwoFAPayload, error) {
+	// Verify temp token
+	userID, err := utils.VerifyTempToken(tempToken, s.jwtSecret)
+	if err != nil {
+		return nil, errors.New("invalid or expired token")
+	}
+
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, errors.New("invalid token")
+	}
+
+	// Verify OTP code
+	twoFACode, err := s.twoFACodeRepo.GetValidByUserIDAndCode(userUUID, code)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("kode verifikasi tidak valid atau sudah kadaluarsa")
+		}
+		return nil, err
+	}
+
+	// Mark code as used
+	if err := s.twoFACodeRepo.MarkAsUsed(twoFACode.ID); err != nil {
+		return nil, err
+	}
+
+	// Get user and auto-enable 2FA
+	user, err := s.userRepo.GetByID(userUUID)
+	if err != nil {
+		return nil, err
+	}
+
+	user.TwoFAEnabled = true
+	now := time.Now()
+	user.UpdatedAt = &now
+	if err := s.userRepo.Update(user); err != nil {
+		return nil, err
+	}
+
+	// Generate actual JWT token
 	token, err := utils.GenerateJWT(user.ID.String(), s.jwtSecret)
 	if err != nil {
 		return nil, err
 	}
 
-	return &AuthPayload{
+	return &TwoFAPayload{
 		Token: token,
 		User:  user,
 	}, nil

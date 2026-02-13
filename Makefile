@@ -7,7 +7,8 @@ build:
 	go build -o bin/server cmd/server/main.go
 
 generate:
-	go generate ./...
+	go get github.com/99designs/gqlgen
+	go run github.com/99designs/gqlgen generate
 
 migrate-up:
 	go run cmd/migrate/main.go up

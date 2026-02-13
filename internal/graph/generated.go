@@ -377,6 +377,7 @@ type ComplexityRoot struct {
 		UpdateRecurringIncome           func(childComplexity int, id uuid.UUID, input model.UpdateRecurringIncomeInput) int
 		UpdateWalletAccount             func(childComplexity int, id uuid.UUID, input model.UpdateAccountInput) int
 		Verify2fa                       func(childComplexity int, input model.Verify2FAInput) int
+		VerifyRegistration              func(childComplexity int, input model.Verify2FAInput) int
 	}
 
 	NotificationLog struct {
@@ -496,6 +497,7 @@ type ComplexityRoot struct {
 type MutationResolver interface {
 	Register(ctx context.Context, input model.RegisterInput) (*model.AuthPayload, error)
 	Login(ctx context.Context, input model.LoginInput) (*model.AuthPayload, error)
+	VerifyRegistration(ctx context.Context, input model.Verify2FAInput) (*model.TwoFAPayload, error)
 	Verify2fa(ctx context.Context, input model.Verify2FAInput) (*model.TwoFAPayload, error)
 	Resend2FACode(ctx context.Context, tempToken string) (bool, error)
 	Enable2fa(ctx context.Context, password string) (bool, error)
@@ -2245,6 +2247,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.Verify2fa(childComplexity, args["input"].(model.Verify2FAInput)), true
+	case "Mutation.verifyRegistration":
+		if e.complexity.Mutation.VerifyRegistration == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_verifyRegistration_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.VerifyRegistration(childComplexity, args["input"].(model.Verify2FAInput)), true
 
 	case "NotificationLog.createdAt":
 		if e.complexity.NotificationLog.CreatedAt == nil {
@@ -3604,6 +3617,17 @@ func (ec *executionContext) field_Mutation_updateWalletAccount_args(ctx context.
 }
 
 func (ec *executionContext) field_Mutation_verify2FA_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNVerify2FAInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐVerify2FAInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_verifyRegistration_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNVerify2FAInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐVerify2FAInput)
@@ -9888,6 +9912,53 @@ func (ec *executionContext) fieldContext_Mutation_login(ctx context.Context, fie
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_login_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_verifyRegistration(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_verifyRegistration,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().VerifyRegistration(ctx, fc.Args["input"].(model.Verify2FAInput))
+		},
+		nil,
+		ec.marshalNTwoFAPayload2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐTwoFAPayload,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_verifyRegistration(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "token":
+				return ec.fieldContext_TwoFAPayload_token(ctx, field)
+			case "user":
+				return ec.fieldContext_TwoFAPayload_user(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TwoFAPayload", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_verifyRegistration_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -20814,6 +20885,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "login":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_login(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "verifyRegistration":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_verifyRegistration(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
