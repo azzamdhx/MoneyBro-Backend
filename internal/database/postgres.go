@@ -9,7 +9,7 @@ import (
 func NewPostgres(databaseURL string) (*gorm.DB, error) {
 	db, err := gorm.Open(postgres.New(postgres.Config{
 		DSN:                  databaseURL,
-		PreferSimpleProtocol: true, // Disable prepared statements for Railway connection pooling
+		PreferSimpleProtocol: true, // Disable prepared statements for connection pooling
 	}), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
