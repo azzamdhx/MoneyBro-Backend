@@ -128,7 +128,7 @@ func (r *mutationResolver) UpdateNotificationSettings(ctx context.Context, input
 	if !ok {
 		return nil, utils.ErrUnauthorized
 	}
-	user, err := r.Services.User.UpdateNotificationSettings(userID, input.NotifyInstallment, input.NotifyDebt, input.NotifyDaysBefore)
+	user, err := r.Services.User.UpdateNotificationSettings(userID, input.NotifyInstallment, input.NotifyDebt, input.NotifySavingsGoal, input.NotifyDaysBefore)
 	if err != nil {
 		return nil, err
 	}
@@ -706,6 +706,84 @@ func (r *mutationResolver) CreateIncomeFromRecurring(ctx context.Context, recurr
 	return incomeToModel(inc), nil
 }
 
+// CreateSavingsGoal is the resolver for the createSavingsGoal field.
+func (r *mutationResolver) CreateSavingsGoal(ctx context.Context, input model.CreateSavingsGoalInput) (*model.SavingsGoal, error) {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
+		return nil, utils.ErrUnauthorized
+	}
+
+	goal, err := r.Services.SavingsGoal.Create(userID, services.CreateSavingsGoalInput{
+		Name:         input.Name,
+		TargetAmount: int64(input.TargetAmount),
+		TargetDate:   input.TargetDate,
+		Icon:         input.Icon,
+		Notes:        input.Notes,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return savingsGoalToModel(goal), nil
+}
+
+// UpdateSavingsGoal is the resolver for the updateSavingsGoal field.
+func (r *mutationResolver) UpdateSavingsGoal(ctx context.Context, id uuid.UUID, input model.UpdateSavingsGoalInput) (*model.SavingsGoal, error) {
+	svcInput := services.UpdateSavingsGoalInput{
+		Name:  input.Name,
+		Icon:  input.Icon,
+		Notes: input.Notes,
+	}
+	if input.TargetAmount != nil {
+		v := int64(*input.TargetAmount)
+		svcInput.TargetAmount = &v
+	}
+	if input.TargetDate != nil {
+		svcInput.TargetDate = input.TargetDate
+	}
+	if input.Status != nil {
+		s := models.SavingsGoalStatus(*input.Status)
+		svcInput.Status = &s
+	}
+
+	goal, err := r.Services.SavingsGoal.Update(id, svcInput)
+	if err != nil {
+		return nil, err
+	}
+
+	return savingsGoalToModel(goal), nil
+}
+
+// DeleteSavingsGoal is the resolver for the deleteSavingsGoal field.
+func (r *mutationResolver) DeleteSavingsGoal(ctx context.Context, id uuid.UUID) (bool, error) {
+	err := r.Services.SavingsGoal.Delete(id)
+	return err == nil, err
+}
+
+// AddSavingsContribution is the resolver for the addSavingsContribution field.
+func (r *mutationResolver) AddSavingsContribution(ctx context.Context, input model.AddSavingsContributionInput) (*model.SavingsContribution, error) {
+	contribution, err := r.Services.SavingsGoal.AddContribution(input.SavingsGoalID, int64(input.Amount), input.ContributionDate, input.Notes)
+	if err != nil {
+		return nil, err
+	}
+	return savingsContributionToModel(contribution), nil
+}
+
+// WithdrawSavingsContribution is the resolver for the withdrawSavingsContribution field.
+func (r *mutationResolver) WithdrawSavingsContribution(ctx context.Context, id uuid.UUID) (bool, error) {
+	err := r.Services.SavingsGoal.WithdrawContribution(id)
+	return err == nil, err
+}
+
+// MarkSavingsGoalComplete is the resolver for the markSavingsGoalComplete field.
+func (r *mutationResolver) MarkSavingsGoalComplete(ctx context.Context, id uuid.UUID) (*model.SavingsGoal, error) {
+	goal, err := r.Services.SavingsGoal.MarkComplete(id)
+	if err != nil {
+		return nil, err
+	}
+	return savingsGoalToModel(goal), nil
+}
+
 // CreateWalletAccount is the resolver for the createWalletAccount field.
 func (r *mutationResolver) CreateWalletAccount(ctx context.Context, input model.CreateAccountInput) (*model.Account, error) {
 	userID, ok := middleware.GetUserID(ctx)
@@ -1098,6 +1176,40 @@ func (r *queryResolver) Dashboard(ctx context.Context) (*model.Dashboard, error)
 		return nil, err
 	}
 	return dashboardToModel(dash), nil
+}
+
+// SavingsGoals is the resolver for the savingsGoals field.
+func (r *queryResolver) SavingsGoals(ctx context.Context, status *model.SavingsGoalStatus) ([]*model.SavingsGoal, error) {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
+		return nil, utils.ErrUnauthorized
+	}
+
+	var modelStatus *models.SavingsGoalStatus
+	if status != nil {
+		s := models.SavingsGoalStatus(*status)
+		modelStatus = &s
+	}
+
+	goals, err := r.Services.SavingsGoal.GetByUserID(userID, modelStatus)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]*model.SavingsGoal, len(goals))
+	for i, g := range goals {
+		result[i] = savingsGoalToModel(&g)
+	}
+	return result, nil
+}
+
+// SavingsGoal is the resolver for the savingsGoal field.
+func (r *queryResolver) SavingsGoal(ctx context.Context, id uuid.UUID) (*model.SavingsGoal, error) {
+	goal, err := r.Services.SavingsGoal.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+	return savingsGoalToModel(goal), nil
 }
 
 // Accounts is the resolver for the accounts field.

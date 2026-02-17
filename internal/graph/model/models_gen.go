@@ -52,6 +52,13 @@ type ActualPaymentsReport struct {
 	TotalPayments    float64                     `json:"totalPayments"`
 }
 
+type AddSavingsContributionInput struct {
+	SavingsGoalID    uuid.UUID `json:"savingsGoalId"`
+	Amount           int       `json:"amount"`
+	ContributionDate time.Time `json:"contributionDate"`
+	Notes            *string   `json:"notes,omitempty"`
+}
+
 type AuthPayload struct {
 	Token       *string `json:"token,omitempty"`
 	User        *User   `json:"user,omitempty"`
@@ -183,14 +190,24 @@ type CreateRecurringIncomeInput struct {
 	Notes        *string    `json:"notes,omitempty"`
 }
 
+type CreateSavingsGoalInput struct {
+	Name         string    `json:"name"`
+	TargetAmount int       `json:"targetAmount"`
+	TargetDate   time.Time `json:"targetDate"`
+	Icon         *string   `json:"icon,omitempty"`
+	Notes        *string   `json:"notes,omitempty"`
+}
+
 type Dashboard struct {
 	TotalActiveDebt        int                `json:"totalActiveDebt"`
 	TotalActiveInstallment int                `json:"totalActiveInstallment"`
 	TotalExpenseThisMonth  int                `json:"totalExpenseThisMonth"`
 	TotalIncomeThisMonth   int                `json:"totalIncomeThisMonth"`
+	TotalSavingsGoal       int                `json:"totalSavingsGoal"`
 	BalanceSummary         *BalanceSummary    `json:"balanceSummary"`
 	UpcomingInstallments   []*Installment     `json:"upcomingInstallments"`
 	UpcomingDebts          []*Debt            `json:"upcomingDebts"`
+	ActiveSavingsGoals     []*SavingsGoal     `json:"activeSavingsGoals"`
 	ExpensesByCategory     []*CategorySummary `json:"expensesByCategory"`
 	RecentExpenses         []*Expense         `json:"recentExpenses"`
 }
@@ -456,6 +473,31 @@ type ResetPasswordInput struct {
 	Password string `json:"password"`
 }
 
+type SavingsContribution struct {
+	ID               uuid.UUID    `json:"id"`
+	Amount           int          `json:"amount"`
+	ContributionDate time.Time    `json:"contributionDate"`
+	Notes            *string      `json:"notes,omitempty"`
+	CreatedAt        time.Time    `json:"createdAt"`
+	SavingsGoal      *SavingsGoal `json:"savingsGoal"`
+}
+
+type SavingsGoal struct {
+	ID              uuid.UUID              `json:"id"`
+	Name            string                 `json:"name"`
+	TargetAmount    int                    `json:"targetAmount"`
+	CurrentAmount   int                    `json:"currentAmount"`
+	TargetDate      time.Time              `json:"targetDate"`
+	Icon            *string                `json:"icon,omitempty"`
+	Status          SavingsGoalStatus      `json:"status"`
+	Notes           *string                `json:"notes,omitempty"`
+	Progress        float64                `json:"progress"`
+	RemainingAmount int                    `json:"remainingAmount"`
+	MonthlyTarget   int                    `json:"monthlyTarget"`
+	CreatedAt       time.Time              `json:"createdAt"`
+	Contributions   []*SavingsContribution `json:"contributions"`
+}
+
 type Transaction struct {
 	ID              string              `json:"id"`
 	TransactionDate time.Time           `json:"transactionDate"`
@@ -586,6 +628,7 @@ type UpdateInstallmentInput struct {
 type UpdateNotificationSettingsInput struct {
 	NotifyInstallment *bool `json:"notifyInstallment,omitempty"`
 	NotifyDebt        *bool `json:"notifyDebt,omitempty"`
+	NotifySavingsGoal *bool `json:"notifySavingsGoal,omitempty"`
 	NotifyDaysBefore  *int  `json:"notifyDaysBefore,omitempty"`
 }
 
@@ -607,6 +650,15 @@ type UpdateRecurringIncomeInput struct {
 	Notes        *string     `json:"notes,omitempty"`
 }
 
+type UpdateSavingsGoalInput struct {
+	Name         *string            `json:"name,omitempty"`
+	TargetAmount *int               `json:"targetAmount,omitempty"`
+	TargetDate   *time.Time         `json:"targetDate,omitempty"`
+	Icon         *string            `json:"icon,omitempty"`
+	Notes        *string            `json:"notes,omitempty"`
+	Status       *SavingsGoalStatus `json:"status,omitempty"`
+}
+
 type User struct {
 	ID                uuid.UUID  `json:"id"`
 	Email             string     `json:"email"`
@@ -615,6 +667,7 @@ type User struct {
 	TwoFAEnabled      bool       `json:"twoFAEnabled"`
 	NotifyInstallment bool       `json:"notifyInstallment"`
 	NotifyDebt        bool       `json:"notifyDebt"`
+	NotifySavingsGoal bool       `json:"notifySavingsGoal"`
 	NotifyDaysBefore  int        `json:"notifyDaysBefore"`
 	CreatedAt         time.Time  `json:"createdAt"`
 	UpdatedAt         *time.Time `json:"updatedAt,omitempty"`
@@ -1027,6 +1080,63 @@ func (e *InstallmentStatus) UnmarshalJSON(b []byte) error {
 }
 
 func (e InstallmentStatus) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type SavingsGoalStatus string
+
+const (
+	SavingsGoalStatusActive    SavingsGoalStatus = "ACTIVE"
+	SavingsGoalStatusCompleted SavingsGoalStatus = "COMPLETED"
+	SavingsGoalStatusCancelled SavingsGoalStatus = "CANCELLED"
+)
+
+var AllSavingsGoalStatus = []SavingsGoalStatus{
+	SavingsGoalStatusActive,
+	SavingsGoalStatusCompleted,
+	SavingsGoalStatusCancelled,
+}
+
+func (e SavingsGoalStatus) IsValid() bool {
+	switch e {
+	case SavingsGoalStatusActive, SavingsGoalStatusCompleted, SavingsGoalStatusCancelled:
+		return true
+	}
+	return false
+}
+
+func (e SavingsGoalStatus) String() string {
+	return string(e)
+}
+
+func (e *SavingsGoalStatus) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = SavingsGoalStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid SavingsGoalStatus", str)
+	}
+	return nil
+}
+
+func (e SavingsGoalStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *SavingsGoalStatus) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e SavingsGoalStatus) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil

@@ -6,6 +6,7 @@ type User {
   twoFAEnabled: Boolean!
   notifyInstallment: Boolean!
   notifyDebt: Boolean!
+  notifySavingsGoal: Boolean!
   notifyDaysBefore: Int!
   createdAt: Time!
   updatedAt: Time
@@ -14,6 +15,7 @@ type User {
 input UpdateNotificationSettingsInput {
   notifyInstallment: Boolean
   notifyDebt: Boolean
+  notifySavingsGoal: Boolean
   notifyDaysBefore: Int
 }
 

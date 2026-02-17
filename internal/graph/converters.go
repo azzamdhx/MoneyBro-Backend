@@ -15,6 +15,7 @@ func userToModel(u *models.User) *model.User {
 		TwoFAEnabled:      u.TwoFAEnabled,
 		NotifyInstallment: u.NotifyInstallment,
 		NotifyDebt:        u.NotifyDebt,
+		NotifySavingsGoal: u.NotifySavingsGoal,
 		NotifyDaysBefore:  u.NotifyDaysBefore,
 		CreatedAt:         u.CreatedAt,
 		UpdatedAt:         u.UpdatedAt,
@@ -352,6 +353,7 @@ func dashboardToModel(d *services.Dashboard) *model.Dashboard {
 		TotalActiveInstallment: int(d.TotalActiveInstallment),
 		TotalExpenseThisMonth:  int(d.TotalExpenseThisMonth),
 		TotalIncomeThisMonth:   int(d.TotalIncomeThisMonth),
+		TotalSavingsGoal:       int(d.TotalSavingsGoal),
 		BalanceSummary:         balanceSummaryToModel(&d.BalanceSummary),
 	}
 	if len(d.UpcomingInstallments) > 0 {
@@ -367,6 +369,13 @@ func dashboardToModel(d *services.Dashboard) *model.Dashboard {
 			debts[i] = debtToModel(&debt)
 		}
 		dash.UpcomingDebts = debts
+	}
+	if len(d.ActiveSavingsGoals) > 0 {
+		goals := make([]*model.SavingsGoal, len(d.ActiveSavingsGoals))
+		for i, g := range d.ActiveSavingsGoals {
+			goals[i] = savingsGoalToModel(&g)
+		}
+		dash.ActiveSavingsGoals = goals
 	}
 	if len(d.ExpensesByCategory) > 0 {
 		cats := make([]*model.CategorySummary, len(d.ExpensesByCategory))
@@ -548,4 +557,43 @@ func calculateIncomeSummary(incomes []models.Income) *model.IncomeSummary {
 		ByCategory: byCategory,
 		ByType:     byType,
 	}
+}
+
+func savingsGoalToModel(g *models.SavingsGoal) *model.SavingsGoal {
+	goal := &model.SavingsGoal{
+		ID:              g.ID,
+		Name:            g.Name,
+		TargetAmount:    int(g.TargetAmount),
+		CurrentAmount:   int(g.CurrentAmount),
+		TargetDate:      g.TargetDate,
+		Icon:            g.Icon,
+		Status:          model.SavingsGoalStatus(g.Status),
+		Notes:           g.Notes,
+		Progress:        g.Progress(),
+		RemainingAmount: int(g.RemainingAmount()),
+		MonthlyTarget:   int(g.MonthlyTarget()),
+		CreatedAt:       g.CreatedAt,
+	}
+	if len(g.Contributions) > 0 {
+		contributions := make([]*model.SavingsContribution, len(g.Contributions))
+		for i, c := range g.Contributions {
+			contributions[i] = savingsContributionToModel(&c)
+		}
+		goal.Contributions = contributions
+	}
+	return goal
+}
+
+func savingsContributionToModel(c *models.SavingsContribution) *model.SavingsContribution {
+	contribution := &model.SavingsContribution{
+		ID:               c.ID,
+		Amount:           int(c.Amount),
+		ContributionDate: c.ContributionDate,
+		Notes:            c.Notes,
+		CreatedAt:        c.CreatedAt,
+	}
+	if c.SavingsGoal != nil {
+		contribution.SavingsGoal = savingsGoalToModel(c.SavingsGoal)
+	}
+	return contribution
 }

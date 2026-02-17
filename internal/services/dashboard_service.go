@@ -46,9 +46,11 @@ type Dashboard struct {
 	TotalActiveInstallment int64
 	TotalExpenseThisMonth  int64
 	TotalIncomeThisMonth   int64
+	TotalSavingsGoal       int64
 	BalanceSummary         BalanceSummary
 	UpcomingInstallments   []models.Installment
 	UpcomingDebts          []models.Debt
+	ActiveSavingsGoals     []models.SavingsGoal
 	ExpensesByCategory     []CategorySummary
 	RecentExpenses         []models.Expense
 }
@@ -189,6 +191,16 @@ func (s *DashboardService) GetDashboard(userID uuid.UUID) (*Dashboard, error) {
 			}
 		}
 	}
+
+	// Get active savings goals
+	activeSavingsGoals, err := s.repos.SavingsGoal.GetActiveByUserID(userID)
+	if err != nil {
+		activeSavingsGoals = nil
+	}
+	for _, goal := range activeSavingsGoals {
+		dashboard.TotalSavingsGoal += goal.CurrentAmount
+	}
+	dashboard.ActiveSavingsGoals = activeSavingsGoals
 
 	recentExpenses, err := s.repos.Expense.GetRecentByUserID(userID, 10)
 	if err != nil {

@@ -25,6 +25,8 @@ type Repositories struct {
 	Account              AccountRepository
 	Transaction          TransactionRepository
 	TransactionEntry     TransactionEntryRepository
+	SavingsGoal          SavingsGoalRepository
+	SavingsContribution  SavingsContributionRepository
 }
 
 func NewRepositories(db *gorm.DB) *Repositories {
@@ -46,6 +48,8 @@ func NewRepositories(db *gorm.DB) *Repositories {
 		Account:              NewAccountRepository(db),
 		Transaction:          NewTransactionRepository(db),
 		TransactionEntry:     NewTransactionEntryRepository(db),
+		SavingsGoal:          NewSavingsGoalRepository(db),
+		SavingsContribution:  NewSavingsContributionRepository(db),
 	}
 }
 
@@ -220,4 +224,21 @@ type TransactionEntryRepository interface {
 	DeleteByTransactionID(transactionID uuid.UUID) error
 	SumByAccountID(accountID uuid.UUID) (debit int64, credit int64, err error)
 	SumByAccountIDAndDateRange(accountID uuid.UUID, startDate, endDate string) (debit int64, credit int64, err error)
+}
+
+type SavingsGoalRepository interface {
+	Create(goal *models.SavingsGoal) error
+	GetByID(id uuid.UUID) (*models.SavingsGoal, error)
+	GetByUserID(userID uuid.UUID, status *models.SavingsGoalStatus) ([]models.SavingsGoal, error)
+	GetActiveByUserID(userID uuid.UUID) ([]models.SavingsGoal, error)
+	GetByTargetDateRange(startDate, endDate string, status models.SavingsGoalStatus) ([]models.SavingsGoal, error)
+	Update(goal *models.SavingsGoal) error
+	Delete(id uuid.UUID) error
+}
+
+type SavingsContributionRepository interface {
+	Create(contribution *models.SavingsContribution) error
+	GetByID(id uuid.UUID) (*models.SavingsContribution, error)
+	GetBySavingsGoalID(goalID uuid.UUID) ([]models.SavingsContribution, error)
+	Delete(id uuid.UUID) error
 }

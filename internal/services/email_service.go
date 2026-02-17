@@ -147,6 +147,27 @@ func (s *EmailService) SendPasswordResetEmail(ctx context.Context, to, name, res
 	})
 }
 
+func (s *EmailService) SendSavingsGoalReminder(ctx context.Context, to, name string, daysUntil int, remainingAmount, currentAmount int64, progress float64) error {
+	template, err := s.loadTemplate("savings_goal_reminder.html")
+	if err != nil {
+		return err
+	}
+
+	html := s.renderTemplate(template, map[string]interface{}{
+		"name":             name,
+		"days_until":       daysUntil,
+		"remaining_amount": remainingAmount,
+		"current_amount":   currentAmount,
+		"progress":         int(progress),
+	})
+
+	return s.Send(ctx, EmailParams{
+		To:      to,
+		Subject: fmt.Sprintf("Reminder: Target tabungan %s deadline dalam %d hari", name, daysUntil),
+		HTML:    html,
+	})
+}
+
 func (s *EmailService) Send2FACodeEmail(ctx context.Context, to, name, code string) error {
 	template, err := s.loadTemplate("2fa_code.html")
 	if err != nil {

@@ -15,6 +15,7 @@ type User struct {
 	TwoFAEnabled      bool       `gorm:"default:false" json:"two_fa_enabled"`
 	NotifyInstallment bool       `gorm:"default:true" json:"notify_installment"`
 	NotifyDebt        bool       `gorm:"default:true" json:"notify_debt"`
+	NotifySavingsGoal bool       `gorm:"default:true" json:"notify_savings_goal"`
 	NotifyDaysBefore  int        `gorm:"default:3" json:"notify_days_before"`
 	CreatedAt         time.Time  `gorm:"default:now()" json:"created_at"`
 	UpdatedAt         *time.Time `json:"updated_at,omitempty"`

@@ -11,6 +11,7 @@ type NotificationType string
 const (
 	NotificationTypeInstallmentReminder NotificationType = "INSTALLMENT_REMINDER"
 	NotificationTypeDebtReminder        NotificationType = "DEBT_REMINDER"
+	NotificationTypeSavingsGoalReminder NotificationType = "SAVINGS_GOAL_REMINDER"
 )
 
 type NotificationLog struct {

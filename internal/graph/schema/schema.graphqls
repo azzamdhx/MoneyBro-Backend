@@ -33,6 +33,9 @@ type Query {
   
   dashboard: Dashboard!
   
+  savingsGoals(status: SavingsGoalStatus): [SavingsGoal!]!
+  savingsGoal(id: UUID!): SavingsGoal
+  
   accounts: [Account!]!
   account(id: UUID!): Account
   accountsByType(accountType: AccountType!): [Account!]!
@@ -94,6 +97,13 @@ type Mutation {
   updateRecurringIncome(id: UUID!, input: UpdateRecurringIncomeInput!): RecurringIncome!
   deleteRecurringIncome(id: UUID!): Boolean!
   createIncomeFromRecurring(recurringId: UUID!, incomeDate: Date): Income!
+  
+  createSavingsGoal(input: CreateSavingsGoalInput!): SavingsGoal!
+  updateSavingsGoal(id: UUID!, input: UpdateSavingsGoalInput!): SavingsGoal!
+  deleteSavingsGoal(id: UUID!): Boolean!
+  addSavingsContribution(input: AddSavingsContributionInput!): SavingsContribution!
+  withdrawSavingsContribution(id: UUID!): Boolean!
+  markSavingsGoalComplete(id: UUID!): SavingsGoal!
   
   createWalletAccount(input: CreateAccountInput!): Account!
   updateWalletAccount(id: UUID!, input: UpdateAccountInput!): Account!

@@ -1,0 +1,1 @@
+ALTER TABLE users ADD COLUMN notify_savings_goal BOOLEAN NOT NULL DEFAULT TRUE;

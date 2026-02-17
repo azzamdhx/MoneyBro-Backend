@@ -1,0 +1,56 @@
+enum SavingsGoalStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+type SavingsGoal {
+  id: UUID!
+  name: String!
+  targetAmount: Int!
+  currentAmount: Int!
+  targetDate: Date!
+  icon: String
+  status: SavingsGoalStatus!
+  notes: String
+  progress: Float!
+  remainingAmount: Int!
+  monthlyTarget: Int!
+  createdAt: Time!
+  
+  contributions: [SavingsContribution!]!
+}
+
+type SavingsContribution {
+  id: UUID!
+  amount: Int!
+  contributionDate: Date!
+  notes: String
+  createdAt: Time!
+  
+  savingsGoal: SavingsGoal!
+}
+
+input CreateSavingsGoalInput {
+  name: String!
+  targetAmount: Int!
+  targetDate: Date!
+  icon: String
+  notes: String
+}
+
+input UpdateSavingsGoalInput {
+  name: String
+  targetAmount: Int
+  targetDate: Date
+  icon: String
+  notes: String
+  status: SavingsGoalStatus
+}
+
+input AddSavingsContributionInput {
+  savingsGoalId: UUID!
+  amount: Int!
+  contributionDate: Date!
+  notes: String
+}

@@ -106,7 +106,7 @@ func (s *UserService) UpdateProfile(userID uuid.UUID, name, email, profileImage,
 	return user, nil
 }
 
-func (s *UserService) UpdateNotificationSettings(userID uuid.UUID, notifyInstallment, notifyDebt *bool, notifyDaysBefore *int) (*models.User, error) {
+func (s *UserService) UpdateNotificationSettings(userID uuid.UUID, notifyInstallment, notifyDebt, notifySavingsGoal *bool, notifyDaysBefore *int) (*models.User, error) {
 	user, err := s.userRepo.GetByID(userID)
 	if err != nil {
 		return nil, err
@@ -118,6 +118,10 @@ func (s *UserService) UpdateNotificationSettings(userID uuid.UUID, notifyInstall
 
 	if notifyDebt != nil {
 		user.NotifyDebt = *notifyDebt
+	}
+
+	if notifySavingsGoal != nil {
+		user.NotifySavingsGoal = *notifySavingsGoal
 	}
 
 	if notifyDaysBefore != nil {

@@ -47,6 +47,11 @@ func (s *NotificationService) SendDueReminders(ctx context.Context) error {
 		if user.NotifyDebt {
 			s.sendDebtRemindersForUser(ctx, user, now)
 		}
+
+		// Send savings goal reminders based on user preference
+		if user.NotifySavingsGoal {
+			s.sendSavingsGoalRemindersForUser(ctx, user, now)
+		}
 	}
 
 	return nil
@@ -156,6 +161,56 @@ func (s *NotificationService) sendDebtRemindersForUser(ctx context.Context, user
 				log.Printf("Error creating notification log: %v", err)
 			}
 			log.Printf("Sent debt reminder to %s for %s (due in %d days)", user.Email, debt.PersonName, daysAhead)
+		}
+	}
+}
+
+func (s *NotificationService) sendSavingsGoalRemindersForUser(ctx context.Context, user models.User, now time.Time) {
+	// Check for savings goals with target dates within user's preferred notification window
+	for daysAhead := 0; daysAhead <= user.NotifyDaysBefore; daysAhead++ {
+		targetDate := now.AddDate(0, 0, daysAhead)
+		startDate := targetDate.Format("2006-01-02")
+		endDate := targetDate.Format("2006-01-02")
+
+		goals, err := s.repos.SavingsGoal.GetByTargetDateRange(startDate, endDate, models.SavingsGoalStatusActive)
+		if err != nil {
+			log.Printf("Error getting savings goals for date %s: %v", startDate, err)
+			continue
+		}
+
+		for _, goal := range goals {
+			// Only process this user's goals
+			if goal.UserID != user.ID {
+				continue
+			}
+
+			exists, err := s.repos.NotificationLog.ExistsForToday(goal.UserID, goal.ID, models.NotificationTypeSavingsGoalReminder)
+			if err != nil {
+				log.Printf("Error checking notification log: %v", err)
+				continue
+			}
+			if exists {
+				continue
+			}
+
+			err = s.emailService.SendSavingsGoalReminder(ctx, user.Email, goal.Name, daysAhead, goal.RemainingAmount(), goal.CurrentAmount, goal.Progress())
+			if err != nil {
+				log.Printf("Error sending savings goal reminder to %s: %v", user.Email, err)
+				continue
+			}
+
+			subject := "Reminder: Target tabungan " + goal.Name + " deadline"
+			logEntry := &models.NotificationLog{
+				UserID:       goal.UserID,
+				Type:         models.NotificationTypeSavingsGoalReminder,
+				ReferenceID:  goal.ID,
+				SentAt:       now,
+				EmailSubject: &subject,
+			}
+			if err := s.repos.NotificationLog.Create(logEntry); err != nil {
+				log.Printf("Error creating notification log: %v", err)
+			}
+			log.Printf("Sent savings goal reminder to %s for %s (deadline in %d days)", user.Email, goal.Name, daysAhead)
 		}
 	}
 }
