@@ -1165,6 +1165,48 @@ func (r *queryResolver) ActualPayments(ctx context.Context, filter model.ActualP
 	return actualPaymentsReportToModel(report), nil
 }
 
+// HistorySummary is the resolver for the historySummary field.
+func (r *queryResolver) HistorySummary(ctx context.Context, filter *model.MonthYearInput) (*model.HistorySummary, error) {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
+		return nil, utils.ErrUnauthorized
+	}
+
+	var month, year *int
+	if filter != nil {
+		month = &filter.Month
+		year = &filter.Year
+	}
+
+	result, err := r.Services.MonthlySummary.GetHistorySummary(userID, month, year)
+	if err != nil {
+		return nil, err
+	}
+
+	return historySummaryToModel(result), nil
+}
+
+// ForecastSummary is the resolver for the forecastSummary field.
+func (r *queryResolver) ForecastSummary(ctx context.Context, filter *model.MonthYearInput) (*model.ForecastSummary, error) {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
+		return nil, utils.ErrUnauthorized
+	}
+
+	var month, year *int
+	if filter != nil {
+		month = &filter.Month
+		year = &filter.Year
+	}
+
+	result, err := r.Services.MonthlySummary.GetForecastSummary(userID, month, year)
+	if err != nil {
+		return nil, err
+	}
+
+	return forecastSummaryToModel(result), nil
+}
+
 // Dashboard is the resolver for the dashboard field.
 func (r *queryResolver) Dashboard(ctx context.Context) (*model.Dashboard, error) {
 	userID, ok := middleware.GetUserID(ctx)

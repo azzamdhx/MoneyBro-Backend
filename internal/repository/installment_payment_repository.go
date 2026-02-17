@@ -19,6 +19,15 @@ func (r *installmentPaymentRepository) Create(payment *models.InstallmentPayment
 	return r.db.Create(payment).Error
 }
 
+func (r *installmentPaymentRepository) GetByIDs(ids []uuid.UUID) ([]models.InstallmentPayment, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	var payments []models.InstallmentPayment
+	err := r.db.Preload("Installment").Where("id IN ?", ids).Find(&payments).Error
+	return payments, err
+}
+
 func (r *installmentPaymentRepository) GetByInstallmentID(installmentID uuid.UUID) ([]models.InstallmentPayment, error) {
 	var payments []models.InstallmentPayment
 	err := r.db.Where("installment_id = ?", installmentID).Order("payment_number ASC").Find(&payments).Error

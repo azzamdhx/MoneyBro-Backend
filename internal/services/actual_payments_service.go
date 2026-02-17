@@ -1,6 +1,7 @@
 package services
 
 import (
+	"github.com/azzamdhx/moneybro/backend/internal/models"
 	"github.com/azzamdhx/moneybro/backend/internal/repository"
 	"github.com/google/uuid"
 )
@@ -47,25 +48,33 @@ func (s *ActualPaymentsService) GetActualPayments(userID uuid.UUID, startDate, e
 
 	// Get installment payment transactions from transactions table only
 	installmentTxs, err := s.repos.Transaction.GetByUserIDAndDateRangeAndReferenceType(
-		userID,
-		startDate,
-		endDate,
-		"installment_payment",
+		userID, startDate, endDate, "installment_payment",
 	)
-	if err == nil {
-		// Each transaction record represents an actual payment
+	if err == nil && len(installmentTxs) > 0 {
+		// Collect all reference IDs for batch fetch
+		refIDs := make([]uuid.UUID, 0, len(installmentTxs))
+		for _, tx := range installmentTxs {
+			if tx.ReferenceID != nil {
+				refIDs = append(refIDs, *tx.ReferenceID)
+			}
+		}
+
+		// Batch fetch all installment payments
+		instPayments, _ := s.repos.InstallmentPayment.GetByIDs(refIDs)
+		paymentMap := make(map[uuid.UUID]*models.InstallmentPayment, len(instPayments))
+		for i := range instPayments {
+			paymentMap[instPayments[i].ID] = &instPayments[i]
+		}
+
 		for _, tx := range installmentTxs {
 			if tx.ReferenceID == nil {
 				continue
 			}
-
-			// Get installment_payment record (reference_id points to installment_payments.id)
-			installmentPayment, err := s.repos.InstallmentPayment.GetByID(*tx.ReferenceID)
-			if err != nil || installmentPayment.Installment == nil {
+			instPmt, ok := paymentMap[*tx.ReferenceID]
+			if !ok || instPmt.Installment == nil {
 				continue
 			}
 
-			// Calculate amount from transaction entries
 			var amount int64
 			for _, entry := range tx.Entries {
 				if entry.Account.AccountType == "LIABILITY" {
@@ -73,40 +82,46 @@ func (s *ActualPaymentsService) GetActualPayments(userID uuid.UUID, startDate, e
 				}
 			}
 
-			// Add each transaction as a separate payment
 			report.Installments = append(report.Installments, ActualInstallmentPayment{
-				InstallmentID:   installmentPayment.InstallmentID,
-				Name:            installmentPayment.Installment.Name,
+				InstallmentID:   instPmt.InstallmentID,
+				Name:            instPmt.Installment.Name,
 				Amount:          amount,
 				TransactionDate: tx.TransactionDate.Format("2006-01-02"),
 				Description:     tx.Description,
 			})
-
 			report.TotalInstallment += amount
 		}
 	}
 
 	// Get debt payment transactions from transactions table only
 	debtTxs, err := s.repos.Transaction.GetByUserIDAndDateRangeAndReferenceType(
-		userID,
-		startDate,
-		endDate,
-		"debt_payment",
+		userID, startDate, endDate, "debt_payment",
 	)
-	if err == nil {
-		// Each transaction record represents an actual payment
+	if err == nil && len(debtTxs) > 0 {
+		// Collect all reference IDs for batch fetch
+		refIDs := make([]uuid.UUID, 0, len(debtTxs))
+		for _, tx := range debtTxs {
+			if tx.ReferenceID != nil {
+				refIDs = append(refIDs, *tx.ReferenceID)
+			}
+		}
+
+		// Batch fetch all debt payments
+		debtPayments, _ := s.repos.DebtPayment.GetByIDs(refIDs)
+		paymentMap := make(map[uuid.UUID]*models.DebtPayment, len(debtPayments))
+		for i := range debtPayments {
+			paymentMap[debtPayments[i].ID] = &debtPayments[i]
+		}
+
 		for _, tx := range debtTxs {
 			if tx.ReferenceID == nil {
 				continue
 			}
-
-			// Get debt_payment record (reference_id points to debt_payments.id)
-			debtPayment, err := s.repos.DebtPayment.GetByID(*tx.ReferenceID)
-			if err != nil || debtPayment.Debt == nil {
+			debtPmt, ok := paymentMap[*tx.ReferenceID]
+			if !ok || debtPmt.Debt == nil {
 				continue
 			}
 
-			// Calculate amount from transaction entries
 			var amount int64
 			for _, entry := range tx.Entries {
 				if entry.Account.AccountType == "LIABILITY" {
@@ -114,15 +129,13 @@ func (s *ActualPaymentsService) GetActualPayments(userID uuid.UUID, startDate, e
 				}
 			}
 
-			// Add each transaction as a separate payment
 			report.Debts = append(report.Debts, ActualDebtPayment{
-				DebtID:          debtPayment.DebtID,
-				PersonName:      debtPayment.Debt.PersonName,
+				DebtID:          debtPmt.DebtID,
+				PersonName:      debtPmt.Debt.PersonName,
 				Amount:          amount,
 				TransactionDate: tx.TransactionDate.Format("2006-01-02"),
 				Description:     tx.Description,
 			})
-
 			report.TotalDebt += amount
 		}
 	}

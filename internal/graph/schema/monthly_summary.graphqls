@@ -1,0 +1,22 @@
+type HistorySummary {
+  availableMonths: [String!]!
+  selectedMonth: String!
+  incomeSummary: IncomeSummary!
+  expenseSummary: ExpenseSummary!
+  payments: ActualPaymentsReport!
+  totalSavingsContribution: Int!
+}
+
+type ForecastSummary {
+  availableMonths: [String!]!
+  selectedMonth: String!
+  incomeSummary: IncomeSummary!
+  expenseSummary: ExpenseSummary!
+  payments: UpcomingPaymentsReport!
+  totalSavingsContribution: Int!
+}
+
+input MonthYearInput {
+  month: Int!
+  year: Int!
+}

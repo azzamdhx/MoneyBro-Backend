@@ -133,17 +133,15 @@ type ComplexityRoot struct {
 	}
 
 	Dashboard struct {
-		ActiveSavingsGoals     func(childComplexity int) int
-		BalanceSummary         func(childComplexity int) int
-		ExpensesByCategory     func(childComplexity int) int
-		RecentExpenses         func(childComplexity int) int
-		TotalActiveDebt        func(childComplexity int) int
-		TotalActiveInstallment func(childComplexity int) int
-		TotalExpenseThisMonth  func(childComplexity int) int
-		TotalIncomeThisMonth   func(childComplexity int) int
-		TotalSavingsGoal       func(childComplexity int) int
-		UpcomingDebts          func(childComplexity int) int
-		UpcomingInstallments   func(childComplexity int) int
+		ActiveSavingsGoals                func(childComplexity int) int
+		BalanceSummary                    func(childComplexity int) int
+		ExpensesByCategory                func(childComplexity int) int
+		RecentExpenses                    func(childComplexity int) int
+		TotalActiveDebt                   func(childComplexity int) int
+		TotalActiveInstallment            func(childComplexity int) int
+		TotalExpenseThisMonth             func(childComplexity int) int
+		TotalIncomeThisMonth              func(childComplexity int) int
+		TotalSavingsContributionThisMonth func(childComplexity int) int
 	}
 
 	Debt struct {
@@ -228,6 +226,24 @@ type ComplexityRoot struct {
 	ExpensesWithSummary struct {
 		Items   func(childComplexity int) int
 		Summary func(childComplexity int) int
+	}
+
+	ForecastSummary struct {
+		AvailableMonths          func(childComplexity int) int
+		ExpenseSummary           func(childComplexity int) int
+		IncomeSummary            func(childComplexity int) int
+		Payments                 func(childComplexity int) int
+		SelectedMonth            func(childComplexity int) int
+		TotalSavingsContribution func(childComplexity int) int
+	}
+
+	HistorySummary struct {
+		AvailableMonths          func(childComplexity int) int
+		ExpenseSummary           func(childComplexity int) int
+		IncomeSummary            func(childComplexity int) int
+		Payments                 func(childComplexity int) int
+		SelectedMonth            func(childComplexity int) int
+		TotalSavingsContribution func(childComplexity int) int
 	}
 
 	Income struct {
@@ -413,6 +429,8 @@ type ComplexityRoot struct {
 		ExpenseTemplateGroup   func(childComplexity int, id uuid.UUID) int
 		ExpenseTemplateGroups  func(childComplexity int) int
 		Expenses               func(childComplexity int, filter *model.ExpenseFilter) int
+		ForecastSummary        func(childComplexity int, filter *model.MonthYearInput) int
+		HistorySummary         func(childComplexity int, filter *model.MonthYearInput) int
 		Income                 func(childComplexity int, id uuid.UUID) int
 		IncomeCategories       func(childComplexity int) int
 		IncomeCategory         func(childComplexity int, id uuid.UUID) int
@@ -609,6 +627,8 @@ type QueryResolver interface {
 	Balance(ctx context.Context, filter model.BalanceFilterInput) (*model.BalanceReport, error)
 	UpcomingPayments(ctx context.Context, filter model.UpcomingPaymentsFilter) (*model.UpcomingPaymentsReport, error)
 	ActualPayments(ctx context.Context, filter model.ActualPaymentsFilter) (*model.ActualPaymentsReport, error)
+	HistorySummary(ctx context.Context, filter *model.MonthYearInput) (*model.HistorySummary, error)
+	ForecastSummary(ctx context.Context, filter *model.MonthYearInput) (*model.ForecastSummary, error)
 	Dashboard(ctx context.Context) (*model.Dashboard, error)
 	SavingsGoals(ctx context.Context, status *model.SavingsGoalStatus) ([]*model.SavingsGoal, error)
 	SavingsGoal(ctx context.Context, id uuid.UUID) (*model.SavingsGoal, error)
@@ -1015,24 +1035,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Dashboard.TotalIncomeThisMonth(childComplexity), true
-	case "Dashboard.totalSavingsGoal":
-		if e.complexity.Dashboard.TotalSavingsGoal == nil {
+	case "Dashboard.totalSavingsContributionThisMonth":
+		if e.complexity.Dashboard.TotalSavingsContributionThisMonth == nil {
 			break
 		}
 
-		return e.complexity.Dashboard.TotalSavingsGoal(childComplexity), true
-	case "Dashboard.upcomingDebts":
-		if e.complexity.Dashboard.UpcomingDebts == nil {
-			break
-		}
-
-		return e.complexity.Dashboard.UpcomingDebts(childComplexity), true
-	case "Dashboard.upcomingInstallments":
-		if e.complexity.Dashboard.UpcomingInstallments == nil {
-			break
-		}
-
-		return e.complexity.Dashboard.UpcomingInstallments(childComplexity), true
+		return e.complexity.Dashboard.TotalSavingsContributionThisMonth(childComplexity), true
 
 	case "Debt.actualAmount":
 		if e.complexity.Debt.ActualAmount == nil {
@@ -1384,6 +1392,80 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.ExpensesWithSummary.Summary(childComplexity), true
+
+	case "ForecastSummary.availableMonths":
+		if e.complexity.ForecastSummary.AvailableMonths == nil {
+			break
+		}
+
+		return e.complexity.ForecastSummary.AvailableMonths(childComplexity), true
+	case "ForecastSummary.expenseSummary":
+		if e.complexity.ForecastSummary.ExpenseSummary == nil {
+			break
+		}
+
+		return e.complexity.ForecastSummary.ExpenseSummary(childComplexity), true
+	case "ForecastSummary.incomeSummary":
+		if e.complexity.ForecastSummary.IncomeSummary == nil {
+			break
+		}
+
+		return e.complexity.ForecastSummary.IncomeSummary(childComplexity), true
+	case "ForecastSummary.payments":
+		if e.complexity.ForecastSummary.Payments == nil {
+			break
+		}
+
+		return e.complexity.ForecastSummary.Payments(childComplexity), true
+	case "ForecastSummary.selectedMonth":
+		if e.complexity.ForecastSummary.SelectedMonth == nil {
+			break
+		}
+
+		return e.complexity.ForecastSummary.SelectedMonth(childComplexity), true
+	case "ForecastSummary.totalSavingsContribution":
+		if e.complexity.ForecastSummary.TotalSavingsContribution == nil {
+			break
+		}
+
+		return e.complexity.ForecastSummary.TotalSavingsContribution(childComplexity), true
+
+	case "HistorySummary.availableMonths":
+		if e.complexity.HistorySummary.AvailableMonths == nil {
+			break
+		}
+
+		return e.complexity.HistorySummary.AvailableMonths(childComplexity), true
+	case "HistorySummary.expenseSummary":
+		if e.complexity.HistorySummary.ExpenseSummary == nil {
+			break
+		}
+
+		return e.complexity.HistorySummary.ExpenseSummary(childComplexity), true
+	case "HistorySummary.incomeSummary":
+		if e.complexity.HistorySummary.IncomeSummary == nil {
+			break
+		}
+
+		return e.complexity.HistorySummary.IncomeSummary(childComplexity), true
+	case "HistorySummary.payments":
+		if e.complexity.HistorySummary.Payments == nil {
+			break
+		}
+
+		return e.complexity.HistorySummary.Payments(childComplexity), true
+	case "HistorySummary.selectedMonth":
+		if e.complexity.HistorySummary.SelectedMonth == nil {
+			break
+		}
+
+		return e.complexity.HistorySummary.SelectedMonth(childComplexity), true
+	case "HistorySummary.totalSavingsContribution":
+		if e.complexity.HistorySummary.TotalSavingsContribution == nil {
+			break
+		}
+
+		return e.complexity.HistorySummary.TotalSavingsContribution(childComplexity), true
 
 	case "Income.amount":
 		if e.complexity.Income.Amount == nil {
@@ -2564,6 +2646,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.Expenses(childComplexity, args["filter"].(*model.ExpenseFilter)), true
+	case "Query.forecastSummary":
+		if e.complexity.Query.ForecastSummary == nil {
+			break
+		}
+
+		args, err := ec.field_Query_forecastSummary_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ForecastSummary(childComplexity, args["filter"].(*model.MonthYearInput)), true
+	case "Query.historySummary":
+		if e.complexity.Query.HistorySummary == nil {
+			break
+		}
+
+		args, err := ec.field_Query_historySummary_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.HistorySummary(childComplexity, args["filter"].(*model.MonthYearInput)), true
 	case "Query.income":
 		if e.complexity.Query.Income == nil {
 			break
@@ -3172,6 +3276,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputForgotPasswordInput,
 		ec.unmarshalInputIncomeFilter,
 		ec.unmarshalInputLoginInput,
+		ec.unmarshalInputMonthYearInput,
 		ec.unmarshalInputRecordDebtPaymentInput,
 		ec.unmarshalInputRecordInstallmentPaymentInput,
 		ec.unmarshalInputRegisterInput,
@@ -3288,7 +3393,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 	return introspection.WrapTypeFromDef(ec.Schema(), ec.Schema().Types[name]), nil
 }
 
-//go:embed "schema/account.graphqls" "schema/actual_payments.graphqls" "schema/balance.graphqls" "schema/category.graphqls" "schema/dashboard.graphqls" "schema/debt.graphqls" "schema/expense.graphqls" "schema/income.graphqls" "schema/installment.graphqls" "schema/ledger.graphqls" "schema/notification.graphqls" "schema/savings_goal.graphqls" "schema/schema.graphqls" "schema/upcoming_payments.graphqls" "schema/user.graphqls"
+//go:embed "schema/account.graphqls" "schema/actual_payments.graphqls" "schema/balance.graphqls" "schema/category.graphqls" "schema/dashboard.graphqls" "schema/debt.graphqls" "schema/expense.graphqls" "schema/income.graphqls" "schema/installment.graphqls" "schema/ledger.graphqls" "schema/monthly_summary.graphqls" "schema/notification.graphqls" "schema/savings_goal.graphqls" "schema/schema.graphqls" "schema/upcoming_payments.graphqls" "schema/user.graphqls"
 var sourcesFS embed.FS
 
 func sourceData(filename string) string {
@@ -3310,6 +3415,7 @@ var sources = []*ast.Source{
 	{Name: "schema/income.graphqls", Input: sourceData("schema/income.graphqls"), BuiltIn: false},
 	{Name: "schema/installment.graphqls", Input: sourceData("schema/installment.graphqls"), BuiltIn: false},
 	{Name: "schema/ledger.graphqls", Input: sourceData("schema/ledger.graphqls"), BuiltIn: false},
+	{Name: "schema/monthly_summary.graphqls", Input: sourceData("schema/monthly_summary.graphqls"), BuiltIn: false},
 	{Name: "schema/notification.graphqls", Input: sourceData("schema/notification.graphqls"), BuiltIn: false},
 	{Name: "schema/savings_goal.graphqls", Input: sourceData("schema/savings_goal.graphqls"), BuiltIn: false},
 	{Name: "schema/schema.graphqls", Input: sourceData("schema/schema.graphqls"), BuiltIn: false},
@@ -4111,6 +4217,28 @@ func (ec *executionContext) field_Query_expenses_args(ctx context.Context, rawAr
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "filter", ec.unmarshalOExpenseFilter2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseFilter)
+	if err != nil {
+		return nil, err
+	}
+	args["filter"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_forecastSummary_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "filter", ec.unmarshalOMonthYearInput2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐMonthYearInput)
+	if err != nil {
+		return nil, err
+	}
+	args["filter"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_historySummary_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "filter", ec.unmarshalOMonthYearInput2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐMonthYearInput)
 	if err != nil {
 		return nil, err
 	}
@@ -6067,14 +6195,14 @@ func (ec *executionContext) fieldContext_Dashboard_totalIncomeThisMonth(_ contex
 	return fc, nil
 }
 
-func (ec *executionContext) _Dashboard_totalSavingsGoal(ctx context.Context, field graphql.CollectedField, obj *model.Dashboard) (ret graphql.Marshaler) {
+func (ec *executionContext) _Dashboard_totalSavingsContributionThisMonth(ctx context.Context, field graphql.CollectedField, obj *model.Dashboard) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Dashboard_totalSavingsGoal,
+		ec.fieldContext_Dashboard_totalSavingsContributionThisMonth,
 		func(ctx context.Context) (any, error) {
-			return obj.TotalSavingsGoal, nil
+			return obj.TotalSavingsContributionThisMonth, nil
 		},
 		nil,
 		ec.marshalNInt2int,
@@ -6083,7 +6211,7 @@ func (ec *executionContext) _Dashboard_totalSavingsGoal(ctx context.Context, fie
 	)
 }
 
-func (ec *executionContext) fieldContext_Dashboard_totalSavingsGoal(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Dashboard_totalSavingsContributionThisMonth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Dashboard",
 		Field:      field,
@@ -6134,136 +6262,6 @@ func (ec *executionContext) fieldContext_Dashboard_balanceSummary(_ context.Cont
 				return ec.fieldContext_BalanceSummary_status(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type BalanceSummary", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Dashboard_upcomingInstallments(ctx context.Context, field graphql.CollectedField, obj *model.Dashboard) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_Dashboard_upcomingInstallments,
-		func(ctx context.Context) (any, error) {
-			return obj.UpcomingInstallments, nil
-		},
-		nil,
-		ec.marshalNInstallment2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐInstallmentᚄ,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_Dashboard_upcomingInstallments(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Dashboard",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Installment_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Installment_name(ctx, field)
-			case "actualAmount":
-				return ec.fieldContext_Installment_actualAmount(ctx, field)
-			case "loanAmount":
-				return ec.fieldContext_Installment_loanAmount(ctx, field)
-			case "monthlyPayment":
-				return ec.fieldContext_Installment_monthlyPayment(ctx, field)
-			case "tenor":
-				return ec.fieldContext_Installment_tenor(ctx, field)
-			case "startDate":
-				return ec.fieldContext_Installment_startDate(ctx, field)
-			case "dueDay":
-				return ec.fieldContext_Installment_dueDay(ctx, field)
-			case "status":
-				return ec.fieldContext_Installment_status(ctx, field)
-			case "notes":
-				return ec.fieldContext_Installment_notes(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Installment_createdAt(ctx, field)
-			case "interestAmount":
-				return ec.fieldContext_Installment_interestAmount(ctx, field)
-			case "interestPercentage":
-				return ec.fieldContext_Installment_interestPercentage(ctx, field)
-			case "paidCount":
-				return ec.fieldContext_Installment_paidCount(ctx, field)
-			case "remainingPayments":
-				return ec.fieldContext_Installment_remainingPayments(ctx, field)
-			case "remainingAmount":
-				return ec.fieldContext_Installment_remainingAmount(ctx, field)
-			case "payments":
-				return ec.fieldContext_Installment_payments(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Installment", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Dashboard_upcomingDebts(ctx context.Context, field graphql.CollectedField, obj *model.Dashboard) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_Dashboard_upcomingDebts,
-		func(ctx context.Context) (any, error) {
-			return obj.UpcomingDebts, nil
-		},
-		nil,
-		ec.marshalNDebt2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐDebtᚄ,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_Dashboard_upcomingDebts(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Dashboard",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Debt_id(ctx, field)
-			case "personName":
-				return ec.fieldContext_Debt_personName(ctx, field)
-			case "actualAmount":
-				return ec.fieldContext_Debt_actualAmount(ctx, field)
-			case "loanAmount":
-				return ec.fieldContext_Debt_loanAmount(ctx, field)
-			case "paymentType":
-				return ec.fieldContext_Debt_paymentType(ctx, field)
-			case "monthlyPayment":
-				return ec.fieldContext_Debt_monthlyPayment(ctx, field)
-			case "tenor":
-				return ec.fieldContext_Debt_tenor(ctx, field)
-			case "dueDate":
-				return ec.fieldContext_Debt_dueDate(ctx, field)
-			case "status":
-				return ec.fieldContext_Debt_status(ctx, field)
-			case "notes":
-				return ec.fieldContext_Debt_notes(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Debt_createdAt(ctx, field)
-			case "interestAmount":
-				return ec.fieldContext_Debt_interestAmount(ctx, field)
-			case "interestPercentage":
-				return ec.fieldContext_Debt_interestPercentage(ctx, field)
-			case "totalToPay":
-				return ec.fieldContext_Debt_totalToPay(ctx, field)
-			case "paidAmount":
-				return ec.fieldContext_Debt_paidAmount(ctx, field)
-			case "remainingAmount":
-				return ec.fieldContext_Debt_remainingAmount(ctx, field)
-			case "payments":
-				return ec.fieldContext_Debt_payments(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Debt", field.Name)
 		},
 	}
 	return fc, nil
@@ -8212,6 +8210,414 @@ func (ec *executionContext) fieldContext_ExpensesWithSummary_summary(_ context.C
 				return ec.fieldContext_ExpenseSummary_byCategory(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ExpenseSummary", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ForecastSummary_availableMonths(ctx context.Context, field graphql.CollectedField, obj *model.ForecastSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ForecastSummary_availableMonths,
+		func(ctx context.Context) (any, error) {
+			return obj.AvailableMonths, nil
+		},
+		nil,
+		ec.marshalNString2ᚕstringᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ForecastSummary_availableMonths(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ForecastSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ForecastSummary_selectedMonth(ctx context.Context, field graphql.CollectedField, obj *model.ForecastSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ForecastSummary_selectedMonth,
+		func(ctx context.Context) (any, error) {
+			return obj.SelectedMonth, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ForecastSummary_selectedMonth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ForecastSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ForecastSummary_incomeSummary(ctx context.Context, field graphql.CollectedField, obj *model.ForecastSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ForecastSummary_incomeSummary,
+		func(ctx context.Context) (any, error) {
+			return obj.IncomeSummary, nil
+		},
+		nil,
+		ec.marshalNIncomeSummary2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeSummary,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ForecastSummary_incomeSummary(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ForecastSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "total":
+				return ec.fieldContext_IncomeSummary_total(ctx, field)
+			case "count":
+				return ec.fieldContext_IncomeSummary_count(ctx, field)
+			case "byCategory":
+				return ec.fieldContext_IncomeSummary_byCategory(ctx, field)
+			case "byType":
+				return ec.fieldContext_IncomeSummary_byType(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type IncomeSummary", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ForecastSummary_expenseSummary(ctx context.Context, field graphql.CollectedField, obj *model.ForecastSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ForecastSummary_expenseSummary,
+		func(ctx context.Context) (any, error) {
+			return obj.ExpenseSummary, nil
+		},
+		nil,
+		ec.marshalNExpenseSummary2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseSummary,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ForecastSummary_expenseSummary(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ForecastSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "total":
+				return ec.fieldContext_ExpenseSummary_total(ctx, field)
+			case "count":
+				return ec.fieldContext_ExpenseSummary_count(ctx, field)
+			case "byCategory":
+				return ec.fieldContext_ExpenseSummary_byCategory(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ExpenseSummary", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ForecastSummary_payments(ctx context.Context, field graphql.CollectedField, obj *model.ForecastSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ForecastSummary_payments,
+		func(ctx context.Context) (any, error) {
+			return obj.Payments, nil
+		},
+		nil,
+		ec.marshalNUpcomingPaymentsReport2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐUpcomingPaymentsReport,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ForecastSummary_payments(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ForecastSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "installments":
+				return ec.fieldContext_UpcomingPaymentsReport_installments(ctx, field)
+			case "debts":
+				return ec.fieldContext_UpcomingPaymentsReport_debts(ctx, field)
+			case "totalInstallment":
+				return ec.fieldContext_UpcomingPaymentsReport_totalInstallment(ctx, field)
+			case "totalDebt":
+				return ec.fieldContext_UpcomingPaymentsReport_totalDebt(ctx, field)
+			case "totalPayments":
+				return ec.fieldContext_UpcomingPaymentsReport_totalPayments(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UpcomingPaymentsReport", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ForecastSummary_totalSavingsContribution(ctx context.Context, field graphql.CollectedField, obj *model.ForecastSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ForecastSummary_totalSavingsContribution,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalSavingsContribution, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ForecastSummary_totalSavingsContribution(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ForecastSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _HistorySummary_availableMonths(ctx context.Context, field graphql.CollectedField, obj *model.HistorySummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_HistorySummary_availableMonths,
+		func(ctx context.Context) (any, error) {
+			return obj.AvailableMonths, nil
+		},
+		nil,
+		ec.marshalNString2ᚕstringᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_HistorySummary_availableMonths(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "HistorySummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _HistorySummary_selectedMonth(ctx context.Context, field graphql.CollectedField, obj *model.HistorySummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_HistorySummary_selectedMonth,
+		func(ctx context.Context) (any, error) {
+			return obj.SelectedMonth, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_HistorySummary_selectedMonth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "HistorySummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _HistorySummary_incomeSummary(ctx context.Context, field graphql.CollectedField, obj *model.HistorySummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_HistorySummary_incomeSummary,
+		func(ctx context.Context) (any, error) {
+			return obj.IncomeSummary, nil
+		},
+		nil,
+		ec.marshalNIncomeSummary2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeSummary,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_HistorySummary_incomeSummary(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "HistorySummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "total":
+				return ec.fieldContext_IncomeSummary_total(ctx, field)
+			case "count":
+				return ec.fieldContext_IncomeSummary_count(ctx, field)
+			case "byCategory":
+				return ec.fieldContext_IncomeSummary_byCategory(ctx, field)
+			case "byType":
+				return ec.fieldContext_IncomeSummary_byType(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type IncomeSummary", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _HistorySummary_expenseSummary(ctx context.Context, field graphql.CollectedField, obj *model.HistorySummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_HistorySummary_expenseSummary,
+		func(ctx context.Context) (any, error) {
+			return obj.ExpenseSummary, nil
+		},
+		nil,
+		ec.marshalNExpenseSummary2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseSummary,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_HistorySummary_expenseSummary(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "HistorySummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "total":
+				return ec.fieldContext_ExpenseSummary_total(ctx, field)
+			case "count":
+				return ec.fieldContext_ExpenseSummary_count(ctx, field)
+			case "byCategory":
+				return ec.fieldContext_ExpenseSummary_byCategory(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ExpenseSummary", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _HistorySummary_payments(ctx context.Context, field graphql.CollectedField, obj *model.HistorySummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_HistorySummary_payments,
+		func(ctx context.Context) (any, error) {
+			return obj.Payments, nil
+		},
+		nil,
+		ec.marshalNActualPaymentsReport2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐActualPaymentsReport,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_HistorySummary_payments(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "HistorySummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "installments":
+				return ec.fieldContext_ActualPaymentsReport_installments(ctx, field)
+			case "debts":
+				return ec.fieldContext_ActualPaymentsReport_debts(ctx, field)
+			case "totalInstallment":
+				return ec.fieldContext_ActualPaymentsReport_totalInstallment(ctx, field)
+			case "totalDebt":
+				return ec.fieldContext_ActualPaymentsReport_totalDebt(ctx, field)
+			case "totalPayments":
+				return ec.fieldContext_ActualPaymentsReport_totalPayments(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ActualPaymentsReport", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _HistorySummary_totalSavingsContribution(ctx context.Context, field graphql.CollectedField, obj *model.HistorySummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_HistorySummary_totalSavingsContribution,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalSavingsContribution, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_HistorySummary_totalSavingsContribution(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "HistorySummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -14607,6 +15013,116 @@ func (ec *executionContext) fieldContext_Query_actualPayments(ctx context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_historySummary(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_historySummary,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().HistorySummary(ctx, fc.Args["filter"].(*model.MonthYearInput))
+		},
+		nil,
+		ec.marshalNHistorySummary2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐHistorySummary,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_historySummary(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "availableMonths":
+				return ec.fieldContext_HistorySummary_availableMonths(ctx, field)
+			case "selectedMonth":
+				return ec.fieldContext_HistorySummary_selectedMonth(ctx, field)
+			case "incomeSummary":
+				return ec.fieldContext_HistorySummary_incomeSummary(ctx, field)
+			case "expenseSummary":
+				return ec.fieldContext_HistorySummary_expenseSummary(ctx, field)
+			case "payments":
+				return ec.fieldContext_HistorySummary_payments(ctx, field)
+			case "totalSavingsContribution":
+				return ec.fieldContext_HistorySummary_totalSavingsContribution(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type HistorySummary", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_historySummary_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_forecastSummary(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_forecastSummary,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().ForecastSummary(ctx, fc.Args["filter"].(*model.MonthYearInput))
+		},
+		nil,
+		ec.marshalNForecastSummary2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐForecastSummary,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_forecastSummary(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "availableMonths":
+				return ec.fieldContext_ForecastSummary_availableMonths(ctx, field)
+			case "selectedMonth":
+				return ec.fieldContext_ForecastSummary_selectedMonth(ctx, field)
+			case "incomeSummary":
+				return ec.fieldContext_ForecastSummary_incomeSummary(ctx, field)
+			case "expenseSummary":
+				return ec.fieldContext_ForecastSummary_expenseSummary(ctx, field)
+			case "payments":
+				return ec.fieldContext_ForecastSummary_payments(ctx, field)
+			case "totalSavingsContribution":
+				return ec.fieldContext_ForecastSummary_totalSavingsContribution(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ForecastSummary", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_forecastSummary_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_dashboard(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -14639,14 +15155,10 @@ func (ec *executionContext) fieldContext_Query_dashboard(_ context.Context, fiel
 				return ec.fieldContext_Dashboard_totalExpenseThisMonth(ctx, field)
 			case "totalIncomeThisMonth":
 				return ec.fieldContext_Dashboard_totalIncomeThisMonth(ctx, field)
-			case "totalSavingsGoal":
-				return ec.fieldContext_Dashboard_totalSavingsGoal(ctx, field)
+			case "totalSavingsContributionThisMonth":
+				return ec.fieldContext_Dashboard_totalSavingsContributionThisMonth(ctx, field)
 			case "balanceSummary":
 				return ec.fieldContext_Dashboard_balanceSummary(ctx, field)
-			case "upcomingInstallments":
-				return ec.fieldContext_Dashboard_upcomingInstallments(ctx, field)
-			case "upcomingDebts":
-				return ec.fieldContext_Dashboard_upcomingDebts(ctx, field)
 			case "activeSavingsGoals":
 				return ec.fieldContext_Dashboard_activeSavingsGoals(ctx, field)
 			case "expensesByCategory":
@@ -19726,6 +20238,40 @@ func (ec *executionContext) unmarshalInputLoginInput(ctx context.Context, obj an
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputMonthYearInput(ctx context.Context, obj any) (model.MonthYearInput, error) {
+	var it model.MonthYearInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"month", "year"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "month":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("month"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Month = data
+		case "year":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("year"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Year = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputRecordDebtPaymentInput(ctx context.Context, obj any) (model.RecordDebtPaymentInput, error) {
 	var it model.RecordDebtPaymentInput
 	asMap := map[string]any{}
@@ -21315,23 +21861,13 @@ func (ec *executionContext) _Dashboard(ctx context.Context, sel ast.SelectionSet
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "totalSavingsGoal":
-			out.Values[i] = ec._Dashboard_totalSavingsGoal(ctx, field, obj)
+		case "totalSavingsContributionThisMonth":
+			out.Values[i] = ec._Dashboard_totalSavingsContributionThisMonth(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "balanceSummary":
 			out.Values[i] = ec._Dashboard_balanceSummary(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "upcomingInstallments":
-			out.Values[i] = ec._Dashboard_upcomingInstallments(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "upcomingDebts":
-			out.Values[i] = ec._Dashboard_upcomingDebts(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -21905,6 +22441,134 @@ func (ec *executionContext) _ExpensesWithSummary(ctx context.Context, sel ast.Se
 			}
 		case "summary":
 			out.Values[i] = ec._ExpensesWithSummary_summary(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var forecastSummaryImplementors = []string{"ForecastSummary"}
+
+func (ec *executionContext) _ForecastSummary(ctx context.Context, sel ast.SelectionSet, obj *model.ForecastSummary) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, forecastSummaryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ForecastSummary")
+		case "availableMonths":
+			out.Values[i] = ec._ForecastSummary_availableMonths(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "selectedMonth":
+			out.Values[i] = ec._ForecastSummary_selectedMonth(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "incomeSummary":
+			out.Values[i] = ec._ForecastSummary_incomeSummary(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "expenseSummary":
+			out.Values[i] = ec._ForecastSummary_expenseSummary(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "payments":
+			out.Values[i] = ec._ForecastSummary_payments(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalSavingsContribution":
+			out.Values[i] = ec._ForecastSummary_totalSavingsContribution(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var historySummaryImplementors = []string{"HistorySummary"}
+
+func (ec *executionContext) _HistorySummary(ctx context.Context, sel ast.SelectionSet, obj *model.HistorySummary) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, historySummaryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("HistorySummary")
+		case "availableMonths":
+			out.Values[i] = ec._HistorySummary_availableMonths(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "selectedMonth":
+			out.Values[i] = ec._HistorySummary_selectedMonth(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "incomeSummary":
+			out.Values[i] = ec._HistorySummary_incomeSummary(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "expenseSummary":
+			out.Values[i] = ec._HistorySummary_expenseSummary(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "payments":
+			out.Values[i] = ec._HistorySummary_payments(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalSavingsContribution":
+			out.Values[i] = ec._HistorySummary_totalSavingsContribution(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -23584,6 +24248,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_actualPayments(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "historySummary":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_historySummary(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "forecastSummary":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_forecastSummary(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -25745,9 +26453,37 @@ func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.S
 	return graphql.WrapContextMarshaler(ctx, res)
 }
 
+func (ec *executionContext) marshalNForecastSummary2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐForecastSummary(ctx context.Context, sel ast.SelectionSet, v model.ForecastSummary) graphql.Marshaler {
+	return ec._ForecastSummary(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNForecastSummary2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐForecastSummary(ctx context.Context, sel ast.SelectionSet, v *model.ForecastSummary) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ForecastSummary(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNForgotPasswordInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐForgotPasswordInput(ctx context.Context, v any) (model.ForgotPasswordInput, error) {
 	res, err := ec.unmarshalInputForgotPasswordInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNHistorySummary2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐHistorySummary(ctx context.Context, sel ast.SelectionSet, v model.HistorySummary) graphql.Marshaler {
+	return ec._HistorySummary(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNHistorySummary2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐHistorySummary(ctx context.Context, sel ast.SelectionSet, v *model.HistorySummary) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._HistorySummary(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v any) (string, error) {
@@ -26561,6 +27297,36 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNString2ᚕstringᚄ(ctx context.Context, v any) ([]string, error) {
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v any) (time.Time, error) {
@@ -27416,6 +28182,14 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	_ = ctx
 	res := graphql.MarshalInt(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalOMonthYearInput2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐMonthYearInput(ctx context.Context, v any) (*model.MonthYearInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputMonthYearInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalORecurringIncome2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecurringIncome(ctx context.Context, sel ast.SelectionSet, v *model.RecurringIncome) graphql.Marshaler {

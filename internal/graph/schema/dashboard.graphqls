@@ -3,12 +3,10 @@ type Dashboard {
   totalActiveInstallment: Int!
   totalExpenseThisMonth: Int!
   totalIncomeThisMonth: Int!
-  totalSavingsGoal: Int!
+  totalSavingsContributionThisMonth: Int!
   
   balanceSummary: BalanceSummary!
   
-  upcomingInstallments: [Installment!]!
-  upcomingDebts: [Debt!]!
   activeSavingsGoals: [SavingsGoal!]!
   
   expensesByCategory: [CategorySummary!]!

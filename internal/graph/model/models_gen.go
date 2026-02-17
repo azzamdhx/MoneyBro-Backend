@@ -199,17 +199,15 @@ type CreateSavingsGoalInput struct {
 }
 
 type Dashboard struct {
-	TotalActiveDebt        int                `json:"totalActiveDebt"`
-	TotalActiveInstallment int                `json:"totalActiveInstallment"`
-	TotalExpenseThisMonth  int                `json:"totalExpenseThisMonth"`
-	TotalIncomeThisMonth   int                `json:"totalIncomeThisMonth"`
-	TotalSavingsGoal       int                `json:"totalSavingsGoal"`
-	BalanceSummary         *BalanceSummary    `json:"balanceSummary"`
-	UpcomingInstallments   []*Installment     `json:"upcomingInstallments"`
-	UpcomingDebts          []*Debt            `json:"upcomingDebts"`
-	ActiveSavingsGoals     []*SavingsGoal     `json:"activeSavingsGoals"`
-	ExpensesByCategory     []*CategorySummary `json:"expensesByCategory"`
-	RecentExpenses         []*Expense         `json:"recentExpenses"`
+	TotalActiveDebt                   int                `json:"totalActiveDebt"`
+	TotalActiveInstallment            int                `json:"totalActiveInstallment"`
+	TotalExpenseThisMonth             int                `json:"totalExpenseThisMonth"`
+	TotalIncomeThisMonth              int                `json:"totalIncomeThisMonth"`
+	TotalSavingsContributionThisMonth int                `json:"totalSavingsContributionThisMonth"`
+	BalanceSummary                    *BalanceSummary    `json:"balanceSummary"`
+	ActiveSavingsGoals                []*SavingsGoal     `json:"activeSavingsGoals"`
+	ExpensesByCategory                []*CategorySummary `json:"expensesByCategory"`
+	RecentExpenses                    []*Expense         `json:"recentExpenses"`
 }
 
 type Debt struct {
@@ -306,8 +304,26 @@ type ExpensesWithSummary struct {
 	Summary *ExpenseSummary `json:"summary"`
 }
 
+type ForecastSummary struct {
+	AvailableMonths          []string                `json:"availableMonths"`
+	SelectedMonth            string                  `json:"selectedMonth"`
+	IncomeSummary            *IncomeSummary          `json:"incomeSummary"`
+	ExpenseSummary           *ExpenseSummary         `json:"expenseSummary"`
+	Payments                 *UpcomingPaymentsReport `json:"payments"`
+	TotalSavingsContribution int                     `json:"totalSavingsContribution"`
+}
+
 type ForgotPasswordInput struct {
 	Email string `json:"email"`
+}
+
+type HistorySummary struct {
+	AvailableMonths          []string              `json:"availableMonths"`
+	SelectedMonth            string                `json:"selectedMonth"`
+	IncomeSummary            *IncomeSummary        `json:"incomeSummary"`
+	ExpenseSummary           *ExpenseSummary       `json:"expenseSummary"`
+	Payments                 *ActualPaymentsReport `json:"payments"`
+	TotalSavingsContribution int                   `json:"totalSavingsContribution"`
 }
 
 type Income struct {
@@ -421,6 +437,11 @@ type LedgerSummary struct {
 type LoginInput struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+}
+
+type MonthYearInput struct {
+	Month int `json:"month"`
+	Year  int `json:"year"`
 }
 
 type Mutation struct {

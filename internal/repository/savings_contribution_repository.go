@@ -37,3 +37,13 @@ func (r *savingsContributionRepository) GetBySavingsGoalID(goalID uuid.UUID) ([]
 func (r *savingsContributionRepository) Delete(id uuid.UUID) error {
 	return r.db.Delete(&models.SavingsContribution{}, "id = ?", id).Error
 }
+
+func (r *savingsContributionRepository) GetTotalByUserIDAndDateRange(userID uuid.UUID, startDate, endDate string) (int64, error) {
+	var total int64
+	err := r.db.Model(&models.SavingsContribution{}).
+		Joins("JOIN savings_goals ON savings_goals.id = savings_contributions.savings_goal_id").
+		Where("savings_goals.user_id = ? AND savings_contributions.contribution_date >= ? AND savings_contributions.contribution_date <= ?", userID, startDate, endDate).
+		Select("COALESCE(SUM(savings_contributions.amount), 0)").
+		Scan(&total).Error
+	return total, err
+}

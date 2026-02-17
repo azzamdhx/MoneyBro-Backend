@@ -349,26 +349,12 @@ func transactionEntryToModel(e *models.TransactionEntry) *model.TransactionEntry
 
 func dashboardToModel(d *services.Dashboard) *model.Dashboard {
 	dash := &model.Dashboard{
-		TotalActiveDebt:        int(d.TotalActiveDebt),
-		TotalActiveInstallment: int(d.TotalActiveInstallment),
-		TotalExpenseThisMonth:  int(d.TotalExpenseThisMonth),
-		TotalIncomeThisMonth:   int(d.TotalIncomeThisMonth),
-		TotalSavingsGoal:       int(d.TotalSavingsGoal),
-		BalanceSummary:         balanceSummaryToModel(&d.BalanceSummary),
-	}
-	if len(d.UpcomingInstallments) > 0 {
-		insts := make([]*model.Installment, len(d.UpcomingInstallments))
-		for i, inst := range d.UpcomingInstallments {
-			insts[i] = installmentToModel(&inst)
-		}
-		dash.UpcomingInstallments = insts
-	}
-	if len(d.UpcomingDebts) > 0 {
-		debts := make([]*model.Debt, len(d.UpcomingDebts))
-		for i, debt := range d.UpcomingDebts {
-			debts[i] = debtToModel(&debt)
-		}
-		dash.UpcomingDebts = debts
+		TotalActiveDebt:                   int(d.TotalActiveDebt),
+		TotalActiveInstallment:            int(d.TotalActiveInstallment),
+		TotalExpenseThisMonth:             int(d.TotalExpenseThisMonth),
+		TotalIncomeThisMonth:              int(d.TotalIncomeThisMonth),
+		TotalSavingsContributionThisMonth: int(d.TotalSavingsContributionThisMonth),
+		BalanceSummary:                    balanceSummaryToModel(&d.BalanceSummary),
 	}
 	if len(d.ActiveSavingsGoals) > 0 {
 		goals := make([]*model.SavingsGoal, len(d.ActiveSavingsGoals))
@@ -596,4 +582,67 @@ func savingsContributionToModel(c *models.SavingsContribution) *model.SavingsCon
 		contribution.SavingsGoal = savingsGoalToModel(c.SavingsGoal)
 	}
 	return contribution
+}
+
+func incomeBreakdownToIncomeSummary(b *services.IncomeBreakdown) *model.IncomeSummary {
+	byCategory := make([]*model.IncomeByCategoryGroup, len(b.ByCategory))
+	for i, cs := range b.ByCategory {
+		byCategory[i] = &model.IncomeByCategoryGroup{
+			Category:    incomeCategoryToModel(&cs.Category),
+			TotalAmount: int(cs.TotalAmount),
+			Count:       cs.IncomeCount,
+		}
+	}
+	byType := make([]*model.IncomeByTypeGroup, len(b.ByType))
+	for i, ts := range b.ByType {
+		byType[i] = &model.IncomeByTypeGroup{
+			IncomeType:  model.IncomeType(ts.IncomeType),
+			TotalAmount: int(ts.TotalAmount),
+			Count:       ts.IncomeCount,
+		}
+	}
+	return &model.IncomeSummary{
+		Total:      int(b.Total),
+		Count:      b.Count,
+		ByCategory: byCategory,
+		ByType:     byType,
+	}
+}
+
+func expenseBreakdownToExpenseSummary(b *services.ExpenseBreakdown) *model.ExpenseSummary {
+	byCategory := make([]*model.ExpenseByCategoryGroup, len(b.ByCategory))
+	for i, cs := range b.ByCategory {
+		byCategory[i] = &model.ExpenseByCategoryGroup{
+			Category:    categoryToModel(&cs.Category),
+			TotalAmount: int(cs.TotalAmount),
+			Count:       cs.ExpenseCount,
+		}
+	}
+	return &model.ExpenseSummary{
+		Total:      int(b.Total),
+		Count:      b.Count,
+		ByCategory: byCategory,
+	}
+}
+
+func historySummaryToModel(r *services.HistorySummaryResult) *model.HistorySummary {
+	return &model.HistorySummary{
+		AvailableMonths:          r.AvailableMonths,
+		SelectedMonth:            r.SelectedMonth,
+		IncomeSummary:            incomeBreakdownToIncomeSummary(&r.IncomeSummary),
+		ExpenseSummary:           expenseBreakdownToExpenseSummary(&r.ExpenseSummary),
+		Payments:                 actualPaymentsReportToModel(r.Payments),
+		TotalSavingsContribution: int(r.TotalSavingsContribution),
+	}
+}
+
+func forecastSummaryToModel(r *services.ForecastSummaryResult) *model.ForecastSummary {
+	return &model.ForecastSummary{
+		AvailableMonths:          r.AvailableMonths,
+		SelectedMonth:            r.SelectedMonth,
+		IncomeSummary:            incomeBreakdownToIncomeSummary(&r.IncomeSummary),
+		ExpenseSummary:           expenseBreakdownToExpenseSummary(&r.ExpenseSummary),
+		Payments:                 upcomingPaymentsReportToModel(r.Payments),
+		TotalSavingsContribution: int(r.TotalSavingsContribution),
+	}
 }

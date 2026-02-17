@@ -8,6 +8,7 @@ import (
 )
 
 type Repositories struct {
+	DB                   *gorm.DB
 	User                 UserRepository
 	Category             CategoryRepository
 	Expense              ExpenseRepository
@@ -31,6 +32,7 @@ type Repositories struct {
 
 func NewRepositories(db *gorm.DB) *Repositories {
 	return &Repositories{
+		DB:                   db,
 		User:                 NewUserRepository(db),
 		Category:             NewCategoryRepository(db),
 		Expense:              NewExpenseRepository(db),
@@ -112,6 +114,7 @@ type InstallmentRepository interface {
 type InstallmentPaymentRepository interface {
 	Create(payment *models.InstallmentPayment) error
 	GetByID(id uuid.UUID) (*models.InstallmentPayment, error)
+	GetByIDs(ids []uuid.UUID) ([]models.InstallmentPayment, error)
 	GetByInstallmentID(installmentID uuid.UUID) ([]models.InstallmentPayment, error)
 	GetLastPaymentNumber(installmentID uuid.UUID) (int, error)
 }
@@ -128,6 +131,7 @@ type DebtRepository interface {
 type DebtPaymentRepository interface {
 	Create(payment *models.DebtPayment) error
 	GetByID(id uuid.UUID) (*models.DebtPayment, error)
+	GetByIDs(ids []uuid.UUID) ([]models.DebtPayment, error)
 	GetByDebtID(debtID uuid.UUID) ([]models.DebtPayment, error)
 	GetLastPaymentNumber(debtID uuid.UUID) (int, error)
 }
@@ -241,4 +245,5 @@ type SavingsContributionRepository interface {
 	GetByID(id uuid.UUID) (*models.SavingsContribution, error)
 	GetBySavingsGoalID(goalID uuid.UUID) ([]models.SavingsContribution, error)
 	Delete(id uuid.UUID) error
+	GetTotalByUserIDAndDateRange(userID uuid.UUID, startDate, endDate string) (int64, error)
 }

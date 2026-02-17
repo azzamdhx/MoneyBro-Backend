@@ -31,6 +31,9 @@ type Query {
   upcomingPayments(filter: UpcomingPaymentsFilter!): UpcomingPaymentsReport!
   actualPayments(filter: ActualPaymentsFilter!): ActualPaymentsReport!
   
+  historySummary(filter: MonthYearInput): HistorySummary!
+  forecastSummary(filter: MonthYearInput): ForecastSummary!
+  
   dashboard: Dashboard!
   
   savingsGoals(status: SavingsGoalStatus): [SavingsGoal!]!
