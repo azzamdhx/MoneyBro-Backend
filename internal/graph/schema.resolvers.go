@@ -115,7 +115,7 @@ func (r *mutationResolver) UpdateProfile(ctx context.Context, input model.Update
 	if !ok {
 		return nil, utils.ErrUnauthorized
 	}
-	user, err := r.Services.User.UpdateProfile(userID, input.Name, input.Email, input.CurrentPassword, input.Password)
+	user, err := r.Services.User.UpdateProfile(userID, input.Name, input.Email, input.ProfileImage, input.CurrentPassword, input.Password)
 	if err != nil {
 		return nil, err
 	}

@@ -592,6 +592,7 @@ type UpdateNotificationSettingsInput struct {
 type UpdateProfileInput struct {
 	Name            *string `json:"name,omitempty"`
 	Email           *string `json:"email,omitempty"`
+	ProfileImage    *string `json:"profileImage,omitempty"`
 	CurrentPassword *string `json:"currentPassword,omitempty"`
 	Password        *string `json:"password,omitempty"`
 }
@@ -610,6 +611,7 @@ type User struct {
 	ID                uuid.UUID  `json:"id"`
 	Email             string     `json:"email"`
 	Name              string     `json:"name"`
+	ProfileImage      string     `json:"profileImage"`
 	TwoFAEnabled      bool       `json:"twoFAEnabled"`
 	NotifyInstallment bool       `json:"notifyInstallment"`
 	NotifyDebt        bool       `json:"notifyDebt"`

@@ -11,6 +11,7 @@ type User struct {
 	Email             string     `gorm:"type:varchar(255);uniqueIndex;not null" json:"email"`
 	PasswordHash      string     `gorm:"type:varchar(255);not null" json:"-"`
 	Name              string     `gorm:"type:varchar(100);not null" json:"name"`
+	ProfileImage      string     `gorm:"type:varchar(50);default:'BRO-1-B'" json:"profile_image"`
 	TwoFAEnabled      bool       `gorm:"default:false" json:"two_fa_enabled"`
 	NotifyInstallment bool       `gorm:"default:true" json:"notify_installment"`
 	NotifyDebt        bool       `gorm:"default:true" json:"notify_debt"`

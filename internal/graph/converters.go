@@ -11,6 +11,7 @@ func userToModel(u *models.User) *model.User {
 		ID:                u.ID,
 		Email:             u.Email,
 		Name:              u.Name,
+		ProfileImage:      u.ProfileImage,
 		TwoFAEnabled:      u.TwoFAEnabled,
 		NotifyInstallment: u.NotifyInstallment,
 		NotifyDebt:        u.NotifyDebt,

@@ -2,6 +2,7 @@ type User {
   id: UUID!
   email: String!
   name: String!
+  profileImage: String!
   twoFAEnabled: Boolean!
   notifyInstallment: Boolean!
   notifyDebt: Boolean!
@@ -42,6 +43,7 @@ input LoginInput {
 input UpdateProfileInput {
   name: String
   email: String
+  profileImage: String
   currentPassword: String
   password: String
 }

@@ -45,7 +45,7 @@ func (s *UserService) DeleteAccount(userID uuid.UUID, password string) error {
 	return s.userRepo.DeleteAllUserData(userID)
 }
 
-func (s *UserService) UpdateProfile(userID uuid.UUID, name, email, currentPassword, password *string) (*models.User, error) {
+func (s *UserService) UpdateProfile(userID uuid.UUID, name, email, profileImage, currentPassword, password *string) (*models.User, error) {
 	user, err := s.userRepo.GetByID(userID)
 	if err != nil {
 		return nil, err
@@ -68,6 +68,13 @@ func (s *UserService) UpdateProfile(userID uuid.UUID, name, email, currentPasswo
 			return nil, utils.ErrEmailExists
 		}
 		user.Email = *email
+	}
+
+	if profileImage != nil {
+		if err := utils.ValidateProfileImage(*profileImage); err != nil {
+			return nil, err
+		}
+		user.ProfileImage = *profileImage
 	}
 
 	if password != nil {

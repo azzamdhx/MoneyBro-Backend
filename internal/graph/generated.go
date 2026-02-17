@@ -489,6 +489,7 @@ type ComplexityRoot struct {
 		NotifyDaysBefore  func(childComplexity int) int
 		NotifyDebt        func(childComplexity int) int
 		NotifyInstallment func(childComplexity int) int
+		ProfileImage      func(childComplexity int) int
 		TwoFAEnabled      func(childComplexity int) int
 		UpdatedAt         func(childComplexity int) int
 	}
@@ -2859,6 +2860,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.User.NotifyInstallment(childComplexity), true
+	case "User.profileImage":
+		if e.complexity.User.ProfileImage == nil {
+			break
+		}
+
+		return e.complexity.User.ProfileImage(childComplexity), true
 	case "User.twoFAEnabled":
 		if e.complexity.User.TwoFAEnabled == nil {
 			break
@@ -4682,6 +4689,8 @@ func (ec *executionContext) fieldContext_AuthPayload_user(_ context.Context, fie
 				return ec.fieldContext_User_email(ctx, field)
 			case "name":
 				return ec.fieldContext_User_name(ctx, field)
+			case "profileImage":
+				return ec.fieldContext_User_profileImage(ctx, field)
 			case "twoFAEnabled":
 				return ec.fieldContext_User_twoFAEnabled(ctx, field)
 			case "notifyInstallment":
@@ -10166,6 +10175,8 @@ func (ec *executionContext) fieldContext_Mutation_updateProfile(ctx context.Cont
 				return ec.fieldContext_User_email(ctx, field)
 			case "name":
 				return ec.fieldContext_User_name(ctx, field)
+			case "profileImage":
+				return ec.fieldContext_User_profileImage(ctx, field)
 			case "twoFAEnabled":
 				return ec.fieldContext_User_twoFAEnabled(ctx, field)
 			case "notifyInstallment":
@@ -10227,6 +10238,8 @@ func (ec *executionContext) fieldContext_Mutation_updateNotificationSettings(ctx
 				return ec.fieldContext_User_email(ctx, field)
 			case "name":
 				return ec.fieldContext_User_name(ctx, field)
+			case "profileImage":
+				return ec.fieldContext_User_profileImage(ctx, field)
 			case "twoFAEnabled":
 				return ec.fieldContext_User_twoFAEnabled(ctx, field)
 			case "notifyInstallment":
@@ -12620,6 +12633,8 @@ func (ec *executionContext) fieldContext_Query_me(_ context.Context, field graph
 				return ec.fieldContext_User_email(ctx, field)
 			case "name":
 				return ec.fieldContext_User_name(ctx, field)
+			case "profileImage":
+				return ec.fieldContext_User_profileImage(ctx, field)
 			case "twoFAEnabled":
 				return ec.fieldContext_User_twoFAEnabled(ctx, field)
 			case "notifyInstallment":
@@ -14951,6 +14966,8 @@ func (ec *executionContext) fieldContext_TwoFAPayload_user(_ context.Context, fi
 				return ec.fieldContext_User_email(ctx, field)
 			case "name":
 				return ec.fieldContext_User_name(ctx, field)
+			case "profileImage":
+				return ec.fieldContext_User_profileImage(ctx, field)
 			case "twoFAEnabled":
 				return ec.fieldContext_User_twoFAEnabled(ctx, field)
 			case "notifyInstallment":
@@ -15597,6 +15614,35 @@ func (ec *executionContext) _User_name(ctx context.Context, field graphql.Collec
 }
 
 func (ec *executionContext) fieldContext_User_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_profileImage(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_User_profileImage,
+		func(ctx context.Context) (any, error) {
+			return obj.ProfileImage, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_User_profileImage(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
@@ -18750,7 +18796,7 @@ func (ec *executionContext) unmarshalInputUpdateProfileInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "email", "currentPassword", "password"}
+	fieldsInOrder := [...]string{"name", "email", "profileImage", "currentPassword", "password"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -18771,6 +18817,13 @@ func (ec *executionContext) unmarshalInputUpdateProfileInput(ctx context.Context
 				return it, err
 			}
 			it.Email = data
+		case "profileImage":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profileImage"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProfileImage = data
 		case "currentPassword":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currentPassword"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -22383,6 +22436,11 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "name":
 			out.Values[i] = ec._User_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "profileImage":
+			out.Values[i] = ec._User_profileImage(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
