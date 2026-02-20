@@ -9,6 +9,7 @@ type Config struct {
 	JWTSecret         string
 	ResendAPIKey      string
 	FrontendURL       string
+	DemoFrontendURL   string
 	Env               string
 	EmailTemplatesDir string
 }
@@ -22,6 +23,7 @@ func Load() *Config {
 		JWTSecret:         getEnv("JWT_SECRET", ""),
 		ResendAPIKey:      getEnv("RESEND_API_KEY", ""),
 		FrontendURL:       getEnv("FRONTEND_URL", "http://localhost:3000"),
+		DemoFrontendURL:   getEnv("DEMO_FRONTEND_URL", ""),
 		EmailTemplatesDir: getEnv("EMAIL_TEMPLATES_DIR", "email-templates"),
 	}
 }

@@ -63,7 +63,7 @@ func main() {
 	r.Use(chimiddleware.Recoverer)
 	r.Use(chimiddleware.RequestID)
 	r.Use(chimiddleware.RealIP)
-	r.Use(middleware.CORS(cfg.FrontendURL))
+	r.Use(middleware.CORS(cfg.FrontendURL, cfg.DemoFrontendURL))
 	r.Use(middleware.RateLimit(100, time.Minute))
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {

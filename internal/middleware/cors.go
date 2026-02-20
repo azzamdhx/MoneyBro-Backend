@@ -6,10 +6,13 @@ import (
 	"github.com/go-chi/cors"
 )
 
-func CORS(frontendURL string) func(http.Handler) http.Handler {
+func CORS(frontendURL string, demoFrontendURL string) func(http.Handler) http.Handler {
 	allowedOrigins := []string{frontendURL}
 	if frontendURL != "http://localhost:3000" {
 		allowedOrigins = append(allowedOrigins, "http://localhost:3000")
+	}
+	if demoFrontendURL != "" {
+		allowedOrigins = append(allowedOrigins, demoFrontendURL)
 	}
 
 	return cors.Handler(cors.Options{
