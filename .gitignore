@@ -40,3 +40,4 @@ temp/
 # Project specific 
 TODO.md
 fly.toml
+/migrations
