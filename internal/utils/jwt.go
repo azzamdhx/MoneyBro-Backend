@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"time"
 
@@ -16,7 +18,7 @@ func GenerateJWT(userID string, secret string) (string, error) {
 	claims := JWTClaims{
 		UserID: userID,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 	}
@@ -65,4 +67,18 @@ func VerifyTempToken(tokenString string, secret string) (string, error) {
 		return "", err
 	}
 	return claims.UserID, nil
+}
+
+// GenerateRefreshToken generates a cryptographically secure random token string
+func GenerateRefreshToken() (string, error) {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
+}
+
+// RefreshTokenExpiry returns the expiration duration for refresh tokens (90 days)
+func RefreshTokenExpiry() time.Duration {
+	return 90 * 24 * time.Hour
 }

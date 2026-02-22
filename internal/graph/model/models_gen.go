@@ -60,10 +60,11 @@ type AddSavingsContributionInput struct {
 }
 
 type AuthPayload struct {
-	Token       *string `json:"token,omitempty"`
-	User        *User   `json:"user,omitempty"`
-	Requires2fa bool    `json:"requires2FA"`
-	TempToken   *string `json:"tempToken,omitempty"`
+	Token        *string `json:"token,omitempty"`
+	RefreshToken *string `json:"refreshToken,omitempty"`
+	User         *User   `json:"user,omitempty"`
+	Requires2fa  bool    `json:"requires2FA"`
+	TempToken    *string `json:"tempToken,omitempty"`
 }
 
 type BalanceBreakdown struct {
@@ -542,8 +543,9 @@ type TransactionFilter struct {
 }
 
 type TwoFAPayload struct {
-	Token string `json:"token"`
-	User  *User  `json:"user"`
+	Token        string `json:"token"`
+	RefreshToken string `json:"refreshToken"`
+	User         *User  `json:"user"`
 }
 
 type UpcomingDebtPayment struct {

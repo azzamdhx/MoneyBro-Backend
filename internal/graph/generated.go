@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -25,20 +24,10 @@ import (
 
 // NewExecutableSchema creates an ExecutableSchema from the ResolverRoot interface.
 func NewExecutableSchema(cfg Config) graphql.ExecutableSchema {
-	return &executableSchema{
-		schema:     cfg.Schema,
-		resolvers:  cfg.Resolvers,
-		directives: cfg.Directives,
-		complexity: cfg.Complexity,
-	}
+	return &executableSchema{SchemaData: cfg.Schema, Resolvers: cfg.Resolvers, Directives: cfg.Directives, ComplexityRoot: cfg.Complexity}
 }
 
-type Config struct {
-	Schema     *ast.Schema
-	Resolvers  ResolverRoot
-	Directives DirectiveRoot
-	Complexity ComplexityRoot
-}
+type Config = graphql.Config[ResolverRoot, DirectiveRoot, ComplexityRoot]
 
 type ResolverRoot interface {
 	Mutation() MutationResolver
@@ -85,10 +74,11 @@ type ComplexityRoot struct {
 	}
 
 	AuthPayload struct {
-		Requires2fa func(childComplexity int) int
-		TempToken   func(childComplexity int) int
-		Token       func(childComplexity int) int
-		User        func(childComplexity int) int
+		RefreshToken func(childComplexity int) int
+		Requires2fa  func(childComplexity int) int
+		TempToken    func(childComplexity int) int
+		Token        func(childComplexity int) int
+		User         func(childComplexity int) int
 	}
 
 	BalanceBreakdown struct {
@@ -378,11 +368,13 @@ type ComplexityRoot struct {
 		Enable2fa                       func(childComplexity int, password string) int
 		ForgotPassword                  func(childComplexity int, input model.ForgotPasswordInput) int
 		Login                           func(childComplexity int, input model.LoginInput) int
+		Logout                          func(childComplexity int, refreshToken string) int
 		MarkDebtComplete                func(childComplexity int, id uuid.UUID) int
 		MarkInstallmentComplete         func(childComplexity int, id uuid.UUID) int
 		MarkSavingsGoalComplete         func(childComplexity int, id uuid.UUID) int
 		RecordDebtPayment               func(childComplexity int, input model.RecordDebtPaymentInput) int
 		RecordInstallmentPayment        func(childComplexity int, input model.RecordInstallmentPaymentInput) int
+		RefreshToken                    func(childComplexity int, refreshToken string) int
 		Register                        func(childComplexity int, input model.RegisterInput) int
 		Resend2FACode                   func(childComplexity int, tempToken string) int
 		ResetPassword                   func(childComplexity int, input model.ResetPasswordInput) int
@@ -503,8 +495,9 @@ type ComplexityRoot struct {
 	}
 
 	TwoFAPayload struct {
-		Token func(childComplexity int) int
-		User  func(childComplexity int) int
+		RefreshToken func(childComplexity int) int
+		Token        func(childComplexity int) int
+		User         func(childComplexity int) int
 	}
 
 	UpcomingDebtPayment struct {
@@ -555,6 +548,8 @@ type MutationResolver interface {
 	VerifyRegistration(ctx context.Context, input model.Verify2FAInput) (*model.TwoFAPayload, error)
 	Verify2fa(ctx context.Context, input model.Verify2FAInput) (*model.TwoFAPayload, error)
 	Resend2FACode(ctx context.Context, tempToken string) (bool, error)
+	RefreshToken(ctx context.Context, refreshToken string) (*model.AuthPayload, error)
+	Logout(ctx context.Context, refreshToken string) (bool, error)
 	Enable2fa(ctx context.Context, password string) (bool, error)
 	Disable2fa(ctx context.Context, password string) (bool, error)
 	UpdateProfile(ctx context.Context, input model.UpdateProfileInput) (*model.User, error)
@@ -640,1237 +635,1238 @@ type QueryResolver interface {
 	Notifications(ctx context.Context) ([]*model.NotificationLog, error)
 }
 
-type executableSchema struct {
-	schema     *ast.Schema
-	resolvers  ResolverRoot
-	directives DirectiveRoot
-	complexity ComplexityRoot
-}
+type executableSchema graphql.ExecutableSchemaState[ResolverRoot, DirectiveRoot, ComplexityRoot]
 
 func (e *executableSchema) Schema() *ast.Schema {
-	if e.schema != nil {
-		return e.schema
+	if e.SchemaData != nil {
+		return e.SchemaData
 	}
 	return parsedSchema
 }
 
 func (e *executableSchema) Complexity(ctx context.Context, typeName, field string, childComplexity int, rawArgs map[string]any) (int, bool) {
-	ec := executionContext{nil, e, 0, 0, nil}
+	ec := newExecutionContext(nil, e, nil)
 	_ = ec
 	switch typeName + "." + field {
 
 	case "Account.accountType":
-		if e.complexity.Account.AccountType == nil {
+		if e.ComplexityRoot.Account.AccountType == nil {
 			break
 		}
 
-		return e.complexity.Account.AccountType(childComplexity), true
+		return e.ComplexityRoot.Account.AccountType(childComplexity), true
 	case "Account.createdAt":
-		if e.complexity.Account.CreatedAt == nil {
+		if e.ComplexityRoot.Account.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.Account.CreatedAt(childComplexity), true
+		return e.ComplexityRoot.Account.CreatedAt(childComplexity), true
 	case "Account.currentBalance":
-		if e.complexity.Account.CurrentBalance == nil {
+		if e.ComplexityRoot.Account.CurrentBalance == nil {
 			break
 		}
 
-		return e.complexity.Account.CurrentBalance(childComplexity), true
+		return e.ComplexityRoot.Account.CurrentBalance(childComplexity), true
 	case "Account.id":
-		if e.complexity.Account.ID == nil {
+		if e.ComplexityRoot.Account.ID == nil {
 			break
 		}
 
-		return e.complexity.Account.ID(childComplexity), true
+		return e.ComplexityRoot.Account.ID(childComplexity), true
 	case "Account.isDefault":
-		if e.complexity.Account.IsDefault == nil {
+		if e.ComplexityRoot.Account.IsDefault == nil {
 			break
 		}
 
-		return e.complexity.Account.IsDefault(childComplexity), true
+		return e.ComplexityRoot.Account.IsDefault(childComplexity), true
 	case "Account.name":
-		if e.complexity.Account.Name == nil {
+		if e.ComplexityRoot.Account.Name == nil {
 			break
 		}
 
-		return e.complexity.Account.Name(childComplexity), true
+		return e.ComplexityRoot.Account.Name(childComplexity), true
 	case "Account.referenceId":
-		if e.complexity.Account.ReferenceID == nil {
+		if e.ComplexityRoot.Account.ReferenceID == nil {
 			break
 		}
 
-		return e.complexity.Account.ReferenceID(childComplexity), true
+		return e.ComplexityRoot.Account.ReferenceID(childComplexity), true
 	case "Account.referenceType":
-		if e.complexity.Account.ReferenceType == nil {
+		if e.ComplexityRoot.Account.ReferenceType == nil {
 			break
 		}
 
-		return e.complexity.Account.ReferenceType(childComplexity), true
+		return e.ComplexityRoot.Account.ReferenceType(childComplexity), true
 
 	case "ActualDebtPayment.amount":
-		if e.complexity.ActualDebtPayment.Amount == nil {
+		if e.ComplexityRoot.ActualDebtPayment.Amount == nil {
 			break
 		}
 
-		return e.complexity.ActualDebtPayment.Amount(childComplexity), true
+		return e.ComplexityRoot.ActualDebtPayment.Amount(childComplexity), true
 	case "ActualDebtPayment.debtId":
-		if e.complexity.ActualDebtPayment.DebtID == nil {
+		if e.ComplexityRoot.ActualDebtPayment.DebtID == nil {
 			break
 		}
 
-		return e.complexity.ActualDebtPayment.DebtID(childComplexity), true
+		return e.ComplexityRoot.ActualDebtPayment.DebtID(childComplexity), true
 	case "ActualDebtPayment.description":
-		if e.complexity.ActualDebtPayment.Description == nil {
+		if e.ComplexityRoot.ActualDebtPayment.Description == nil {
 			break
 		}
 
-		return e.complexity.ActualDebtPayment.Description(childComplexity), true
+		return e.ComplexityRoot.ActualDebtPayment.Description(childComplexity), true
 	case "ActualDebtPayment.personName":
-		if e.complexity.ActualDebtPayment.PersonName == nil {
+		if e.ComplexityRoot.ActualDebtPayment.PersonName == nil {
 			break
 		}
 
-		return e.complexity.ActualDebtPayment.PersonName(childComplexity), true
+		return e.ComplexityRoot.ActualDebtPayment.PersonName(childComplexity), true
 	case "ActualDebtPayment.transactionDate":
-		if e.complexity.ActualDebtPayment.TransactionDate == nil {
+		if e.ComplexityRoot.ActualDebtPayment.TransactionDate == nil {
 			break
 		}
 
-		return e.complexity.ActualDebtPayment.TransactionDate(childComplexity), true
+		return e.ComplexityRoot.ActualDebtPayment.TransactionDate(childComplexity), true
 
 	case "ActualInstallmentPayment.amount":
-		if e.complexity.ActualInstallmentPayment.Amount == nil {
+		if e.ComplexityRoot.ActualInstallmentPayment.Amount == nil {
 			break
 		}
 
-		return e.complexity.ActualInstallmentPayment.Amount(childComplexity), true
+		return e.ComplexityRoot.ActualInstallmentPayment.Amount(childComplexity), true
 	case "ActualInstallmentPayment.description":
-		if e.complexity.ActualInstallmentPayment.Description == nil {
+		if e.ComplexityRoot.ActualInstallmentPayment.Description == nil {
 			break
 		}
 
-		return e.complexity.ActualInstallmentPayment.Description(childComplexity), true
+		return e.ComplexityRoot.ActualInstallmentPayment.Description(childComplexity), true
 	case "ActualInstallmentPayment.installmentId":
-		if e.complexity.ActualInstallmentPayment.InstallmentID == nil {
+		if e.ComplexityRoot.ActualInstallmentPayment.InstallmentID == nil {
 			break
 		}
 
-		return e.complexity.ActualInstallmentPayment.InstallmentID(childComplexity), true
+		return e.ComplexityRoot.ActualInstallmentPayment.InstallmentID(childComplexity), true
 	case "ActualInstallmentPayment.name":
-		if e.complexity.ActualInstallmentPayment.Name == nil {
+		if e.ComplexityRoot.ActualInstallmentPayment.Name == nil {
 			break
 		}
 
-		return e.complexity.ActualInstallmentPayment.Name(childComplexity), true
+		return e.ComplexityRoot.ActualInstallmentPayment.Name(childComplexity), true
 	case "ActualInstallmentPayment.transactionDate":
-		if e.complexity.ActualInstallmentPayment.TransactionDate == nil {
+		if e.ComplexityRoot.ActualInstallmentPayment.TransactionDate == nil {
 			break
 		}
 
-		return e.complexity.ActualInstallmentPayment.TransactionDate(childComplexity), true
+		return e.ComplexityRoot.ActualInstallmentPayment.TransactionDate(childComplexity), true
 
 	case "ActualPaymentsReport.debts":
-		if e.complexity.ActualPaymentsReport.Debts == nil {
+		if e.ComplexityRoot.ActualPaymentsReport.Debts == nil {
 			break
 		}
 
-		return e.complexity.ActualPaymentsReport.Debts(childComplexity), true
+		return e.ComplexityRoot.ActualPaymentsReport.Debts(childComplexity), true
 	case "ActualPaymentsReport.installments":
-		if e.complexity.ActualPaymentsReport.Installments == nil {
+		if e.ComplexityRoot.ActualPaymentsReport.Installments == nil {
 			break
 		}
 
-		return e.complexity.ActualPaymentsReport.Installments(childComplexity), true
+		return e.ComplexityRoot.ActualPaymentsReport.Installments(childComplexity), true
 	case "ActualPaymentsReport.totalDebt":
-		if e.complexity.ActualPaymentsReport.TotalDebt == nil {
+		if e.ComplexityRoot.ActualPaymentsReport.TotalDebt == nil {
 			break
 		}
 
-		return e.complexity.ActualPaymentsReport.TotalDebt(childComplexity), true
+		return e.ComplexityRoot.ActualPaymentsReport.TotalDebt(childComplexity), true
 	case "ActualPaymentsReport.totalInstallment":
-		if e.complexity.ActualPaymentsReport.TotalInstallment == nil {
+		if e.ComplexityRoot.ActualPaymentsReport.TotalInstallment == nil {
 			break
 		}
 
-		return e.complexity.ActualPaymentsReport.TotalInstallment(childComplexity), true
+		return e.ComplexityRoot.ActualPaymentsReport.TotalInstallment(childComplexity), true
 	case "ActualPaymentsReport.totalPayments":
-		if e.complexity.ActualPaymentsReport.TotalPayments == nil {
+		if e.ComplexityRoot.ActualPaymentsReport.TotalPayments == nil {
 			break
 		}
 
-		return e.complexity.ActualPaymentsReport.TotalPayments(childComplexity), true
+		return e.ComplexityRoot.ActualPaymentsReport.TotalPayments(childComplexity), true
 
+	case "AuthPayload.refreshToken":
+		if e.ComplexityRoot.AuthPayload.RefreshToken == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AuthPayload.RefreshToken(childComplexity), true
 	case "AuthPayload.requires2FA":
-		if e.complexity.AuthPayload.Requires2fa == nil {
+		if e.ComplexityRoot.AuthPayload.Requires2fa == nil {
 			break
 		}
 
-		return e.complexity.AuthPayload.Requires2fa(childComplexity), true
+		return e.ComplexityRoot.AuthPayload.Requires2fa(childComplexity), true
 	case "AuthPayload.tempToken":
-		if e.complexity.AuthPayload.TempToken == nil {
+		if e.ComplexityRoot.AuthPayload.TempToken == nil {
 			break
 		}
 
-		return e.complexity.AuthPayload.TempToken(childComplexity), true
+		return e.ComplexityRoot.AuthPayload.TempToken(childComplexity), true
 	case "AuthPayload.token":
-		if e.complexity.AuthPayload.Token == nil {
+		if e.ComplexityRoot.AuthPayload.Token == nil {
 			break
 		}
 
-		return e.complexity.AuthPayload.Token(childComplexity), true
+		return e.ComplexityRoot.AuthPayload.Token(childComplexity), true
 	case "AuthPayload.user":
-		if e.complexity.AuthPayload.User == nil {
+		if e.ComplexityRoot.AuthPayload.User == nil {
 			break
 		}
 
-		return e.complexity.AuthPayload.User(childComplexity), true
+		return e.ComplexityRoot.AuthPayload.User(childComplexity), true
 
 	case "BalanceBreakdown.count":
-		if e.complexity.BalanceBreakdown.Count == nil {
+		if e.ComplexityRoot.BalanceBreakdown.Count == nil {
 			break
 		}
 
-		return e.complexity.BalanceBreakdown.Count(childComplexity), true
+		return e.ComplexityRoot.BalanceBreakdown.Count(childComplexity), true
 	case "BalanceBreakdown.total":
-		if e.complexity.BalanceBreakdown.Total == nil {
+		if e.ComplexityRoot.BalanceBreakdown.Total == nil {
 			break
 		}
 
-		return e.complexity.BalanceBreakdown.Total(childComplexity), true
+		return e.ComplexityRoot.BalanceBreakdown.Total(childComplexity), true
 
 	case "BalanceReport.debt":
-		if e.complexity.BalanceReport.Debt == nil {
+		if e.ComplexityRoot.BalanceReport.Debt == nil {
 			break
 		}
 
-		return e.complexity.BalanceReport.Debt(childComplexity), true
+		return e.ComplexityRoot.BalanceReport.Debt(childComplexity), true
 	case "BalanceReport.endDate":
-		if e.complexity.BalanceReport.EndDate == nil {
+		if e.ComplexityRoot.BalanceReport.EndDate == nil {
 			break
 		}
 
-		return e.complexity.BalanceReport.EndDate(childComplexity), true
+		return e.ComplexityRoot.BalanceReport.EndDate(childComplexity), true
 	case "BalanceReport.expense":
-		if e.complexity.BalanceReport.Expense == nil {
+		if e.ComplexityRoot.BalanceReport.Expense == nil {
 			break
 		}
 
-		return e.complexity.BalanceReport.Expense(childComplexity), true
+		return e.ComplexityRoot.BalanceReport.Expense(childComplexity), true
 	case "BalanceReport.income":
-		if e.complexity.BalanceReport.Income == nil {
+		if e.ComplexityRoot.BalanceReport.Income == nil {
 			break
 		}
 
-		return e.complexity.BalanceReport.Income(childComplexity), true
+		return e.ComplexityRoot.BalanceReport.Income(childComplexity), true
 	case "BalanceReport.installment":
-		if e.complexity.BalanceReport.Installment == nil {
+		if e.ComplexityRoot.BalanceReport.Installment == nil {
 			break
 		}
 
-		return e.complexity.BalanceReport.Installment(childComplexity), true
+		return e.ComplexityRoot.BalanceReport.Installment(childComplexity), true
 	case "BalanceReport.netBalance":
-		if e.complexity.BalanceReport.NetBalance == nil {
+		if e.ComplexityRoot.BalanceReport.NetBalance == nil {
 			break
 		}
 
-		return e.complexity.BalanceReport.NetBalance(childComplexity), true
+		return e.ComplexityRoot.BalanceReport.NetBalance(childComplexity), true
 	case "BalanceReport.periodLabel":
-		if e.complexity.BalanceReport.PeriodLabel == nil {
+		if e.ComplexityRoot.BalanceReport.PeriodLabel == nil {
 			break
 		}
 
-		return e.complexity.BalanceReport.PeriodLabel(childComplexity), true
+		return e.ComplexityRoot.BalanceReport.PeriodLabel(childComplexity), true
 	case "BalanceReport.startDate":
-		if e.complexity.BalanceReport.StartDate == nil {
+		if e.ComplexityRoot.BalanceReport.StartDate == nil {
 			break
 		}
 
-		return e.complexity.BalanceReport.StartDate(childComplexity), true
+		return e.ComplexityRoot.BalanceReport.StartDate(childComplexity), true
 	case "BalanceReport.status":
-		if e.complexity.BalanceReport.Status == nil {
+		if e.ComplexityRoot.BalanceReport.Status == nil {
 			break
 		}
 
-		return e.complexity.BalanceReport.Status(childComplexity), true
+		return e.ComplexityRoot.BalanceReport.Status(childComplexity), true
 
 	case "BalanceSummary.netBalance":
-		if e.complexity.BalanceSummary.NetBalance == nil {
+		if e.ComplexityRoot.BalanceSummary.NetBalance == nil {
 			break
 		}
 
-		return e.complexity.BalanceSummary.NetBalance(childComplexity), true
+		return e.ComplexityRoot.BalanceSummary.NetBalance(childComplexity), true
 	case "BalanceSummary.status":
-		if e.complexity.BalanceSummary.Status == nil {
+		if e.ComplexityRoot.BalanceSummary.Status == nil {
 			break
 		}
 
-		return e.complexity.BalanceSummary.Status(childComplexity), true
+		return e.ComplexityRoot.BalanceSummary.Status(childComplexity), true
 	case "BalanceSummary.totalDebtPayment":
-		if e.complexity.BalanceSummary.TotalDebtPayment == nil {
+		if e.ComplexityRoot.BalanceSummary.TotalDebtPayment == nil {
 			break
 		}
 
-		return e.complexity.BalanceSummary.TotalDebtPayment(childComplexity), true
+		return e.ComplexityRoot.BalanceSummary.TotalDebtPayment(childComplexity), true
 	case "BalanceSummary.totalExpense":
-		if e.complexity.BalanceSummary.TotalExpense == nil {
+		if e.ComplexityRoot.BalanceSummary.TotalExpense == nil {
 			break
 		}
 
-		return e.complexity.BalanceSummary.TotalExpense(childComplexity), true
+		return e.ComplexityRoot.BalanceSummary.TotalExpense(childComplexity), true
 	case "BalanceSummary.totalIncome":
-		if e.complexity.BalanceSummary.TotalIncome == nil {
+		if e.ComplexityRoot.BalanceSummary.TotalIncome == nil {
 			break
 		}
 
-		return e.complexity.BalanceSummary.TotalIncome(childComplexity), true
+		return e.ComplexityRoot.BalanceSummary.TotalIncome(childComplexity), true
 	case "BalanceSummary.totalInstallmentPayment":
-		if e.complexity.BalanceSummary.TotalInstallmentPayment == nil {
+		if e.ComplexityRoot.BalanceSummary.TotalInstallmentPayment == nil {
 			break
 		}
 
-		return e.complexity.BalanceSummary.TotalInstallmentPayment(childComplexity), true
+		return e.ComplexityRoot.BalanceSummary.TotalInstallmentPayment(childComplexity), true
 
 	case "Category.createdAt":
-		if e.complexity.Category.CreatedAt == nil {
+		if e.ComplexityRoot.Category.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.Category.CreatedAt(childComplexity), true
+		return e.ComplexityRoot.Category.CreatedAt(childComplexity), true
 	case "Category.expenseCount":
-		if e.complexity.Category.ExpenseCount == nil {
+		if e.ComplexityRoot.Category.ExpenseCount == nil {
 			break
 		}
 
-		return e.complexity.Category.ExpenseCount(childComplexity), true
+		return e.ComplexityRoot.Category.ExpenseCount(childComplexity), true
 	case "Category.expenses":
-		if e.complexity.Category.Expenses == nil {
+		if e.ComplexityRoot.Category.Expenses == nil {
 			break
 		}
 
-		return e.complexity.Category.Expenses(childComplexity), true
+		return e.ComplexityRoot.Category.Expenses(childComplexity), true
 	case "Category.id":
-		if e.complexity.Category.ID == nil {
+		if e.ComplexityRoot.Category.ID == nil {
 			break
 		}
 
-		return e.complexity.Category.ID(childComplexity), true
+		return e.ComplexityRoot.Category.ID(childComplexity), true
 	case "Category.name":
-		if e.complexity.Category.Name == nil {
+		if e.ComplexityRoot.Category.Name == nil {
 			break
 		}
 
-		return e.complexity.Category.Name(childComplexity), true
+		return e.ComplexityRoot.Category.Name(childComplexity), true
 	case "Category.totalSpent":
-		if e.complexity.Category.TotalSpent == nil {
+		if e.ComplexityRoot.Category.TotalSpent == nil {
 			break
 		}
 
-		return e.complexity.Category.TotalSpent(childComplexity), true
+		return e.ComplexityRoot.Category.TotalSpent(childComplexity), true
 
 	case "CategorySummary.category":
-		if e.complexity.CategorySummary.Category == nil {
+		if e.ComplexityRoot.CategorySummary.Category == nil {
 			break
 		}
 
-		return e.complexity.CategorySummary.Category(childComplexity), true
+		return e.ComplexityRoot.CategorySummary.Category(childComplexity), true
 	case "CategorySummary.expenseCount":
-		if e.complexity.CategorySummary.ExpenseCount == nil {
+		if e.ComplexityRoot.CategorySummary.ExpenseCount == nil {
 			break
 		}
 
-		return e.complexity.CategorySummary.ExpenseCount(childComplexity), true
+		return e.ComplexityRoot.CategorySummary.ExpenseCount(childComplexity), true
 	case "CategorySummary.totalAmount":
-		if e.complexity.CategorySummary.TotalAmount == nil {
+		if e.ComplexityRoot.CategorySummary.TotalAmount == nil {
 			break
 		}
 
-		return e.complexity.CategorySummary.TotalAmount(childComplexity), true
+		return e.ComplexityRoot.CategorySummary.TotalAmount(childComplexity), true
 
 	case "Dashboard.activeSavingsGoals":
-		if e.complexity.Dashboard.ActiveSavingsGoals == nil {
+		if e.ComplexityRoot.Dashboard.ActiveSavingsGoals == nil {
 			break
 		}
 
-		return e.complexity.Dashboard.ActiveSavingsGoals(childComplexity), true
+		return e.ComplexityRoot.Dashboard.ActiveSavingsGoals(childComplexity), true
 	case "Dashboard.balanceSummary":
-		if e.complexity.Dashboard.BalanceSummary == nil {
+		if e.ComplexityRoot.Dashboard.BalanceSummary == nil {
 			break
 		}
 
-		return e.complexity.Dashboard.BalanceSummary(childComplexity), true
+		return e.ComplexityRoot.Dashboard.BalanceSummary(childComplexity), true
 	case "Dashboard.expensesByCategory":
-		if e.complexity.Dashboard.ExpensesByCategory == nil {
+		if e.ComplexityRoot.Dashboard.ExpensesByCategory == nil {
 			break
 		}
 
-		return e.complexity.Dashboard.ExpensesByCategory(childComplexity), true
+		return e.ComplexityRoot.Dashboard.ExpensesByCategory(childComplexity), true
 	case "Dashboard.recentExpenses":
-		if e.complexity.Dashboard.RecentExpenses == nil {
+		if e.ComplexityRoot.Dashboard.RecentExpenses == nil {
 			break
 		}
 
-		return e.complexity.Dashboard.RecentExpenses(childComplexity), true
+		return e.ComplexityRoot.Dashboard.RecentExpenses(childComplexity), true
 	case "Dashboard.totalActiveDebt":
-		if e.complexity.Dashboard.TotalActiveDebt == nil {
+		if e.ComplexityRoot.Dashboard.TotalActiveDebt == nil {
 			break
 		}
 
-		return e.complexity.Dashboard.TotalActiveDebt(childComplexity), true
+		return e.ComplexityRoot.Dashboard.TotalActiveDebt(childComplexity), true
 	case "Dashboard.totalActiveInstallment":
-		if e.complexity.Dashboard.TotalActiveInstallment == nil {
+		if e.ComplexityRoot.Dashboard.TotalActiveInstallment == nil {
 			break
 		}
 
-		return e.complexity.Dashboard.TotalActiveInstallment(childComplexity), true
+		return e.ComplexityRoot.Dashboard.TotalActiveInstallment(childComplexity), true
 	case "Dashboard.totalExpenseThisMonth":
-		if e.complexity.Dashboard.TotalExpenseThisMonth == nil {
+		if e.ComplexityRoot.Dashboard.TotalExpenseThisMonth == nil {
 			break
 		}
 
-		return e.complexity.Dashboard.TotalExpenseThisMonth(childComplexity), true
+		return e.ComplexityRoot.Dashboard.TotalExpenseThisMonth(childComplexity), true
 	case "Dashboard.totalIncomeThisMonth":
-		if e.complexity.Dashboard.TotalIncomeThisMonth == nil {
+		if e.ComplexityRoot.Dashboard.TotalIncomeThisMonth == nil {
 			break
 		}
 
-		return e.complexity.Dashboard.TotalIncomeThisMonth(childComplexity), true
+		return e.ComplexityRoot.Dashboard.TotalIncomeThisMonth(childComplexity), true
 	case "Dashboard.totalSavingsContributionThisMonth":
-		if e.complexity.Dashboard.TotalSavingsContributionThisMonth == nil {
+		if e.ComplexityRoot.Dashboard.TotalSavingsContributionThisMonth == nil {
 			break
 		}
 
-		return e.complexity.Dashboard.TotalSavingsContributionThisMonth(childComplexity), true
+		return e.ComplexityRoot.Dashboard.TotalSavingsContributionThisMonth(childComplexity), true
 
 	case "Debt.actualAmount":
-		if e.complexity.Debt.ActualAmount == nil {
+		if e.ComplexityRoot.Debt.ActualAmount == nil {
 			break
 		}
 
-		return e.complexity.Debt.ActualAmount(childComplexity), true
+		return e.ComplexityRoot.Debt.ActualAmount(childComplexity), true
 	case "Debt.createdAt":
-		if e.complexity.Debt.CreatedAt == nil {
+		if e.ComplexityRoot.Debt.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.Debt.CreatedAt(childComplexity), true
+		return e.ComplexityRoot.Debt.CreatedAt(childComplexity), true
 	case "Debt.dueDate":
-		if e.complexity.Debt.DueDate == nil {
+		if e.ComplexityRoot.Debt.DueDate == nil {
 			break
 		}
 
-		return e.complexity.Debt.DueDate(childComplexity), true
+		return e.ComplexityRoot.Debt.DueDate(childComplexity), true
 	case "Debt.id":
-		if e.complexity.Debt.ID == nil {
+		if e.ComplexityRoot.Debt.ID == nil {
 			break
 		}
 
-		return e.complexity.Debt.ID(childComplexity), true
+		return e.ComplexityRoot.Debt.ID(childComplexity), true
 	case "Debt.interestAmount":
-		if e.complexity.Debt.InterestAmount == nil {
+		if e.ComplexityRoot.Debt.InterestAmount == nil {
 			break
 		}
 
-		return e.complexity.Debt.InterestAmount(childComplexity), true
+		return e.ComplexityRoot.Debt.InterestAmount(childComplexity), true
 	case "Debt.interestPercentage":
-		if e.complexity.Debt.InterestPercentage == nil {
+		if e.ComplexityRoot.Debt.InterestPercentage == nil {
 			break
 		}
 
-		return e.complexity.Debt.InterestPercentage(childComplexity), true
+		return e.ComplexityRoot.Debt.InterestPercentage(childComplexity), true
 	case "Debt.loanAmount":
-		if e.complexity.Debt.LoanAmount == nil {
+		if e.ComplexityRoot.Debt.LoanAmount == nil {
 			break
 		}
 
-		return e.complexity.Debt.LoanAmount(childComplexity), true
+		return e.ComplexityRoot.Debt.LoanAmount(childComplexity), true
 	case "Debt.monthlyPayment":
-		if e.complexity.Debt.MonthlyPayment == nil {
+		if e.ComplexityRoot.Debt.MonthlyPayment == nil {
 			break
 		}
 
-		return e.complexity.Debt.MonthlyPayment(childComplexity), true
+		return e.ComplexityRoot.Debt.MonthlyPayment(childComplexity), true
 	case "Debt.notes":
-		if e.complexity.Debt.Notes == nil {
+		if e.ComplexityRoot.Debt.Notes == nil {
 			break
 		}
 
-		return e.complexity.Debt.Notes(childComplexity), true
+		return e.ComplexityRoot.Debt.Notes(childComplexity), true
 	case "Debt.paidAmount":
-		if e.complexity.Debt.PaidAmount == nil {
+		if e.ComplexityRoot.Debt.PaidAmount == nil {
 			break
 		}
 
-		return e.complexity.Debt.PaidAmount(childComplexity), true
+		return e.ComplexityRoot.Debt.PaidAmount(childComplexity), true
 	case "Debt.paymentType":
-		if e.complexity.Debt.PaymentType == nil {
+		if e.ComplexityRoot.Debt.PaymentType == nil {
 			break
 		}
 
-		return e.complexity.Debt.PaymentType(childComplexity), true
+		return e.ComplexityRoot.Debt.PaymentType(childComplexity), true
 	case "Debt.payments":
-		if e.complexity.Debt.Payments == nil {
+		if e.ComplexityRoot.Debt.Payments == nil {
 			break
 		}
 
-		return e.complexity.Debt.Payments(childComplexity), true
+		return e.ComplexityRoot.Debt.Payments(childComplexity), true
 	case "Debt.personName":
-		if e.complexity.Debt.PersonName == nil {
+		if e.ComplexityRoot.Debt.PersonName == nil {
 			break
 		}
 
-		return e.complexity.Debt.PersonName(childComplexity), true
+		return e.ComplexityRoot.Debt.PersonName(childComplexity), true
 	case "Debt.remainingAmount":
-		if e.complexity.Debt.RemainingAmount == nil {
+		if e.ComplexityRoot.Debt.RemainingAmount == nil {
 			break
 		}
 
-		return e.complexity.Debt.RemainingAmount(childComplexity), true
+		return e.ComplexityRoot.Debt.RemainingAmount(childComplexity), true
 	case "Debt.status":
-		if e.complexity.Debt.Status == nil {
+		if e.ComplexityRoot.Debt.Status == nil {
 			break
 		}
 
-		return e.complexity.Debt.Status(childComplexity), true
+		return e.ComplexityRoot.Debt.Status(childComplexity), true
 	case "Debt.tenor":
-		if e.complexity.Debt.Tenor == nil {
+		if e.ComplexityRoot.Debt.Tenor == nil {
 			break
 		}
 
-		return e.complexity.Debt.Tenor(childComplexity), true
+		return e.ComplexityRoot.Debt.Tenor(childComplexity), true
 	case "Debt.totalToPay":
-		if e.complexity.Debt.TotalToPay == nil {
+		if e.ComplexityRoot.Debt.TotalToPay == nil {
 			break
 		}
 
-		return e.complexity.Debt.TotalToPay(childComplexity), true
+		return e.ComplexityRoot.Debt.TotalToPay(childComplexity), true
 
 	case "DebtPayment.amount":
-		if e.complexity.DebtPayment.Amount == nil {
+		if e.ComplexityRoot.DebtPayment.Amount == nil {
 			break
 		}
 
-		return e.complexity.DebtPayment.Amount(childComplexity), true
+		return e.ComplexityRoot.DebtPayment.Amount(childComplexity), true
 	case "DebtPayment.createdAt":
-		if e.complexity.DebtPayment.CreatedAt == nil {
+		if e.ComplexityRoot.DebtPayment.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.DebtPayment.CreatedAt(childComplexity), true
+		return e.ComplexityRoot.DebtPayment.CreatedAt(childComplexity), true
 	case "DebtPayment.debt":
-		if e.complexity.DebtPayment.Debt == nil {
+		if e.ComplexityRoot.DebtPayment.Debt == nil {
 			break
 		}
 
-		return e.complexity.DebtPayment.Debt(childComplexity), true
+		return e.ComplexityRoot.DebtPayment.Debt(childComplexity), true
 	case "DebtPayment.id":
-		if e.complexity.DebtPayment.ID == nil {
+		if e.ComplexityRoot.DebtPayment.ID == nil {
 			break
 		}
 
-		return e.complexity.DebtPayment.ID(childComplexity), true
+		return e.ComplexityRoot.DebtPayment.ID(childComplexity), true
 	case "DebtPayment.paidAt":
-		if e.complexity.DebtPayment.PaidAt == nil {
+		if e.ComplexityRoot.DebtPayment.PaidAt == nil {
 			break
 		}
 
-		return e.complexity.DebtPayment.PaidAt(childComplexity), true
+		return e.ComplexityRoot.DebtPayment.PaidAt(childComplexity), true
 	case "DebtPayment.paymentNumber":
-		if e.complexity.DebtPayment.PaymentNumber == nil {
+		if e.ComplexityRoot.DebtPayment.PaymentNumber == nil {
 			break
 		}
 
-		return e.complexity.DebtPayment.PaymentNumber(childComplexity), true
+		return e.ComplexityRoot.DebtPayment.PaymentNumber(childComplexity), true
 
 	case "Expense.category":
-		if e.complexity.Expense.Category == nil {
+		if e.ComplexityRoot.Expense.Category == nil {
 			break
 		}
 
-		return e.complexity.Expense.Category(childComplexity), true
+		return e.ComplexityRoot.Expense.Category(childComplexity), true
 	case "Expense.createdAt":
-		if e.complexity.Expense.CreatedAt == nil {
+		if e.ComplexityRoot.Expense.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.Expense.CreatedAt(childComplexity), true
+		return e.ComplexityRoot.Expense.CreatedAt(childComplexity), true
 	case "Expense.expenseDate":
-		if e.complexity.Expense.ExpenseDate == nil {
+		if e.ComplexityRoot.Expense.ExpenseDate == nil {
 			break
 		}
 
-		return e.complexity.Expense.ExpenseDate(childComplexity), true
+		return e.ComplexityRoot.Expense.ExpenseDate(childComplexity), true
 	case "Expense.id":
-		if e.complexity.Expense.ID == nil {
+		if e.ComplexityRoot.Expense.ID == nil {
 			break
 		}
 
-		return e.complexity.Expense.ID(childComplexity), true
+		return e.ComplexityRoot.Expense.ID(childComplexity), true
 	case "Expense.itemName":
-		if e.complexity.Expense.ItemName == nil {
+		if e.ComplexityRoot.Expense.ItemName == nil {
 			break
 		}
 
-		return e.complexity.Expense.ItemName(childComplexity), true
+		return e.ComplexityRoot.Expense.ItemName(childComplexity), true
 	case "Expense.notes":
-		if e.complexity.Expense.Notes == nil {
+		if e.ComplexityRoot.Expense.Notes == nil {
 			break
 		}
 
-		return e.complexity.Expense.Notes(childComplexity), true
+		return e.ComplexityRoot.Expense.Notes(childComplexity), true
 	case "Expense.quantity":
-		if e.complexity.Expense.Quantity == nil {
+		if e.ComplexityRoot.Expense.Quantity == nil {
 			break
 		}
 
-		return e.complexity.Expense.Quantity(childComplexity), true
+		return e.ComplexityRoot.Expense.Quantity(childComplexity), true
 	case "Expense.total":
-		if e.complexity.Expense.Total == nil {
+		if e.ComplexityRoot.Expense.Total == nil {
 			break
 		}
 
-		return e.complexity.Expense.Total(childComplexity), true
+		return e.ComplexityRoot.Expense.Total(childComplexity), true
 	case "Expense.unitPrice":
-		if e.complexity.Expense.UnitPrice == nil {
+		if e.ComplexityRoot.Expense.UnitPrice == nil {
 			break
 		}
 
-		return e.complexity.Expense.UnitPrice(childComplexity), true
+		return e.ComplexityRoot.Expense.UnitPrice(childComplexity), true
 
 	case "ExpenseBreakdown.byCategory":
-		if e.complexity.ExpenseBreakdown.ByCategory == nil {
+		if e.ComplexityRoot.ExpenseBreakdown.ByCategory == nil {
 			break
 		}
 
-		return e.complexity.ExpenseBreakdown.ByCategory(childComplexity), true
+		return e.ComplexityRoot.ExpenseBreakdown.ByCategory(childComplexity), true
 	case "ExpenseBreakdown.count":
-		if e.complexity.ExpenseBreakdown.Count == nil {
+		if e.ComplexityRoot.ExpenseBreakdown.Count == nil {
 			break
 		}
 
-		return e.complexity.ExpenseBreakdown.Count(childComplexity), true
+		return e.ComplexityRoot.ExpenseBreakdown.Count(childComplexity), true
 	case "ExpenseBreakdown.total":
-		if e.complexity.ExpenseBreakdown.Total == nil {
+		if e.ComplexityRoot.ExpenseBreakdown.Total == nil {
 			break
 		}
 
-		return e.complexity.ExpenseBreakdown.Total(childComplexity), true
+		return e.ComplexityRoot.ExpenseBreakdown.Total(childComplexity), true
 
 	case "ExpenseByCategoryGroup.category":
-		if e.complexity.ExpenseByCategoryGroup.Category == nil {
+		if e.ComplexityRoot.ExpenseByCategoryGroup.Category == nil {
 			break
 		}
 
-		return e.complexity.ExpenseByCategoryGroup.Category(childComplexity), true
+		return e.ComplexityRoot.ExpenseByCategoryGroup.Category(childComplexity), true
 	case "ExpenseByCategoryGroup.count":
-		if e.complexity.ExpenseByCategoryGroup.Count == nil {
+		if e.ComplexityRoot.ExpenseByCategoryGroup.Count == nil {
 			break
 		}
 
-		return e.complexity.ExpenseByCategoryGroup.Count(childComplexity), true
+		return e.ComplexityRoot.ExpenseByCategoryGroup.Count(childComplexity), true
 	case "ExpenseByCategoryGroup.totalAmount":
-		if e.complexity.ExpenseByCategoryGroup.TotalAmount == nil {
+		if e.ComplexityRoot.ExpenseByCategoryGroup.TotalAmount == nil {
 			break
 		}
 
-		return e.complexity.ExpenseByCategoryGroup.TotalAmount(childComplexity), true
+		return e.ComplexityRoot.ExpenseByCategoryGroup.TotalAmount(childComplexity), true
 
 	case "ExpenseSummary.byCategory":
-		if e.complexity.ExpenseSummary.ByCategory == nil {
+		if e.ComplexityRoot.ExpenseSummary.ByCategory == nil {
 			break
 		}
 
-		return e.complexity.ExpenseSummary.ByCategory(childComplexity), true
+		return e.ComplexityRoot.ExpenseSummary.ByCategory(childComplexity), true
 	case "ExpenseSummary.count":
-		if e.complexity.ExpenseSummary.Count == nil {
+		if e.ComplexityRoot.ExpenseSummary.Count == nil {
 			break
 		}
 
-		return e.complexity.ExpenseSummary.Count(childComplexity), true
+		return e.ComplexityRoot.ExpenseSummary.Count(childComplexity), true
 	case "ExpenseSummary.total":
-		if e.complexity.ExpenseSummary.Total == nil {
+		if e.ComplexityRoot.ExpenseSummary.Total == nil {
 			break
 		}
 
-		return e.complexity.ExpenseSummary.Total(childComplexity), true
+		return e.ComplexityRoot.ExpenseSummary.Total(childComplexity), true
 
 	case "ExpenseTemplateGroup.createdAt":
-		if e.complexity.ExpenseTemplateGroup.CreatedAt == nil {
+		if e.ComplexityRoot.ExpenseTemplateGroup.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.ExpenseTemplateGroup.CreatedAt(childComplexity), true
+		return e.ComplexityRoot.ExpenseTemplateGroup.CreatedAt(childComplexity), true
 	case "ExpenseTemplateGroup.id":
-		if e.complexity.ExpenseTemplateGroup.ID == nil {
+		if e.ComplexityRoot.ExpenseTemplateGroup.ID == nil {
 			break
 		}
 
-		return e.complexity.ExpenseTemplateGroup.ID(childComplexity), true
+		return e.ComplexityRoot.ExpenseTemplateGroup.ID(childComplexity), true
 	case "ExpenseTemplateGroup.items":
-		if e.complexity.ExpenseTemplateGroup.Items == nil {
+		if e.ComplexityRoot.ExpenseTemplateGroup.Items == nil {
 			break
 		}
 
-		return e.complexity.ExpenseTemplateGroup.Items(childComplexity), true
+		return e.ComplexityRoot.ExpenseTemplateGroup.Items(childComplexity), true
 	case "ExpenseTemplateGroup.name":
-		if e.complexity.ExpenseTemplateGroup.Name == nil {
+		if e.ComplexityRoot.ExpenseTemplateGroup.Name == nil {
 			break
 		}
 
-		return e.complexity.ExpenseTemplateGroup.Name(childComplexity), true
+		return e.ComplexityRoot.ExpenseTemplateGroup.Name(childComplexity), true
 	case "ExpenseTemplateGroup.notes":
-		if e.complexity.ExpenseTemplateGroup.Notes == nil {
+		if e.ComplexityRoot.ExpenseTemplateGroup.Notes == nil {
 			break
 		}
 
-		return e.complexity.ExpenseTemplateGroup.Notes(childComplexity), true
+		return e.ComplexityRoot.ExpenseTemplateGroup.Notes(childComplexity), true
 	case "ExpenseTemplateGroup.recurringDay":
-		if e.complexity.ExpenseTemplateGroup.RecurringDay == nil {
+		if e.ComplexityRoot.ExpenseTemplateGroup.RecurringDay == nil {
 			break
 		}
 
-		return e.complexity.ExpenseTemplateGroup.RecurringDay(childComplexity), true
+		return e.ComplexityRoot.ExpenseTemplateGroup.RecurringDay(childComplexity), true
 	case "ExpenseTemplateGroup.total":
-		if e.complexity.ExpenseTemplateGroup.Total == nil {
+		if e.ComplexityRoot.ExpenseTemplateGroup.Total == nil {
 			break
 		}
 
-		return e.complexity.ExpenseTemplateGroup.Total(childComplexity), true
+		return e.ComplexityRoot.ExpenseTemplateGroup.Total(childComplexity), true
 
 	case "ExpenseTemplateItem.category":
-		if e.complexity.ExpenseTemplateItem.Category == nil {
+		if e.ComplexityRoot.ExpenseTemplateItem.Category == nil {
 			break
 		}
 
-		return e.complexity.ExpenseTemplateItem.Category(childComplexity), true
+		return e.ComplexityRoot.ExpenseTemplateItem.Category(childComplexity), true
 	case "ExpenseTemplateItem.createdAt":
-		if e.complexity.ExpenseTemplateItem.CreatedAt == nil {
+		if e.ComplexityRoot.ExpenseTemplateItem.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.ExpenseTemplateItem.CreatedAt(childComplexity), true
+		return e.ComplexityRoot.ExpenseTemplateItem.CreatedAt(childComplexity), true
 	case "ExpenseTemplateItem.id":
-		if e.complexity.ExpenseTemplateItem.ID == nil {
+		if e.ComplexityRoot.ExpenseTemplateItem.ID == nil {
 			break
 		}
 
-		return e.complexity.ExpenseTemplateItem.ID(childComplexity), true
+		return e.ComplexityRoot.ExpenseTemplateItem.ID(childComplexity), true
 	case "ExpenseTemplateItem.itemName":
-		if e.complexity.ExpenseTemplateItem.ItemName == nil {
+		if e.ComplexityRoot.ExpenseTemplateItem.ItemName == nil {
 			break
 		}
 
-		return e.complexity.ExpenseTemplateItem.ItemName(childComplexity), true
+		return e.ComplexityRoot.ExpenseTemplateItem.ItemName(childComplexity), true
 	case "ExpenseTemplateItem.quantity":
-		if e.complexity.ExpenseTemplateItem.Quantity == nil {
+		if e.ComplexityRoot.ExpenseTemplateItem.Quantity == nil {
 			break
 		}
 
-		return e.complexity.ExpenseTemplateItem.Quantity(childComplexity), true
+		return e.ComplexityRoot.ExpenseTemplateItem.Quantity(childComplexity), true
 	case "ExpenseTemplateItem.total":
-		if e.complexity.ExpenseTemplateItem.Total == nil {
+		if e.ComplexityRoot.ExpenseTemplateItem.Total == nil {
 			break
 		}
 
-		return e.complexity.ExpenseTemplateItem.Total(childComplexity), true
+		return e.ComplexityRoot.ExpenseTemplateItem.Total(childComplexity), true
 	case "ExpenseTemplateItem.unitPrice":
-		if e.complexity.ExpenseTemplateItem.UnitPrice == nil {
+		if e.ComplexityRoot.ExpenseTemplateItem.UnitPrice == nil {
 			break
 		}
 
-		return e.complexity.ExpenseTemplateItem.UnitPrice(childComplexity), true
+		return e.ComplexityRoot.ExpenseTemplateItem.UnitPrice(childComplexity), true
 
 	case "ExpensesWithSummary.items":
-		if e.complexity.ExpensesWithSummary.Items == nil {
+		if e.ComplexityRoot.ExpensesWithSummary.Items == nil {
 			break
 		}
 
-		return e.complexity.ExpensesWithSummary.Items(childComplexity), true
+		return e.ComplexityRoot.ExpensesWithSummary.Items(childComplexity), true
 	case "ExpensesWithSummary.summary":
-		if e.complexity.ExpensesWithSummary.Summary == nil {
+		if e.ComplexityRoot.ExpensesWithSummary.Summary == nil {
 			break
 		}
 
-		return e.complexity.ExpensesWithSummary.Summary(childComplexity), true
+		return e.ComplexityRoot.ExpensesWithSummary.Summary(childComplexity), true
 
 	case "ForecastSummary.availableMonths":
-		if e.complexity.ForecastSummary.AvailableMonths == nil {
+		if e.ComplexityRoot.ForecastSummary.AvailableMonths == nil {
 			break
 		}
 
-		return e.complexity.ForecastSummary.AvailableMonths(childComplexity), true
+		return e.ComplexityRoot.ForecastSummary.AvailableMonths(childComplexity), true
 	case "ForecastSummary.expenseSummary":
-		if e.complexity.ForecastSummary.ExpenseSummary == nil {
+		if e.ComplexityRoot.ForecastSummary.ExpenseSummary == nil {
 			break
 		}
 
-		return e.complexity.ForecastSummary.ExpenseSummary(childComplexity), true
+		return e.ComplexityRoot.ForecastSummary.ExpenseSummary(childComplexity), true
 	case "ForecastSummary.incomeSummary":
-		if e.complexity.ForecastSummary.IncomeSummary == nil {
+		if e.ComplexityRoot.ForecastSummary.IncomeSummary == nil {
 			break
 		}
 
-		return e.complexity.ForecastSummary.IncomeSummary(childComplexity), true
+		return e.ComplexityRoot.ForecastSummary.IncomeSummary(childComplexity), true
 	case "ForecastSummary.payments":
-		if e.complexity.ForecastSummary.Payments == nil {
+		if e.ComplexityRoot.ForecastSummary.Payments == nil {
 			break
 		}
 
-		return e.complexity.ForecastSummary.Payments(childComplexity), true
+		return e.ComplexityRoot.ForecastSummary.Payments(childComplexity), true
 	case "ForecastSummary.selectedMonth":
-		if e.complexity.ForecastSummary.SelectedMonth == nil {
+		if e.ComplexityRoot.ForecastSummary.SelectedMonth == nil {
 			break
 		}
 
-		return e.complexity.ForecastSummary.SelectedMonth(childComplexity), true
+		return e.ComplexityRoot.ForecastSummary.SelectedMonth(childComplexity), true
 	case "ForecastSummary.totalSavingsContribution":
-		if e.complexity.ForecastSummary.TotalSavingsContribution == nil {
+		if e.ComplexityRoot.ForecastSummary.TotalSavingsContribution == nil {
 			break
 		}
 
-		return e.complexity.ForecastSummary.TotalSavingsContribution(childComplexity), true
+		return e.ComplexityRoot.ForecastSummary.TotalSavingsContribution(childComplexity), true
 
 	case "HistorySummary.availableMonths":
-		if e.complexity.HistorySummary.AvailableMonths == nil {
+		if e.ComplexityRoot.HistorySummary.AvailableMonths == nil {
 			break
 		}
 
-		return e.complexity.HistorySummary.AvailableMonths(childComplexity), true
+		return e.ComplexityRoot.HistorySummary.AvailableMonths(childComplexity), true
 	case "HistorySummary.expenseSummary":
-		if e.complexity.HistorySummary.ExpenseSummary == nil {
+		if e.ComplexityRoot.HistorySummary.ExpenseSummary == nil {
 			break
 		}
 
-		return e.complexity.HistorySummary.ExpenseSummary(childComplexity), true
+		return e.ComplexityRoot.HistorySummary.ExpenseSummary(childComplexity), true
 	case "HistorySummary.incomeSummary":
-		if e.complexity.HistorySummary.IncomeSummary == nil {
+		if e.ComplexityRoot.HistorySummary.IncomeSummary == nil {
 			break
 		}
 
-		return e.complexity.HistorySummary.IncomeSummary(childComplexity), true
+		return e.ComplexityRoot.HistorySummary.IncomeSummary(childComplexity), true
 	case "HistorySummary.payments":
-		if e.complexity.HistorySummary.Payments == nil {
+		if e.ComplexityRoot.HistorySummary.Payments == nil {
 			break
 		}
 
-		return e.complexity.HistorySummary.Payments(childComplexity), true
+		return e.ComplexityRoot.HistorySummary.Payments(childComplexity), true
 	case "HistorySummary.selectedMonth":
-		if e.complexity.HistorySummary.SelectedMonth == nil {
+		if e.ComplexityRoot.HistorySummary.SelectedMonth == nil {
 			break
 		}
 
-		return e.complexity.HistorySummary.SelectedMonth(childComplexity), true
+		return e.ComplexityRoot.HistorySummary.SelectedMonth(childComplexity), true
 	case "HistorySummary.totalSavingsContribution":
-		if e.complexity.HistorySummary.TotalSavingsContribution == nil {
+		if e.ComplexityRoot.HistorySummary.TotalSavingsContribution == nil {
 			break
 		}
 
-		return e.complexity.HistorySummary.TotalSavingsContribution(childComplexity), true
+		return e.ComplexityRoot.HistorySummary.TotalSavingsContribution(childComplexity), true
 
 	case "Income.amount":
-		if e.complexity.Income.Amount == nil {
+		if e.ComplexityRoot.Income.Amount == nil {
 			break
 		}
 
-		return e.complexity.Income.Amount(childComplexity), true
+		return e.ComplexityRoot.Income.Amount(childComplexity), true
 	case "Income.category":
-		if e.complexity.Income.Category == nil {
+		if e.ComplexityRoot.Income.Category == nil {
 			break
 		}
 
-		return e.complexity.Income.Category(childComplexity), true
+		return e.ComplexityRoot.Income.Category(childComplexity), true
 	case "Income.createdAt":
-		if e.complexity.Income.CreatedAt == nil {
+		if e.ComplexityRoot.Income.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.Income.CreatedAt(childComplexity), true
+		return e.ComplexityRoot.Income.CreatedAt(childComplexity), true
 	case "Income.id":
-		if e.complexity.Income.ID == nil {
+		if e.ComplexityRoot.Income.ID == nil {
 			break
 		}
 
-		return e.complexity.Income.ID(childComplexity), true
+		return e.ComplexityRoot.Income.ID(childComplexity), true
 	case "Income.incomeDate":
-		if e.complexity.Income.IncomeDate == nil {
+		if e.ComplexityRoot.Income.IncomeDate == nil {
 			break
 		}
 
-		return e.complexity.Income.IncomeDate(childComplexity), true
+		return e.ComplexityRoot.Income.IncomeDate(childComplexity), true
 	case "Income.incomeType":
-		if e.complexity.Income.IncomeType == nil {
+		if e.ComplexityRoot.Income.IncomeType == nil {
 			break
 		}
 
-		return e.complexity.Income.IncomeType(childComplexity), true
+		return e.ComplexityRoot.Income.IncomeType(childComplexity), true
 	case "Income.isRecurring":
-		if e.complexity.Income.IsRecurring == nil {
+		if e.ComplexityRoot.Income.IsRecurring == nil {
 			break
 		}
 
-		return e.complexity.Income.IsRecurring(childComplexity), true
+		return e.ComplexityRoot.Income.IsRecurring(childComplexity), true
 	case "Income.notes":
-		if e.complexity.Income.Notes == nil {
+		if e.ComplexityRoot.Income.Notes == nil {
 			break
 		}
 
-		return e.complexity.Income.Notes(childComplexity), true
+		return e.ComplexityRoot.Income.Notes(childComplexity), true
 	case "Income.sourceName":
-		if e.complexity.Income.SourceName == nil {
+		if e.ComplexityRoot.Income.SourceName == nil {
 			break
 		}
 
-		return e.complexity.Income.SourceName(childComplexity), true
+		return e.ComplexityRoot.Income.SourceName(childComplexity), true
 
 	case "IncomeBreakdown.byCategory":
-		if e.complexity.IncomeBreakdown.ByCategory == nil {
+		if e.ComplexityRoot.IncomeBreakdown.ByCategory == nil {
 			break
 		}
 
-		return e.complexity.IncomeBreakdown.ByCategory(childComplexity), true
+		return e.ComplexityRoot.IncomeBreakdown.ByCategory(childComplexity), true
 	case "IncomeBreakdown.byType":
-		if e.complexity.IncomeBreakdown.ByType == nil {
+		if e.ComplexityRoot.IncomeBreakdown.ByType == nil {
 			break
 		}
 
-		return e.complexity.IncomeBreakdown.ByType(childComplexity), true
+		return e.ComplexityRoot.IncomeBreakdown.ByType(childComplexity), true
 	case "IncomeBreakdown.count":
-		if e.complexity.IncomeBreakdown.Count == nil {
+		if e.ComplexityRoot.IncomeBreakdown.Count == nil {
 			break
 		}
 
-		return e.complexity.IncomeBreakdown.Count(childComplexity), true
+		return e.ComplexityRoot.IncomeBreakdown.Count(childComplexity), true
 	case "IncomeBreakdown.total":
-		if e.complexity.IncomeBreakdown.Total == nil {
+		if e.ComplexityRoot.IncomeBreakdown.Total == nil {
 			break
 		}
 
-		return e.complexity.IncomeBreakdown.Total(childComplexity), true
+		return e.ComplexityRoot.IncomeBreakdown.Total(childComplexity), true
 
 	case "IncomeByCategoryGroup.category":
-		if e.complexity.IncomeByCategoryGroup.Category == nil {
+		if e.ComplexityRoot.IncomeByCategoryGroup.Category == nil {
 			break
 		}
 
-		return e.complexity.IncomeByCategoryGroup.Category(childComplexity), true
+		return e.ComplexityRoot.IncomeByCategoryGroup.Category(childComplexity), true
 	case "IncomeByCategoryGroup.count":
-		if e.complexity.IncomeByCategoryGroup.Count == nil {
+		if e.ComplexityRoot.IncomeByCategoryGroup.Count == nil {
 			break
 		}
 
-		return e.complexity.IncomeByCategoryGroup.Count(childComplexity), true
+		return e.ComplexityRoot.IncomeByCategoryGroup.Count(childComplexity), true
 	case "IncomeByCategoryGroup.totalAmount":
-		if e.complexity.IncomeByCategoryGroup.TotalAmount == nil {
+		if e.ComplexityRoot.IncomeByCategoryGroup.TotalAmount == nil {
 			break
 		}
 
-		return e.complexity.IncomeByCategoryGroup.TotalAmount(childComplexity), true
+		return e.ComplexityRoot.IncomeByCategoryGroup.TotalAmount(childComplexity), true
 
 	case "IncomeByTypeGroup.count":
-		if e.complexity.IncomeByTypeGroup.Count == nil {
+		if e.ComplexityRoot.IncomeByTypeGroup.Count == nil {
 			break
 		}
 
-		return e.complexity.IncomeByTypeGroup.Count(childComplexity), true
+		return e.ComplexityRoot.IncomeByTypeGroup.Count(childComplexity), true
 	case "IncomeByTypeGroup.incomeType":
-		if e.complexity.IncomeByTypeGroup.IncomeType == nil {
+		if e.ComplexityRoot.IncomeByTypeGroup.IncomeType == nil {
 			break
 		}
 
-		return e.complexity.IncomeByTypeGroup.IncomeType(childComplexity), true
+		return e.ComplexityRoot.IncomeByTypeGroup.IncomeType(childComplexity), true
 	case "IncomeByTypeGroup.totalAmount":
-		if e.complexity.IncomeByTypeGroup.TotalAmount == nil {
+		if e.ComplexityRoot.IncomeByTypeGroup.TotalAmount == nil {
 			break
 		}
 
-		return e.complexity.IncomeByTypeGroup.TotalAmount(childComplexity), true
+		return e.ComplexityRoot.IncomeByTypeGroup.TotalAmount(childComplexity), true
 
 	case "IncomeCategory.createdAt":
-		if e.complexity.IncomeCategory.CreatedAt == nil {
+		if e.ComplexityRoot.IncomeCategory.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.IncomeCategory.CreatedAt(childComplexity), true
+		return e.ComplexityRoot.IncomeCategory.CreatedAt(childComplexity), true
 	case "IncomeCategory.id":
-		if e.complexity.IncomeCategory.ID == nil {
+		if e.ComplexityRoot.IncomeCategory.ID == nil {
 			break
 		}
 
-		return e.complexity.IncomeCategory.ID(childComplexity), true
+		return e.ComplexityRoot.IncomeCategory.ID(childComplexity), true
 	case "IncomeCategory.incomeCount":
-		if e.complexity.IncomeCategory.IncomeCount == nil {
+		if e.ComplexityRoot.IncomeCategory.IncomeCount == nil {
 			break
 		}
 
-		return e.complexity.IncomeCategory.IncomeCount(childComplexity), true
+		return e.ComplexityRoot.IncomeCategory.IncomeCount(childComplexity), true
 	case "IncomeCategory.incomes":
-		if e.complexity.IncomeCategory.Incomes == nil {
+		if e.ComplexityRoot.IncomeCategory.Incomes == nil {
 			break
 		}
 
-		return e.complexity.IncomeCategory.Incomes(childComplexity), true
+		return e.ComplexityRoot.IncomeCategory.Incomes(childComplexity), true
 	case "IncomeCategory.name":
-		if e.complexity.IncomeCategory.Name == nil {
+		if e.ComplexityRoot.IncomeCategory.Name == nil {
 			break
 		}
 
-		return e.complexity.IncomeCategory.Name(childComplexity), true
+		return e.ComplexityRoot.IncomeCategory.Name(childComplexity), true
 	case "IncomeCategory.totalIncome":
-		if e.complexity.IncomeCategory.TotalIncome == nil {
+		if e.ComplexityRoot.IncomeCategory.TotalIncome == nil {
 			break
 		}
 
-		return e.complexity.IncomeCategory.TotalIncome(childComplexity), true
+		return e.ComplexityRoot.IncomeCategory.TotalIncome(childComplexity), true
 
 	case "IncomeCategorySummary.category":
-		if e.complexity.IncomeCategorySummary.Category == nil {
+		if e.ComplexityRoot.IncomeCategorySummary.Category == nil {
 			break
 		}
 
-		return e.complexity.IncomeCategorySummary.Category(childComplexity), true
+		return e.ComplexityRoot.IncomeCategorySummary.Category(childComplexity), true
 	case "IncomeCategorySummary.incomeCount":
-		if e.complexity.IncomeCategorySummary.IncomeCount == nil {
+		if e.ComplexityRoot.IncomeCategorySummary.IncomeCount == nil {
 			break
 		}
 
-		return e.complexity.IncomeCategorySummary.IncomeCount(childComplexity), true
+		return e.ComplexityRoot.IncomeCategorySummary.IncomeCount(childComplexity), true
 	case "IncomeCategorySummary.totalAmount":
-		if e.complexity.IncomeCategorySummary.TotalAmount == nil {
+		if e.ComplexityRoot.IncomeCategorySummary.TotalAmount == nil {
 			break
 		}
 
-		return e.complexity.IncomeCategorySummary.TotalAmount(childComplexity), true
+		return e.ComplexityRoot.IncomeCategorySummary.TotalAmount(childComplexity), true
 
 	case "IncomeSummary.byCategory":
-		if e.complexity.IncomeSummary.ByCategory == nil {
+		if e.ComplexityRoot.IncomeSummary.ByCategory == nil {
 			break
 		}
 
-		return e.complexity.IncomeSummary.ByCategory(childComplexity), true
+		return e.ComplexityRoot.IncomeSummary.ByCategory(childComplexity), true
 	case "IncomeSummary.byType":
-		if e.complexity.IncomeSummary.ByType == nil {
+		if e.ComplexityRoot.IncomeSummary.ByType == nil {
 			break
 		}
 
-		return e.complexity.IncomeSummary.ByType(childComplexity), true
+		return e.ComplexityRoot.IncomeSummary.ByType(childComplexity), true
 	case "IncomeSummary.count":
-		if e.complexity.IncomeSummary.Count == nil {
+		if e.ComplexityRoot.IncomeSummary.Count == nil {
 			break
 		}
 
-		return e.complexity.IncomeSummary.Count(childComplexity), true
+		return e.ComplexityRoot.IncomeSummary.Count(childComplexity), true
 	case "IncomeSummary.total":
-		if e.complexity.IncomeSummary.Total == nil {
+		if e.ComplexityRoot.IncomeSummary.Total == nil {
 			break
 		}
 
-		return e.complexity.IncomeSummary.Total(childComplexity), true
+		return e.ComplexityRoot.IncomeSummary.Total(childComplexity), true
 
 	case "IncomeTypeSummary.incomeCount":
-		if e.complexity.IncomeTypeSummary.IncomeCount == nil {
+		if e.ComplexityRoot.IncomeTypeSummary.IncomeCount == nil {
 			break
 		}
 
-		return e.complexity.IncomeTypeSummary.IncomeCount(childComplexity), true
+		return e.ComplexityRoot.IncomeTypeSummary.IncomeCount(childComplexity), true
 	case "IncomeTypeSummary.incomeType":
-		if e.complexity.IncomeTypeSummary.IncomeType == nil {
+		if e.ComplexityRoot.IncomeTypeSummary.IncomeType == nil {
 			break
 		}
 
-		return e.complexity.IncomeTypeSummary.IncomeType(childComplexity), true
+		return e.ComplexityRoot.IncomeTypeSummary.IncomeType(childComplexity), true
 	case "IncomeTypeSummary.totalAmount":
-		if e.complexity.IncomeTypeSummary.TotalAmount == nil {
+		if e.ComplexityRoot.IncomeTypeSummary.TotalAmount == nil {
 			break
 		}
 
-		return e.complexity.IncomeTypeSummary.TotalAmount(childComplexity), true
+		return e.ComplexityRoot.IncomeTypeSummary.TotalAmount(childComplexity), true
 
 	case "IncomesWithSummary.items":
-		if e.complexity.IncomesWithSummary.Items == nil {
+		if e.ComplexityRoot.IncomesWithSummary.Items == nil {
 			break
 		}
 
-		return e.complexity.IncomesWithSummary.Items(childComplexity), true
+		return e.ComplexityRoot.IncomesWithSummary.Items(childComplexity), true
 	case "IncomesWithSummary.summary":
-		if e.complexity.IncomesWithSummary.Summary == nil {
+		if e.ComplexityRoot.IncomesWithSummary.Summary == nil {
 			break
 		}
 
-		return e.complexity.IncomesWithSummary.Summary(childComplexity), true
+		return e.ComplexityRoot.IncomesWithSummary.Summary(childComplexity), true
 
 	case "Installment.actualAmount":
-		if e.complexity.Installment.ActualAmount == nil {
+		if e.ComplexityRoot.Installment.ActualAmount == nil {
 			break
 		}
 
-		return e.complexity.Installment.ActualAmount(childComplexity), true
+		return e.ComplexityRoot.Installment.ActualAmount(childComplexity), true
 	case "Installment.createdAt":
-		if e.complexity.Installment.CreatedAt == nil {
+		if e.ComplexityRoot.Installment.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.Installment.CreatedAt(childComplexity), true
+		return e.ComplexityRoot.Installment.CreatedAt(childComplexity), true
 	case "Installment.dueDay":
-		if e.complexity.Installment.DueDay == nil {
+		if e.ComplexityRoot.Installment.DueDay == nil {
 			break
 		}
 
-		return e.complexity.Installment.DueDay(childComplexity), true
+		return e.ComplexityRoot.Installment.DueDay(childComplexity), true
 	case "Installment.id":
-		if e.complexity.Installment.ID == nil {
+		if e.ComplexityRoot.Installment.ID == nil {
 			break
 		}
 
-		return e.complexity.Installment.ID(childComplexity), true
+		return e.ComplexityRoot.Installment.ID(childComplexity), true
 	case "Installment.interestAmount":
-		if e.complexity.Installment.InterestAmount == nil {
+		if e.ComplexityRoot.Installment.InterestAmount == nil {
 			break
 		}
 
-		return e.complexity.Installment.InterestAmount(childComplexity), true
+		return e.ComplexityRoot.Installment.InterestAmount(childComplexity), true
 	case "Installment.interestPercentage":
-		if e.complexity.Installment.InterestPercentage == nil {
+		if e.ComplexityRoot.Installment.InterestPercentage == nil {
 			break
 		}
 
-		return e.complexity.Installment.InterestPercentage(childComplexity), true
+		return e.ComplexityRoot.Installment.InterestPercentage(childComplexity), true
 	case "Installment.loanAmount":
-		if e.complexity.Installment.LoanAmount == nil {
+		if e.ComplexityRoot.Installment.LoanAmount == nil {
 			break
 		}
 
-		return e.complexity.Installment.LoanAmount(childComplexity), true
+		return e.ComplexityRoot.Installment.LoanAmount(childComplexity), true
 	case "Installment.monthlyPayment":
-		if e.complexity.Installment.MonthlyPayment == nil {
+		if e.ComplexityRoot.Installment.MonthlyPayment == nil {
 			break
 		}
 
-		return e.complexity.Installment.MonthlyPayment(childComplexity), true
+		return e.ComplexityRoot.Installment.MonthlyPayment(childComplexity), true
 	case "Installment.name":
-		if e.complexity.Installment.Name == nil {
+		if e.ComplexityRoot.Installment.Name == nil {
 			break
 		}
 
-		return e.complexity.Installment.Name(childComplexity), true
+		return e.ComplexityRoot.Installment.Name(childComplexity), true
 	case "Installment.notes":
-		if e.complexity.Installment.Notes == nil {
+		if e.ComplexityRoot.Installment.Notes == nil {
 			break
 		}
 
-		return e.complexity.Installment.Notes(childComplexity), true
+		return e.ComplexityRoot.Installment.Notes(childComplexity), true
 	case "Installment.paidCount":
-		if e.complexity.Installment.PaidCount == nil {
+		if e.ComplexityRoot.Installment.PaidCount == nil {
 			break
 		}
 
-		return e.complexity.Installment.PaidCount(childComplexity), true
+		return e.ComplexityRoot.Installment.PaidCount(childComplexity), true
 	case "Installment.payments":
-		if e.complexity.Installment.Payments == nil {
+		if e.ComplexityRoot.Installment.Payments == nil {
 			break
 		}
 
-		return e.complexity.Installment.Payments(childComplexity), true
+		return e.ComplexityRoot.Installment.Payments(childComplexity), true
 	case "Installment.remainingAmount":
-		if e.complexity.Installment.RemainingAmount == nil {
+		if e.ComplexityRoot.Installment.RemainingAmount == nil {
 			break
 		}
 
-		return e.complexity.Installment.RemainingAmount(childComplexity), true
+		return e.ComplexityRoot.Installment.RemainingAmount(childComplexity), true
 	case "Installment.remainingPayments":
-		if e.complexity.Installment.RemainingPayments == nil {
+		if e.ComplexityRoot.Installment.RemainingPayments == nil {
 			break
 		}
 
-		return e.complexity.Installment.RemainingPayments(childComplexity), true
+		return e.ComplexityRoot.Installment.RemainingPayments(childComplexity), true
 	case "Installment.startDate":
-		if e.complexity.Installment.StartDate == nil {
+		if e.ComplexityRoot.Installment.StartDate == nil {
 			break
 		}
 
-		return e.complexity.Installment.StartDate(childComplexity), true
+		return e.ComplexityRoot.Installment.StartDate(childComplexity), true
 	case "Installment.status":
-		if e.complexity.Installment.Status == nil {
+		if e.ComplexityRoot.Installment.Status == nil {
 			break
 		}
 
-		return e.complexity.Installment.Status(childComplexity), true
+		return e.ComplexityRoot.Installment.Status(childComplexity), true
 	case "Installment.tenor":
-		if e.complexity.Installment.Tenor == nil {
+		if e.ComplexityRoot.Installment.Tenor == nil {
 			break
 		}
 
-		return e.complexity.Installment.Tenor(childComplexity), true
+		return e.ComplexityRoot.Installment.Tenor(childComplexity), true
 
 	case "InstallmentPayment.amount":
-		if e.complexity.InstallmentPayment.Amount == nil {
+		if e.ComplexityRoot.InstallmentPayment.Amount == nil {
 			break
 		}
 
-		return e.complexity.InstallmentPayment.Amount(childComplexity), true
+		return e.ComplexityRoot.InstallmentPayment.Amount(childComplexity), true
 	case "InstallmentPayment.createdAt":
-		if e.complexity.InstallmentPayment.CreatedAt == nil {
+		if e.ComplexityRoot.InstallmentPayment.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.InstallmentPayment.CreatedAt(childComplexity), true
+		return e.ComplexityRoot.InstallmentPayment.CreatedAt(childComplexity), true
 	case "InstallmentPayment.id":
-		if e.complexity.InstallmentPayment.ID == nil {
+		if e.ComplexityRoot.InstallmentPayment.ID == nil {
 			break
 		}
 
-		return e.complexity.InstallmentPayment.ID(childComplexity), true
+		return e.ComplexityRoot.InstallmentPayment.ID(childComplexity), true
 	case "InstallmentPayment.installment":
-		if e.complexity.InstallmentPayment.Installment == nil {
+		if e.ComplexityRoot.InstallmentPayment.Installment == nil {
 			break
 		}
 
-		return e.complexity.InstallmentPayment.Installment(childComplexity), true
+		return e.ComplexityRoot.InstallmentPayment.Installment(childComplexity), true
 	case "InstallmentPayment.paidAt":
-		if e.complexity.InstallmentPayment.PaidAt == nil {
+		if e.ComplexityRoot.InstallmentPayment.PaidAt == nil {
 			break
 		}
 
-		return e.complexity.InstallmentPayment.PaidAt(childComplexity), true
+		return e.ComplexityRoot.InstallmentPayment.PaidAt(childComplexity), true
 	case "InstallmentPayment.paymentNumber":
-		if e.complexity.InstallmentPayment.PaymentNumber == nil {
+		if e.ComplexityRoot.InstallmentPayment.PaymentNumber == nil {
 			break
 		}
 
-		return e.complexity.InstallmentPayment.PaymentNumber(childComplexity), true
+		return e.ComplexityRoot.InstallmentPayment.PaymentNumber(childComplexity), true
 
 	case "LedgerSummary.netWorth":
-		if e.complexity.LedgerSummary.NetWorth == nil {
+		if e.ComplexityRoot.LedgerSummary.NetWorth == nil {
 			break
 		}
 
-		return e.complexity.LedgerSummary.NetWorth(childComplexity), true
+		return e.ComplexityRoot.LedgerSummary.NetWorth(childComplexity), true
 	case "LedgerSummary.totalAssets":
-		if e.complexity.LedgerSummary.TotalAssets == nil {
+		if e.ComplexityRoot.LedgerSummary.TotalAssets == nil {
 			break
 		}
 
-		return e.complexity.LedgerSummary.TotalAssets(childComplexity), true
+		return e.ComplexityRoot.LedgerSummary.TotalAssets(childComplexity), true
 	case "LedgerSummary.totalExpense":
-		if e.complexity.LedgerSummary.TotalExpense == nil {
+		if e.ComplexityRoot.LedgerSummary.TotalExpense == nil {
 			break
 		}
 
-		return e.complexity.LedgerSummary.TotalExpense(childComplexity), true
+		return e.ComplexityRoot.LedgerSummary.TotalExpense(childComplexity), true
 	case "LedgerSummary.totalIncome":
-		if e.complexity.LedgerSummary.TotalIncome == nil {
+		if e.ComplexityRoot.LedgerSummary.TotalIncome == nil {
 			break
 		}
 
-		return e.complexity.LedgerSummary.TotalIncome(childComplexity), true
+		return e.ComplexityRoot.LedgerSummary.TotalIncome(childComplexity), true
 	case "LedgerSummary.totalLiabilities":
-		if e.complexity.LedgerSummary.TotalLiabilities == nil {
+		if e.ComplexityRoot.LedgerSummary.TotalLiabilities == nil {
 			break
 		}
 
-		return e.complexity.LedgerSummary.TotalLiabilities(childComplexity), true
+		return e.ComplexityRoot.LedgerSummary.TotalLiabilities(childComplexity), true
 
 	case "Mutation.addExpenseTemplateItem":
-		if e.complexity.Mutation.AddExpenseTemplateItem == nil {
+		if e.ComplexityRoot.Mutation.AddExpenseTemplateItem == nil {
 			break
 		}
 
@@ -1879,9 +1875,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.AddExpenseTemplateItem(childComplexity, args["groupId"].(uuid.UUID), args["input"].(model.CreateExpenseTemplateItemInput)), true
+		return e.ComplexityRoot.Mutation.AddExpenseTemplateItem(childComplexity, args["groupId"].(uuid.UUID), args["input"].(model.CreateExpenseTemplateItemInput)), true
 	case "Mutation.addSavingsContribution":
-		if e.complexity.Mutation.AddSavingsContribution == nil {
+		if e.ComplexityRoot.Mutation.AddSavingsContribution == nil {
 			break
 		}
 
@@ -1890,9 +1886,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.AddSavingsContribution(childComplexity, args["input"].(model.AddSavingsContributionInput)), true
+		return e.ComplexityRoot.Mutation.AddSavingsContribution(childComplexity, args["input"].(model.AddSavingsContributionInput)), true
 	case "Mutation.createCategory":
-		if e.complexity.Mutation.CreateCategory == nil {
+		if e.ComplexityRoot.Mutation.CreateCategory == nil {
 			break
 		}
 
@@ -1901,9 +1897,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateCategory(childComplexity, args["input"].(model.CreateCategoryInput)), true
+		return e.ComplexityRoot.Mutation.CreateCategory(childComplexity, args["input"].(model.CreateCategoryInput)), true
 	case "Mutation.createDebt":
-		if e.complexity.Mutation.CreateDebt == nil {
+		if e.ComplexityRoot.Mutation.CreateDebt == nil {
 			break
 		}
 
@@ -1912,9 +1908,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateDebt(childComplexity, args["input"].(model.CreateDebtInput)), true
+		return e.ComplexityRoot.Mutation.CreateDebt(childComplexity, args["input"].(model.CreateDebtInput)), true
 	case "Mutation.createExpense":
-		if e.complexity.Mutation.CreateExpense == nil {
+		if e.ComplexityRoot.Mutation.CreateExpense == nil {
 			break
 		}
 
@@ -1923,9 +1919,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateExpense(childComplexity, args["input"].(model.CreateExpenseInput)), true
+		return e.ComplexityRoot.Mutation.CreateExpense(childComplexity, args["input"].(model.CreateExpenseInput)), true
 	case "Mutation.createExpenseTemplateGroup":
-		if e.complexity.Mutation.CreateExpenseTemplateGroup == nil {
+		if e.ComplexityRoot.Mutation.CreateExpenseTemplateGroup == nil {
 			break
 		}
 
@@ -1934,9 +1930,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateExpenseTemplateGroup(childComplexity, args["input"].(model.CreateExpenseTemplateGroupInput)), true
+		return e.ComplexityRoot.Mutation.CreateExpenseTemplateGroup(childComplexity, args["input"].(model.CreateExpenseTemplateGroupInput)), true
 	case "Mutation.createExpensesFromTemplateGroup":
-		if e.complexity.Mutation.CreateExpensesFromTemplateGroup == nil {
+		if e.ComplexityRoot.Mutation.CreateExpensesFromTemplateGroup == nil {
 			break
 		}
 
@@ -1945,9 +1941,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateExpensesFromTemplateGroup(childComplexity, args["groupId"].(uuid.UUID), args["expenseDate"].(*time.Time)), true
+		return e.ComplexityRoot.Mutation.CreateExpensesFromTemplateGroup(childComplexity, args["groupId"].(uuid.UUID), args["expenseDate"].(*time.Time)), true
 	case "Mutation.createIncome":
-		if e.complexity.Mutation.CreateIncome == nil {
+		if e.ComplexityRoot.Mutation.CreateIncome == nil {
 			break
 		}
 
@@ -1956,9 +1952,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateIncome(childComplexity, args["input"].(model.CreateIncomeInput)), true
+		return e.ComplexityRoot.Mutation.CreateIncome(childComplexity, args["input"].(model.CreateIncomeInput)), true
 	case "Mutation.createIncomeCategory":
-		if e.complexity.Mutation.CreateIncomeCategory == nil {
+		if e.ComplexityRoot.Mutation.CreateIncomeCategory == nil {
 			break
 		}
 
@@ -1967,9 +1963,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateIncomeCategory(childComplexity, args["input"].(model.CreateIncomeCategoryInput)), true
+		return e.ComplexityRoot.Mutation.CreateIncomeCategory(childComplexity, args["input"].(model.CreateIncomeCategoryInput)), true
 	case "Mutation.createIncomeFromRecurring":
-		if e.complexity.Mutation.CreateIncomeFromRecurring == nil {
+		if e.ComplexityRoot.Mutation.CreateIncomeFromRecurring == nil {
 			break
 		}
 
@@ -1978,9 +1974,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateIncomeFromRecurring(childComplexity, args["recurringId"].(uuid.UUID), args["incomeDate"].(*time.Time)), true
+		return e.ComplexityRoot.Mutation.CreateIncomeFromRecurring(childComplexity, args["recurringId"].(uuid.UUID), args["incomeDate"].(*time.Time)), true
 	case "Mutation.createInstallment":
-		if e.complexity.Mutation.CreateInstallment == nil {
+		if e.ComplexityRoot.Mutation.CreateInstallment == nil {
 			break
 		}
 
@@ -1989,9 +1985,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateInstallment(childComplexity, args["input"].(model.CreateInstallmentInput)), true
+		return e.ComplexityRoot.Mutation.CreateInstallment(childComplexity, args["input"].(model.CreateInstallmentInput)), true
 	case "Mutation.createRecurringIncome":
-		if e.complexity.Mutation.CreateRecurringIncome == nil {
+		if e.ComplexityRoot.Mutation.CreateRecurringIncome == nil {
 			break
 		}
 
@@ -2000,9 +1996,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateRecurringIncome(childComplexity, args["input"].(model.CreateRecurringIncomeInput)), true
+		return e.ComplexityRoot.Mutation.CreateRecurringIncome(childComplexity, args["input"].(model.CreateRecurringIncomeInput)), true
 	case "Mutation.createSavingsGoal":
-		if e.complexity.Mutation.CreateSavingsGoal == nil {
+		if e.ComplexityRoot.Mutation.CreateSavingsGoal == nil {
 			break
 		}
 
@@ -2011,9 +2007,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateSavingsGoal(childComplexity, args["input"].(model.CreateSavingsGoalInput)), true
+		return e.ComplexityRoot.Mutation.CreateSavingsGoal(childComplexity, args["input"].(model.CreateSavingsGoalInput)), true
 	case "Mutation.createWalletAccount":
-		if e.complexity.Mutation.CreateWalletAccount == nil {
+		if e.ComplexityRoot.Mutation.CreateWalletAccount == nil {
 			break
 		}
 
@@ -2022,9 +2018,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateWalletAccount(childComplexity, args["input"].(model.CreateAccountInput)), true
+		return e.ComplexityRoot.Mutation.CreateWalletAccount(childComplexity, args["input"].(model.CreateAccountInput)), true
 	case "Mutation.deleteAccount":
-		if e.complexity.Mutation.DeleteAccount == nil {
+		if e.ComplexityRoot.Mutation.DeleteAccount == nil {
 			break
 		}
 
@@ -2033,9 +2029,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteAccount(childComplexity, args["input"].(model.DeleteAccountInput)), true
+		return e.ComplexityRoot.Mutation.DeleteAccount(childComplexity, args["input"].(model.DeleteAccountInput)), true
 	case "Mutation.deleteCategory":
-		if e.complexity.Mutation.DeleteCategory == nil {
+		if e.ComplexityRoot.Mutation.DeleteCategory == nil {
 			break
 		}
 
@@ -2044,9 +2040,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteCategory(childComplexity, args["id"].(uuid.UUID)), true
+		return e.ComplexityRoot.Mutation.DeleteCategory(childComplexity, args["id"].(uuid.UUID)), true
 	case "Mutation.deleteDebt":
-		if e.complexity.Mutation.DeleteDebt == nil {
+		if e.ComplexityRoot.Mutation.DeleteDebt == nil {
 			break
 		}
 
@@ -2055,9 +2051,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteDebt(childComplexity, args["id"].(uuid.UUID)), true
+		return e.ComplexityRoot.Mutation.DeleteDebt(childComplexity, args["id"].(uuid.UUID)), true
 	case "Mutation.deleteExpense":
-		if e.complexity.Mutation.DeleteExpense == nil {
+		if e.ComplexityRoot.Mutation.DeleteExpense == nil {
 			break
 		}
 
@@ -2066,9 +2062,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteExpense(childComplexity, args["id"].(uuid.UUID)), true
+		return e.ComplexityRoot.Mutation.DeleteExpense(childComplexity, args["id"].(uuid.UUID)), true
 	case "Mutation.deleteExpenseTemplateGroup":
-		if e.complexity.Mutation.DeleteExpenseTemplateGroup == nil {
+		if e.ComplexityRoot.Mutation.DeleteExpenseTemplateGroup == nil {
 			break
 		}
 
@@ -2077,9 +2073,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteExpenseTemplateGroup(childComplexity, args["id"].(uuid.UUID)), true
+		return e.ComplexityRoot.Mutation.DeleteExpenseTemplateGroup(childComplexity, args["id"].(uuid.UUID)), true
 	case "Mutation.deleteExpenseTemplateItem":
-		if e.complexity.Mutation.DeleteExpenseTemplateItem == nil {
+		if e.ComplexityRoot.Mutation.DeleteExpenseTemplateItem == nil {
 			break
 		}
 
@@ -2088,9 +2084,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteExpenseTemplateItem(childComplexity, args["itemId"].(uuid.UUID)), true
+		return e.ComplexityRoot.Mutation.DeleteExpenseTemplateItem(childComplexity, args["itemId"].(uuid.UUID)), true
 	case "Mutation.deleteIncome":
-		if e.complexity.Mutation.DeleteIncome == nil {
+		if e.ComplexityRoot.Mutation.DeleteIncome == nil {
 			break
 		}
 
@@ -2099,9 +2095,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteIncome(childComplexity, args["id"].(uuid.UUID)), true
+		return e.ComplexityRoot.Mutation.DeleteIncome(childComplexity, args["id"].(uuid.UUID)), true
 	case "Mutation.deleteIncomeCategory":
-		if e.complexity.Mutation.DeleteIncomeCategory == nil {
+		if e.ComplexityRoot.Mutation.DeleteIncomeCategory == nil {
 			break
 		}
 
@@ -2110,9 +2106,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteIncomeCategory(childComplexity, args["id"].(uuid.UUID)), true
+		return e.ComplexityRoot.Mutation.DeleteIncomeCategory(childComplexity, args["id"].(uuid.UUID)), true
 	case "Mutation.deleteInstallment":
-		if e.complexity.Mutation.DeleteInstallment == nil {
+		if e.ComplexityRoot.Mutation.DeleteInstallment == nil {
 			break
 		}
 
@@ -2121,9 +2117,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteInstallment(childComplexity, args["id"].(uuid.UUID)), true
+		return e.ComplexityRoot.Mutation.DeleteInstallment(childComplexity, args["id"].(uuid.UUID)), true
 	case "Mutation.deleteRecurringIncome":
-		if e.complexity.Mutation.DeleteRecurringIncome == nil {
+		if e.ComplexityRoot.Mutation.DeleteRecurringIncome == nil {
 			break
 		}
 
@@ -2132,9 +2128,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteRecurringIncome(childComplexity, args["id"].(uuid.UUID)), true
+		return e.ComplexityRoot.Mutation.DeleteRecurringIncome(childComplexity, args["id"].(uuid.UUID)), true
 	case "Mutation.deleteSavingsGoal":
-		if e.complexity.Mutation.DeleteSavingsGoal == nil {
+		if e.ComplexityRoot.Mutation.DeleteSavingsGoal == nil {
 			break
 		}
 
@@ -2143,9 +2139,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteSavingsGoal(childComplexity, args["id"].(uuid.UUID)), true
+		return e.ComplexityRoot.Mutation.DeleteSavingsGoal(childComplexity, args["id"].(uuid.UUID)), true
 	case "Mutation.deleteWalletAccount":
-		if e.complexity.Mutation.DeleteWalletAccount == nil {
+		if e.ComplexityRoot.Mutation.DeleteWalletAccount == nil {
 			break
 		}
 
@@ -2154,9 +2150,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteWalletAccount(childComplexity, args["id"].(uuid.UUID)), true
+		return e.ComplexityRoot.Mutation.DeleteWalletAccount(childComplexity, args["id"].(uuid.UUID)), true
 	case "Mutation.disable2FA":
-		if e.complexity.Mutation.Disable2fa == nil {
+		if e.ComplexityRoot.Mutation.Disable2fa == nil {
 			break
 		}
 
@@ -2165,9 +2161,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.Disable2fa(childComplexity, args["password"].(string)), true
+		return e.ComplexityRoot.Mutation.Disable2fa(childComplexity, args["password"].(string)), true
 	case "Mutation.enable2FA":
-		if e.complexity.Mutation.Enable2fa == nil {
+		if e.ComplexityRoot.Mutation.Enable2fa == nil {
 			break
 		}
 
@@ -2176,9 +2172,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.Enable2fa(childComplexity, args["password"].(string)), true
+		return e.ComplexityRoot.Mutation.Enable2fa(childComplexity, args["password"].(string)), true
 	case "Mutation.forgotPassword":
-		if e.complexity.Mutation.ForgotPassword == nil {
+		if e.ComplexityRoot.Mutation.ForgotPassword == nil {
 			break
 		}
 
@@ -2187,9 +2183,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ForgotPassword(childComplexity, args["input"].(model.ForgotPasswordInput)), true
+		return e.ComplexityRoot.Mutation.ForgotPassword(childComplexity, args["input"].(model.ForgotPasswordInput)), true
 	case "Mutation.login":
-		if e.complexity.Mutation.Login == nil {
+		if e.ComplexityRoot.Mutation.Login == nil {
 			break
 		}
 
@@ -2198,9 +2194,20 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.Login(childComplexity, args["input"].(model.LoginInput)), true
+		return e.ComplexityRoot.Mutation.Login(childComplexity, args["input"].(model.LoginInput)), true
+	case "Mutation.logout":
+		if e.ComplexityRoot.Mutation.Logout == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_logout_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.Logout(childComplexity, args["refreshToken"].(string)), true
 	case "Mutation.markDebtComplete":
-		if e.complexity.Mutation.MarkDebtComplete == nil {
+		if e.ComplexityRoot.Mutation.MarkDebtComplete == nil {
 			break
 		}
 
@@ -2209,9 +2216,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.MarkDebtComplete(childComplexity, args["id"].(uuid.UUID)), true
+		return e.ComplexityRoot.Mutation.MarkDebtComplete(childComplexity, args["id"].(uuid.UUID)), true
 	case "Mutation.markInstallmentComplete":
-		if e.complexity.Mutation.MarkInstallmentComplete == nil {
+		if e.ComplexityRoot.Mutation.MarkInstallmentComplete == nil {
 			break
 		}
 
@@ -2220,9 +2227,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.MarkInstallmentComplete(childComplexity, args["id"].(uuid.UUID)), true
+		return e.ComplexityRoot.Mutation.MarkInstallmentComplete(childComplexity, args["id"].(uuid.UUID)), true
 	case "Mutation.markSavingsGoalComplete":
-		if e.complexity.Mutation.MarkSavingsGoalComplete == nil {
+		if e.ComplexityRoot.Mutation.MarkSavingsGoalComplete == nil {
 			break
 		}
 
@@ -2231,9 +2238,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.MarkSavingsGoalComplete(childComplexity, args["id"].(uuid.UUID)), true
+		return e.ComplexityRoot.Mutation.MarkSavingsGoalComplete(childComplexity, args["id"].(uuid.UUID)), true
 	case "Mutation.recordDebtPayment":
-		if e.complexity.Mutation.RecordDebtPayment == nil {
+		if e.ComplexityRoot.Mutation.RecordDebtPayment == nil {
 			break
 		}
 
@@ -2242,9 +2249,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.RecordDebtPayment(childComplexity, args["input"].(model.RecordDebtPaymentInput)), true
+		return e.ComplexityRoot.Mutation.RecordDebtPayment(childComplexity, args["input"].(model.RecordDebtPaymentInput)), true
 	case "Mutation.recordInstallmentPayment":
-		if e.complexity.Mutation.RecordInstallmentPayment == nil {
+		if e.ComplexityRoot.Mutation.RecordInstallmentPayment == nil {
 			break
 		}
 
@@ -2253,9 +2260,20 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.RecordInstallmentPayment(childComplexity, args["input"].(model.RecordInstallmentPaymentInput)), true
+		return e.ComplexityRoot.Mutation.RecordInstallmentPayment(childComplexity, args["input"].(model.RecordInstallmentPaymentInput)), true
+	case "Mutation.refreshToken":
+		if e.ComplexityRoot.Mutation.RefreshToken == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_refreshToken_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.RefreshToken(childComplexity, args["refreshToken"].(string)), true
 	case "Mutation.register":
-		if e.complexity.Mutation.Register == nil {
+		if e.ComplexityRoot.Mutation.Register == nil {
 			break
 		}
 
@@ -2264,9 +2282,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.Register(childComplexity, args["input"].(model.RegisterInput)), true
+		return e.ComplexityRoot.Mutation.Register(childComplexity, args["input"].(model.RegisterInput)), true
 	case "Mutation.resend2FACode":
-		if e.complexity.Mutation.Resend2FACode == nil {
+		if e.ComplexityRoot.Mutation.Resend2FACode == nil {
 			break
 		}
 
@@ -2275,9 +2293,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.Resend2FACode(childComplexity, args["tempToken"].(string)), true
+		return e.ComplexityRoot.Mutation.Resend2FACode(childComplexity, args["tempToken"].(string)), true
 	case "Mutation.resetPassword":
-		if e.complexity.Mutation.ResetPassword == nil {
+		if e.ComplexityRoot.Mutation.ResetPassword == nil {
 			break
 		}
 
@@ -2286,9 +2304,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ResetPassword(childComplexity, args["input"].(model.ResetPasswordInput)), true
+		return e.ComplexityRoot.Mutation.ResetPassword(childComplexity, args["input"].(model.ResetPasswordInput)), true
 	case "Mutation.updateCategory":
-		if e.complexity.Mutation.UpdateCategory == nil {
+		if e.ComplexityRoot.Mutation.UpdateCategory == nil {
 			break
 		}
 
@@ -2297,9 +2315,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateCategory(childComplexity, args["id"].(uuid.UUID), args["input"].(model.UpdateCategoryInput)), true
+		return e.ComplexityRoot.Mutation.UpdateCategory(childComplexity, args["id"].(uuid.UUID), args["input"].(model.UpdateCategoryInput)), true
 	case "Mutation.updateDebt":
-		if e.complexity.Mutation.UpdateDebt == nil {
+		if e.ComplexityRoot.Mutation.UpdateDebt == nil {
 			break
 		}
 
@@ -2308,9 +2326,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateDebt(childComplexity, args["id"].(uuid.UUID), args["input"].(model.UpdateDebtInput)), true
+		return e.ComplexityRoot.Mutation.UpdateDebt(childComplexity, args["id"].(uuid.UUID), args["input"].(model.UpdateDebtInput)), true
 	case "Mutation.updateExpense":
-		if e.complexity.Mutation.UpdateExpense == nil {
+		if e.ComplexityRoot.Mutation.UpdateExpense == nil {
 			break
 		}
 
@@ -2319,9 +2337,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateExpense(childComplexity, args["id"].(uuid.UUID), args["input"].(model.UpdateExpenseInput)), true
+		return e.ComplexityRoot.Mutation.UpdateExpense(childComplexity, args["id"].(uuid.UUID), args["input"].(model.UpdateExpenseInput)), true
 	case "Mutation.updateExpenseTemplateGroup":
-		if e.complexity.Mutation.UpdateExpenseTemplateGroup == nil {
+		if e.ComplexityRoot.Mutation.UpdateExpenseTemplateGroup == nil {
 			break
 		}
 
@@ -2330,9 +2348,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateExpenseTemplateGroup(childComplexity, args["id"].(uuid.UUID), args["input"].(model.UpdateExpenseTemplateGroupInput)), true
+		return e.ComplexityRoot.Mutation.UpdateExpenseTemplateGroup(childComplexity, args["id"].(uuid.UUID), args["input"].(model.UpdateExpenseTemplateGroupInput)), true
 	case "Mutation.updateExpenseTemplateItem":
-		if e.complexity.Mutation.UpdateExpenseTemplateItem == nil {
+		if e.ComplexityRoot.Mutation.UpdateExpenseTemplateItem == nil {
 			break
 		}
 
@@ -2341,9 +2359,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateExpenseTemplateItem(childComplexity, args["itemId"].(uuid.UUID), args["input"].(model.UpdateExpenseTemplateItemInput)), true
+		return e.ComplexityRoot.Mutation.UpdateExpenseTemplateItem(childComplexity, args["itemId"].(uuid.UUID), args["input"].(model.UpdateExpenseTemplateItemInput)), true
 	case "Mutation.updateIncome":
-		if e.complexity.Mutation.UpdateIncome == nil {
+		if e.ComplexityRoot.Mutation.UpdateIncome == nil {
 			break
 		}
 
@@ -2352,9 +2370,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateIncome(childComplexity, args["id"].(uuid.UUID), args["input"].(model.UpdateIncomeInput)), true
+		return e.ComplexityRoot.Mutation.UpdateIncome(childComplexity, args["id"].(uuid.UUID), args["input"].(model.UpdateIncomeInput)), true
 	case "Mutation.updateIncomeCategory":
-		if e.complexity.Mutation.UpdateIncomeCategory == nil {
+		if e.ComplexityRoot.Mutation.UpdateIncomeCategory == nil {
 			break
 		}
 
@@ -2363,9 +2381,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateIncomeCategory(childComplexity, args["id"].(uuid.UUID), args["input"].(model.UpdateIncomeCategoryInput)), true
+		return e.ComplexityRoot.Mutation.UpdateIncomeCategory(childComplexity, args["id"].(uuid.UUID), args["input"].(model.UpdateIncomeCategoryInput)), true
 	case "Mutation.updateInstallment":
-		if e.complexity.Mutation.UpdateInstallment == nil {
+		if e.ComplexityRoot.Mutation.UpdateInstallment == nil {
 			break
 		}
 
@@ -2374,9 +2392,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateInstallment(childComplexity, args["id"].(uuid.UUID), args["input"].(model.UpdateInstallmentInput)), true
+		return e.ComplexityRoot.Mutation.UpdateInstallment(childComplexity, args["id"].(uuid.UUID), args["input"].(model.UpdateInstallmentInput)), true
 	case "Mutation.updateNotificationSettings":
-		if e.complexity.Mutation.UpdateNotificationSettings == nil {
+		if e.ComplexityRoot.Mutation.UpdateNotificationSettings == nil {
 			break
 		}
 
@@ -2385,9 +2403,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateNotificationSettings(childComplexity, args["input"].(model.UpdateNotificationSettingsInput)), true
+		return e.ComplexityRoot.Mutation.UpdateNotificationSettings(childComplexity, args["input"].(model.UpdateNotificationSettingsInput)), true
 	case "Mutation.updateProfile":
-		if e.complexity.Mutation.UpdateProfile == nil {
+		if e.ComplexityRoot.Mutation.UpdateProfile == nil {
 			break
 		}
 
@@ -2396,9 +2414,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateProfile(childComplexity, args["input"].(model.UpdateProfileInput)), true
+		return e.ComplexityRoot.Mutation.UpdateProfile(childComplexity, args["input"].(model.UpdateProfileInput)), true
 	case "Mutation.updateRecurringIncome":
-		if e.complexity.Mutation.UpdateRecurringIncome == nil {
+		if e.ComplexityRoot.Mutation.UpdateRecurringIncome == nil {
 			break
 		}
 
@@ -2407,9 +2425,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateRecurringIncome(childComplexity, args["id"].(uuid.UUID), args["input"].(model.UpdateRecurringIncomeInput)), true
+		return e.ComplexityRoot.Mutation.UpdateRecurringIncome(childComplexity, args["id"].(uuid.UUID), args["input"].(model.UpdateRecurringIncomeInput)), true
 	case "Mutation.updateSavingsGoal":
-		if e.complexity.Mutation.UpdateSavingsGoal == nil {
+		if e.ComplexityRoot.Mutation.UpdateSavingsGoal == nil {
 			break
 		}
 
@@ -2418,9 +2436,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateSavingsGoal(childComplexity, args["id"].(uuid.UUID), args["input"].(model.UpdateSavingsGoalInput)), true
+		return e.ComplexityRoot.Mutation.UpdateSavingsGoal(childComplexity, args["id"].(uuid.UUID), args["input"].(model.UpdateSavingsGoalInput)), true
 	case "Mutation.updateWalletAccount":
-		if e.complexity.Mutation.UpdateWalletAccount == nil {
+		if e.ComplexityRoot.Mutation.UpdateWalletAccount == nil {
 			break
 		}
 
@@ -2429,9 +2447,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateWalletAccount(childComplexity, args["id"].(uuid.UUID), args["input"].(model.UpdateAccountInput)), true
+		return e.ComplexityRoot.Mutation.UpdateWalletAccount(childComplexity, args["id"].(uuid.UUID), args["input"].(model.UpdateAccountInput)), true
 	case "Mutation.verify2FA":
-		if e.complexity.Mutation.Verify2fa == nil {
+		if e.ComplexityRoot.Mutation.Verify2fa == nil {
 			break
 		}
 
@@ -2440,9 +2458,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.Verify2fa(childComplexity, args["input"].(model.Verify2FAInput)), true
+		return e.ComplexityRoot.Mutation.Verify2fa(childComplexity, args["input"].(model.Verify2FAInput)), true
 	case "Mutation.verifyRegistration":
-		if e.complexity.Mutation.VerifyRegistration == nil {
+		if e.ComplexityRoot.Mutation.VerifyRegistration == nil {
 			break
 		}
 
@@ -2451,9 +2469,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.VerifyRegistration(childComplexity, args["input"].(model.Verify2FAInput)), true
+		return e.ComplexityRoot.Mutation.VerifyRegistration(childComplexity, args["input"].(model.Verify2FAInput)), true
 	case "Mutation.withdrawSavingsContribution":
-		if e.complexity.Mutation.WithdrawSavingsContribution == nil {
+		if e.ComplexityRoot.Mutation.WithdrawSavingsContribution == nil {
 			break
 		}
 
@@ -2462,47 +2480,47 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.WithdrawSavingsContribution(childComplexity, args["id"].(uuid.UUID)), true
+		return e.ComplexityRoot.Mutation.WithdrawSavingsContribution(childComplexity, args["id"].(uuid.UUID)), true
 
 	case "NotificationLog.createdAt":
-		if e.complexity.NotificationLog.CreatedAt == nil {
+		if e.ComplexityRoot.NotificationLog.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.NotificationLog.CreatedAt(childComplexity), true
+		return e.ComplexityRoot.NotificationLog.CreatedAt(childComplexity), true
 	case "NotificationLog.emailSubject":
-		if e.complexity.NotificationLog.EmailSubject == nil {
+		if e.ComplexityRoot.NotificationLog.EmailSubject == nil {
 			break
 		}
 
-		return e.complexity.NotificationLog.EmailSubject(childComplexity), true
+		return e.ComplexityRoot.NotificationLog.EmailSubject(childComplexity), true
 	case "NotificationLog.id":
-		if e.complexity.NotificationLog.ID == nil {
+		if e.ComplexityRoot.NotificationLog.ID == nil {
 			break
 		}
 
-		return e.complexity.NotificationLog.ID(childComplexity), true
+		return e.ComplexityRoot.NotificationLog.ID(childComplexity), true
 	case "NotificationLog.referenceId":
-		if e.complexity.NotificationLog.ReferenceID == nil {
+		if e.ComplexityRoot.NotificationLog.ReferenceID == nil {
 			break
 		}
 
-		return e.complexity.NotificationLog.ReferenceID(childComplexity), true
+		return e.ComplexityRoot.NotificationLog.ReferenceID(childComplexity), true
 	case "NotificationLog.sentAt":
-		if e.complexity.NotificationLog.SentAt == nil {
+		if e.ComplexityRoot.NotificationLog.SentAt == nil {
 			break
 		}
 
-		return e.complexity.NotificationLog.SentAt(childComplexity), true
+		return e.ComplexityRoot.NotificationLog.SentAt(childComplexity), true
 	case "NotificationLog.type":
-		if e.complexity.NotificationLog.Type == nil {
+		if e.ComplexityRoot.NotificationLog.Type == nil {
 			break
 		}
 
-		return e.complexity.NotificationLog.Type(childComplexity), true
+		return e.ComplexityRoot.NotificationLog.Type(childComplexity), true
 
 	case "Query.account":
-		if e.complexity.Query.Account == nil {
+		if e.ComplexityRoot.Query.Account == nil {
 			break
 		}
 
@@ -2511,15 +2529,15 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Account(childComplexity, args["id"].(uuid.UUID)), true
+		return e.ComplexityRoot.Query.Account(childComplexity, args["id"].(uuid.UUID)), true
 	case "Query.accounts":
-		if e.complexity.Query.Accounts == nil {
+		if e.ComplexityRoot.Query.Accounts == nil {
 			break
 		}
 
-		return e.complexity.Query.Accounts(childComplexity), true
+		return e.ComplexityRoot.Query.Accounts(childComplexity), true
 	case "Query.accountsByType":
-		if e.complexity.Query.AccountsByType == nil {
+		if e.ComplexityRoot.Query.AccountsByType == nil {
 			break
 		}
 
@@ -2528,9 +2546,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.AccountsByType(childComplexity, args["accountType"].(model.AccountType)), true
+		return e.ComplexityRoot.Query.AccountsByType(childComplexity, args["accountType"].(model.AccountType)), true
 	case "Query.actualPayments":
-		if e.complexity.Query.ActualPayments == nil {
+		if e.ComplexityRoot.Query.ActualPayments == nil {
 			break
 		}
 
@@ -2539,9 +2557,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.ActualPayments(childComplexity, args["filter"].(model.ActualPaymentsFilter)), true
+		return e.ComplexityRoot.Query.ActualPayments(childComplexity, args["filter"].(model.ActualPaymentsFilter)), true
 	case "Query.balance":
-		if e.complexity.Query.Balance == nil {
+		if e.ComplexityRoot.Query.Balance == nil {
 			break
 		}
 
@@ -2550,15 +2568,15 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Balance(childComplexity, args["filter"].(model.BalanceFilterInput)), true
+		return e.ComplexityRoot.Query.Balance(childComplexity, args["filter"].(model.BalanceFilterInput)), true
 	case "Query.categories":
-		if e.complexity.Query.Categories == nil {
+		if e.ComplexityRoot.Query.Categories == nil {
 			break
 		}
 
-		return e.complexity.Query.Categories(childComplexity), true
+		return e.ComplexityRoot.Query.Categories(childComplexity), true
 	case "Query.category":
-		if e.complexity.Query.Category == nil {
+		if e.ComplexityRoot.Query.Category == nil {
 			break
 		}
 
@@ -2567,9 +2585,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Category(childComplexity, args["id"].(uuid.UUID)), true
+		return e.ComplexityRoot.Query.Category(childComplexity, args["id"].(uuid.UUID)), true
 	case "Query.checkEmailAvailability":
-		if e.complexity.Query.CheckEmailAvailability == nil {
+		if e.ComplexityRoot.Query.CheckEmailAvailability == nil {
 			break
 		}
 
@@ -2578,15 +2596,15 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.CheckEmailAvailability(childComplexity, args["email"].(string)), true
+		return e.ComplexityRoot.Query.CheckEmailAvailability(childComplexity, args["email"].(string)), true
 	case "Query.dashboard":
-		if e.complexity.Query.Dashboard == nil {
+		if e.ComplexityRoot.Query.Dashboard == nil {
 			break
 		}
 
-		return e.complexity.Query.Dashboard(childComplexity), true
+		return e.ComplexityRoot.Query.Dashboard(childComplexity), true
 	case "Query.debt":
-		if e.complexity.Query.Debt == nil {
+		if e.ComplexityRoot.Query.Debt == nil {
 			break
 		}
 
@@ -2595,9 +2613,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Debt(childComplexity, args["id"].(uuid.UUID)), true
+		return e.ComplexityRoot.Query.Debt(childComplexity, args["id"].(uuid.UUID)), true
 	case "Query.debts":
-		if e.complexity.Query.Debts == nil {
+		if e.ComplexityRoot.Query.Debts == nil {
 			break
 		}
 
@@ -2606,9 +2624,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Debts(childComplexity, args["status"].(*model.DebtStatus)), true
+		return e.ComplexityRoot.Query.Debts(childComplexity, args["status"].(*model.DebtStatus)), true
 	case "Query.expense":
-		if e.complexity.Query.Expense == nil {
+		if e.ComplexityRoot.Query.Expense == nil {
 			break
 		}
 
@@ -2617,9 +2635,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Expense(childComplexity, args["id"].(uuid.UUID)), true
+		return e.ComplexityRoot.Query.Expense(childComplexity, args["id"].(uuid.UUID)), true
 	case "Query.expenseTemplateGroup":
-		if e.complexity.Query.ExpenseTemplateGroup == nil {
+		if e.ComplexityRoot.Query.ExpenseTemplateGroup == nil {
 			break
 		}
 
@@ -2628,15 +2646,15 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.ExpenseTemplateGroup(childComplexity, args["id"].(uuid.UUID)), true
+		return e.ComplexityRoot.Query.ExpenseTemplateGroup(childComplexity, args["id"].(uuid.UUID)), true
 	case "Query.expenseTemplateGroups":
-		if e.complexity.Query.ExpenseTemplateGroups == nil {
+		if e.ComplexityRoot.Query.ExpenseTemplateGroups == nil {
 			break
 		}
 
-		return e.complexity.Query.ExpenseTemplateGroups(childComplexity), true
+		return e.ComplexityRoot.Query.ExpenseTemplateGroups(childComplexity), true
 	case "Query.expenses":
-		if e.complexity.Query.Expenses == nil {
+		if e.ComplexityRoot.Query.Expenses == nil {
 			break
 		}
 
@@ -2645,9 +2663,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Expenses(childComplexity, args["filter"].(*model.ExpenseFilter)), true
+		return e.ComplexityRoot.Query.Expenses(childComplexity, args["filter"].(*model.ExpenseFilter)), true
 	case "Query.forecastSummary":
-		if e.complexity.Query.ForecastSummary == nil {
+		if e.ComplexityRoot.Query.ForecastSummary == nil {
 			break
 		}
 
@@ -2656,9 +2674,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.ForecastSummary(childComplexity, args["filter"].(*model.MonthYearInput)), true
+		return e.ComplexityRoot.Query.ForecastSummary(childComplexity, args["filter"].(*model.MonthYearInput)), true
 	case "Query.historySummary":
-		if e.complexity.Query.HistorySummary == nil {
+		if e.ComplexityRoot.Query.HistorySummary == nil {
 			break
 		}
 
@@ -2667,9 +2685,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.HistorySummary(childComplexity, args["filter"].(*model.MonthYearInput)), true
+		return e.ComplexityRoot.Query.HistorySummary(childComplexity, args["filter"].(*model.MonthYearInput)), true
 	case "Query.income":
-		if e.complexity.Query.Income == nil {
+		if e.ComplexityRoot.Query.Income == nil {
 			break
 		}
 
@@ -2678,15 +2696,15 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Income(childComplexity, args["id"].(uuid.UUID)), true
+		return e.ComplexityRoot.Query.Income(childComplexity, args["id"].(uuid.UUID)), true
 	case "Query.incomeCategories":
-		if e.complexity.Query.IncomeCategories == nil {
+		if e.ComplexityRoot.Query.IncomeCategories == nil {
 			break
 		}
 
-		return e.complexity.Query.IncomeCategories(childComplexity), true
+		return e.ComplexityRoot.Query.IncomeCategories(childComplexity), true
 	case "Query.incomeCategory":
-		if e.complexity.Query.IncomeCategory == nil {
+		if e.ComplexityRoot.Query.IncomeCategory == nil {
 			break
 		}
 
@@ -2695,9 +2713,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.IncomeCategory(childComplexity, args["id"].(uuid.UUID)), true
+		return e.ComplexityRoot.Query.IncomeCategory(childComplexity, args["id"].(uuid.UUID)), true
 	case "Query.incomes":
-		if e.complexity.Query.Incomes == nil {
+		if e.ComplexityRoot.Query.Incomes == nil {
 			break
 		}
 
@@ -2706,9 +2724,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Incomes(childComplexity, args["filter"].(*model.IncomeFilter)), true
+		return e.ComplexityRoot.Query.Incomes(childComplexity, args["filter"].(*model.IncomeFilter)), true
 	case "Query.installment":
-		if e.complexity.Query.Installment == nil {
+		if e.ComplexityRoot.Query.Installment == nil {
 			break
 		}
 
@@ -2717,9 +2735,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Installment(childComplexity, args["id"].(uuid.UUID)), true
+		return e.ComplexityRoot.Query.Installment(childComplexity, args["id"].(uuid.UUID)), true
 	case "Query.installments":
-		if e.complexity.Query.Installments == nil {
+		if e.ComplexityRoot.Query.Installments == nil {
 			break
 		}
 
@@ -2728,21 +2746,22 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Installments(childComplexity, args["status"].(*model.InstallmentStatus)), true
+		return e.ComplexityRoot.Query.Installments(childComplexity, args["status"].(*model.InstallmentStatus)), true
+
 	case "Query.me":
-		if e.complexity.Query.Me == nil {
+		if e.ComplexityRoot.Query.Me == nil {
 			break
 		}
 
-		return e.complexity.Query.Me(childComplexity), true
+		return e.ComplexityRoot.Query.Me(childComplexity), true
 	case "Query.notifications":
-		if e.complexity.Query.Notifications == nil {
+		if e.ComplexityRoot.Query.Notifications == nil {
 			break
 		}
 
-		return e.complexity.Query.Notifications(childComplexity), true
+		return e.ComplexityRoot.Query.Notifications(childComplexity), true
 	case "Query.recurringIncome":
-		if e.complexity.Query.RecurringIncome == nil {
+		if e.ComplexityRoot.Query.RecurringIncome == nil {
 			break
 		}
 
@@ -2751,9 +2770,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.RecurringIncome(childComplexity, args["id"].(uuid.UUID)), true
+		return e.ComplexityRoot.Query.RecurringIncome(childComplexity, args["id"].(uuid.UUID)), true
 	case "Query.recurringIncomes":
-		if e.complexity.Query.RecurringIncomes == nil {
+		if e.ComplexityRoot.Query.RecurringIncomes == nil {
 			break
 		}
 
@@ -2762,9 +2781,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.RecurringIncomes(childComplexity, args["isActive"].(*bool)), true
+		return e.ComplexityRoot.Query.RecurringIncomes(childComplexity, args["isActive"].(*bool)), true
 	case "Query.savingsGoal":
-		if e.complexity.Query.SavingsGoal == nil {
+		if e.ComplexityRoot.Query.SavingsGoal == nil {
 			break
 		}
 
@@ -2773,9 +2792,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.SavingsGoal(childComplexity, args["id"].(uuid.UUID)), true
+		return e.ComplexityRoot.Query.SavingsGoal(childComplexity, args["id"].(uuid.UUID)), true
 	case "Query.savingsGoals":
-		if e.complexity.Query.SavingsGoals == nil {
+		if e.ComplexityRoot.Query.SavingsGoals == nil {
 			break
 		}
 
@@ -2784,9 +2803,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.SavingsGoals(childComplexity, args["status"].(*model.SavingsGoalStatus)), true
+		return e.ComplexityRoot.Query.SavingsGoals(childComplexity, args["status"].(*model.SavingsGoalStatus)), true
 	case "Query.transaction":
-		if e.complexity.Query.Transaction == nil {
+		if e.ComplexityRoot.Query.Transaction == nil {
 			break
 		}
 
@@ -2795,9 +2814,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Transaction(childComplexity, args["id"].(uuid.UUID)), true
+		return e.ComplexityRoot.Query.Transaction(childComplexity, args["id"].(uuid.UUID)), true
 	case "Query.transactions":
-		if e.complexity.Query.Transactions == nil {
+		if e.ComplexityRoot.Query.Transactions == nil {
 			break
 		}
 
@@ -2806,9 +2825,9 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Transactions(childComplexity, args["filter"].(*model.TransactionFilter)), true
+		return e.ComplexityRoot.Query.Transactions(childComplexity, args["filter"].(*model.TransactionFilter)), true
 	case "Query.upcomingPayments":
-		if e.complexity.Query.UpcomingPayments == nil {
+		if e.ComplexityRoot.Query.UpcomingPayments == nil {
 			break
 		}
 
@@ -2817,437 +2836,443 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.UpcomingPayments(childComplexity, args["filter"].(model.UpcomingPaymentsFilter)), true
+		return e.ComplexityRoot.Query.UpcomingPayments(childComplexity, args["filter"].(model.UpcomingPaymentsFilter)), true
 
 	case "RecurringIncome.amount":
-		if e.complexity.RecurringIncome.Amount == nil {
+		if e.ComplexityRoot.RecurringIncome.Amount == nil {
 			break
 		}
 
-		return e.complexity.RecurringIncome.Amount(childComplexity), true
+		return e.ComplexityRoot.RecurringIncome.Amount(childComplexity), true
 	case "RecurringIncome.category":
-		if e.complexity.RecurringIncome.Category == nil {
+		if e.ComplexityRoot.RecurringIncome.Category == nil {
 			break
 		}
 
-		return e.complexity.RecurringIncome.Category(childComplexity), true
+		return e.ComplexityRoot.RecurringIncome.Category(childComplexity), true
 	case "RecurringIncome.createdAt":
-		if e.complexity.RecurringIncome.CreatedAt == nil {
+		if e.ComplexityRoot.RecurringIncome.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.RecurringIncome.CreatedAt(childComplexity), true
+		return e.ComplexityRoot.RecurringIncome.CreatedAt(childComplexity), true
 	case "RecurringIncome.id":
-		if e.complexity.RecurringIncome.ID == nil {
+		if e.ComplexityRoot.RecurringIncome.ID == nil {
 			break
 		}
 
-		return e.complexity.RecurringIncome.ID(childComplexity), true
+		return e.ComplexityRoot.RecurringIncome.ID(childComplexity), true
 	case "RecurringIncome.incomeType":
-		if e.complexity.RecurringIncome.IncomeType == nil {
+		if e.ComplexityRoot.RecurringIncome.IncomeType == nil {
 			break
 		}
 
-		return e.complexity.RecurringIncome.IncomeType(childComplexity), true
+		return e.ComplexityRoot.RecurringIncome.IncomeType(childComplexity), true
 	case "RecurringIncome.isActive":
-		if e.complexity.RecurringIncome.IsActive == nil {
+		if e.ComplexityRoot.RecurringIncome.IsActive == nil {
 			break
 		}
 
-		return e.complexity.RecurringIncome.IsActive(childComplexity), true
+		return e.ComplexityRoot.RecurringIncome.IsActive(childComplexity), true
 	case "RecurringIncome.notes":
-		if e.complexity.RecurringIncome.Notes == nil {
+		if e.ComplexityRoot.RecurringIncome.Notes == nil {
 			break
 		}
 
-		return e.complexity.RecurringIncome.Notes(childComplexity), true
+		return e.ComplexityRoot.RecurringIncome.Notes(childComplexity), true
 	case "RecurringIncome.recurringDay":
-		if e.complexity.RecurringIncome.RecurringDay == nil {
+		if e.ComplexityRoot.RecurringIncome.RecurringDay == nil {
 			break
 		}
 
-		return e.complexity.RecurringIncome.RecurringDay(childComplexity), true
+		return e.ComplexityRoot.RecurringIncome.RecurringDay(childComplexity), true
 	case "RecurringIncome.sourceName":
-		if e.complexity.RecurringIncome.SourceName == nil {
+		if e.ComplexityRoot.RecurringIncome.SourceName == nil {
 			break
 		}
 
-		return e.complexity.RecurringIncome.SourceName(childComplexity), true
+		return e.ComplexityRoot.RecurringIncome.SourceName(childComplexity), true
 
 	case "SavingsContribution.amount":
-		if e.complexity.SavingsContribution.Amount == nil {
+		if e.ComplexityRoot.SavingsContribution.Amount == nil {
 			break
 		}
 
-		return e.complexity.SavingsContribution.Amount(childComplexity), true
+		return e.ComplexityRoot.SavingsContribution.Amount(childComplexity), true
 	case "SavingsContribution.contributionDate":
-		if e.complexity.SavingsContribution.ContributionDate == nil {
+		if e.ComplexityRoot.SavingsContribution.ContributionDate == nil {
 			break
 		}
 
-		return e.complexity.SavingsContribution.ContributionDate(childComplexity), true
+		return e.ComplexityRoot.SavingsContribution.ContributionDate(childComplexity), true
 	case "SavingsContribution.createdAt":
-		if e.complexity.SavingsContribution.CreatedAt == nil {
+		if e.ComplexityRoot.SavingsContribution.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.SavingsContribution.CreatedAt(childComplexity), true
+		return e.ComplexityRoot.SavingsContribution.CreatedAt(childComplexity), true
 	case "SavingsContribution.id":
-		if e.complexity.SavingsContribution.ID == nil {
+		if e.ComplexityRoot.SavingsContribution.ID == nil {
 			break
 		}
 
-		return e.complexity.SavingsContribution.ID(childComplexity), true
+		return e.ComplexityRoot.SavingsContribution.ID(childComplexity), true
 	case "SavingsContribution.notes":
-		if e.complexity.SavingsContribution.Notes == nil {
+		if e.ComplexityRoot.SavingsContribution.Notes == nil {
 			break
 		}
 
-		return e.complexity.SavingsContribution.Notes(childComplexity), true
+		return e.ComplexityRoot.SavingsContribution.Notes(childComplexity), true
 	case "SavingsContribution.savingsGoal":
-		if e.complexity.SavingsContribution.SavingsGoal == nil {
+		if e.ComplexityRoot.SavingsContribution.SavingsGoal == nil {
 			break
 		}
 
-		return e.complexity.SavingsContribution.SavingsGoal(childComplexity), true
+		return e.ComplexityRoot.SavingsContribution.SavingsGoal(childComplexity), true
 
 	case "SavingsGoal.contributions":
-		if e.complexity.SavingsGoal.Contributions == nil {
+		if e.ComplexityRoot.SavingsGoal.Contributions == nil {
 			break
 		}
 
-		return e.complexity.SavingsGoal.Contributions(childComplexity), true
+		return e.ComplexityRoot.SavingsGoal.Contributions(childComplexity), true
 	case "SavingsGoal.createdAt":
-		if e.complexity.SavingsGoal.CreatedAt == nil {
+		if e.ComplexityRoot.SavingsGoal.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.SavingsGoal.CreatedAt(childComplexity), true
+		return e.ComplexityRoot.SavingsGoal.CreatedAt(childComplexity), true
 	case "SavingsGoal.currentAmount":
-		if e.complexity.SavingsGoal.CurrentAmount == nil {
+		if e.ComplexityRoot.SavingsGoal.CurrentAmount == nil {
 			break
 		}
 
-		return e.complexity.SavingsGoal.CurrentAmount(childComplexity), true
+		return e.ComplexityRoot.SavingsGoal.CurrentAmount(childComplexity), true
 	case "SavingsGoal.id":
-		if e.complexity.SavingsGoal.ID == nil {
+		if e.ComplexityRoot.SavingsGoal.ID == nil {
 			break
 		}
 
-		return e.complexity.SavingsGoal.ID(childComplexity), true
+		return e.ComplexityRoot.SavingsGoal.ID(childComplexity), true
 	case "SavingsGoal.icon":
-		if e.complexity.SavingsGoal.Icon == nil {
+		if e.ComplexityRoot.SavingsGoal.Icon == nil {
 			break
 		}
 
-		return e.complexity.SavingsGoal.Icon(childComplexity), true
+		return e.ComplexityRoot.SavingsGoal.Icon(childComplexity), true
 	case "SavingsGoal.monthlyTarget":
-		if e.complexity.SavingsGoal.MonthlyTarget == nil {
+		if e.ComplexityRoot.SavingsGoal.MonthlyTarget == nil {
 			break
 		}
 
-		return e.complexity.SavingsGoal.MonthlyTarget(childComplexity), true
+		return e.ComplexityRoot.SavingsGoal.MonthlyTarget(childComplexity), true
 	case "SavingsGoal.name":
-		if e.complexity.SavingsGoal.Name == nil {
+		if e.ComplexityRoot.SavingsGoal.Name == nil {
 			break
 		}
 
-		return e.complexity.SavingsGoal.Name(childComplexity), true
+		return e.ComplexityRoot.SavingsGoal.Name(childComplexity), true
 	case "SavingsGoal.notes":
-		if e.complexity.SavingsGoal.Notes == nil {
+		if e.ComplexityRoot.SavingsGoal.Notes == nil {
 			break
 		}
 
-		return e.complexity.SavingsGoal.Notes(childComplexity), true
+		return e.ComplexityRoot.SavingsGoal.Notes(childComplexity), true
 	case "SavingsGoal.progress":
-		if e.complexity.SavingsGoal.Progress == nil {
+		if e.ComplexityRoot.SavingsGoal.Progress == nil {
 			break
 		}
 
-		return e.complexity.SavingsGoal.Progress(childComplexity), true
+		return e.ComplexityRoot.SavingsGoal.Progress(childComplexity), true
 	case "SavingsGoal.remainingAmount":
-		if e.complexity.SavingsGoal.RemainingAmount == nil {
+		if e.ComplexityRoot.SavingsGoal.RemainingAmount == nil {
 			break
 		}
 
-		return e.complexity.SavingsGoal.RemainingAmount(childComplexity), true
+		return e.ComplexityRoot.SavingsGoal.RemainingAmount(childComplexity), true
 	case "SavingsGoal.status":
-		if e.complexity.SavingsGoal.Status == nil {
+		if e.ComplexityRoot.SavingsGoal.Status == nil {
 			break
 		}
 
-		return e.complexity.SavingsGoal.Status(childComplexity), true
+		return e.ComplexityRoot.SavingsGoal.Status(childComplexity), true
 	case "SavingsGoal.targetAmount":
-		if e.complexity.SavingsGoal.TargetAmount == nil {
+		if e.ComplexityRoot.SavingsGoal.TargetAmount == nil {
 			break
 		}
 
-		return e.complexity.SavingsGoal.TargetAmount(childComplexity), true
+		return e.ComplexityRoot.SavingsGoal.TargetAmount(childComplexity), true
 	case "SavingsGoal.targetDate":
-		if e.complexity.SavingsGoal.TargetDate == nil {
+		if e.ComplexityRoot.SavingsGoal.TargetDate == nil {
 			break
 		}
 
-		return e.complexity.SavingsGoal.TargetDate(childComplexity), true
+		return e.ComplexityRoot.SavingsGoal.TargetDate(childComplexity), true
 
 	case "Transaction.createdAt":
-		if e.complexity.Transaction.CreatedAt == nil {
+		if e.ComplexityRoot.Transaction.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.Transaction.CreatedAt(childComplexity), true
+		return e.ComplexityRoot.Transaction.CreatedAt(childComplexity), true
 	case "Transaction.description":
-		if e.complexity.Transaction.Description == nil {
+		if e.ComplexityRoot.Transaction.Description == nil {
 			break
 		}
 
-		return e.complexity.Transaction.Description(childComplexity), true
+		return e.ComplexityRoot.Transaction.Description(childComplexity), true
 	case "Transaction.entries":
-		if e.complexity.Transaction.Entries == nil {
+		if e.ComplexityRoot.Transaction.Entries == nil {
 			break
 		}
 
-		return e.complexity.Transaction.Entries(childComplexity), true
+		return e.ComplexityRoot.Transaction.Entries(childComplexity), true
 	case "Transaction.id":
-		if e.complexity.Transaction.ID == nil {
+		if e.ComplexityRoot.Transaction.ID == nil {
 			break
 		}
 
-		return e.complexity.Transaction.ID(childComplexity), true
+		return e.ComplexityRoot.Transaction.ID(childComplexity), true
 	case "Transaction.referenceId":
-		if e.complexity.Transaction.ReferenceID == nil {
+		if e.ComplexityRoot.Transaction.ReferenceID == nil {
 			break
 		}
 
-		return e.complexity.Transaction.ReferenceID(childComplexity), true
+		return e.ComplexityRoot.Transaction.ReferenceID(childComplexity), true
 	case "Transaction.referenceType":
-		if e.complexity.Transaction.ReferenceType == nil {
+		if e.ComplexityRoot.Transaction.ReferenceType == nil {
 			break
 		}
 
-		return e.complexity.Transaction.ReferenceType(childComplexity), true
+		return e.ComplexityRoot.Transaction.ReferenceType(childComplexity), true
 	case "Transaction.transactionDate":
-		if e.complexity.Transaction.TransactionDate == nil {
+		if e.ComplexityRoot.Transaction.TransactionDate == nil {
 			break
 		}
 
-		return e.complexity.Transaction.TransactionDate(childComplexity), true
+		return e.ComplexityRoot.Transaction.TransactionDate(childComplexity), true
 
 	case "TransactionEntry.account":
-		if e.complexity.TransactionEntry.Account == nil {
+		if e.ComplexityRoot.TransactionEntry.Account == nil {
 			break
 		}
 
-		return e.complexity.TransactionEntry.Account(childComplexity), true
+		return e.ComplexityRoot.TransactionEntry.Account(childComplexity), true
 	case "TransactionEntry.credit":
-		if e.complexity.TransactionEntry.Credit == nil {
+		if e.ComplexityRoot.TransactionEntry.Credit == nil {
 			break
 		}
 
-		return e.complexity.TransactionEntry.Credit(childComplexity), true
+		return e.ComplexityRoot.TransactionEntry.Credit(childComplexity), true
 	case "TransactionEntry.debit":
-		if e.complexity.TransactionEntry.Debit == nil {
+		if e.ComplexityRoot.TransactionEntry.Debit == nil {
 			break
 		}
 
-		return e.complexity.TransactionEntry.Debit(childComplexity), true
+		return e.ComplexityRoot.TransactionEntry.Debit(childComplexity), true
 	case "TransactionEntry.id":
-		if e.complexity.TransactionEntry.ID == nil {
+		if e.ComplexityRoot.TransactionEntry.ID == nil {
 			break
 		}
 
-		return e.complexity.TransactionEntry.ID(childComplexity), true
+		return e.ComplexityRoot.TransactionEntry.ID(childComplexity), true
 
+	case "TwoFAPayload.refreshToken":
+		if e.ComplexityRoot.TwoFAPayload.RefreshToken == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TwoFAPayload.RefreshToken(childComplexity), true
 	case "TwoFAPayload.token":
-		if e.complexity.TwoFAPayload.Token == nil {
+		if e.ComplexityRoot.TwoFAPayload.Token == nil {
 			break
 		}
 
-		return e.complexity.TwoFAPayload.Token(childComplexity), true
+		return e.ComplexityRoot.TwoFAPayload.Token(childComplexity), true
 	case "TwoFAPayload.user":
-		if e.complexity.TwoFAPayload.User == nil {
+		if e.ComplexityRoot.TwoFAPayload.User == nil {
 			break
 		}
 
-		return e.complexity.TwoFAPayload.User(childComplexity), true
+		return e.ComplexityRoot.TwoFAPayload.User(childComplexity), true
 
 	case "UpcomingDebtPayment.debtId":
-		if e.complexity.UpcomingDebtPayment.DebtID == nil {
+		if e.ComplexityRoot.UpcomingDebtPayment.DebtID == nil {
 			break
 		}
 
-		return e.complexity.UpcomingDebtPayment.DebtID(childComplexity), true
+		return e.ComplexityRoot.UpcomingDebtPayment.DebtID(childComplexity), true
 	case "UpcomingDebtPayment.dueDate":
-		if e.complexity.UpcomingDebtPayment.DueDate == nil {
+		if e.ComplexityRoot.UpcomingDebtPayment.DueDate == nil {
 			break
 		}
 
-		return e.complexity.UpcomingDebtPayment.DueDate(childComplexity), true
+		return e.ComplexityRoot.UpcomingDebtPayment.DueDate(childComplexity), true
 	case "UpcomingDebtPayment.monthlyPayment":
-		if e.complexity.UpcomingDebtPayment.MonthlyPayment == nil {
+		if e.ComplexityRoot.UpcomingDebtPayment.MonthlyPayment == nil {
 			break
 		}
 
-		return e.complexity.UpcomingDebtPayment.MonthlyPayment(childComplexity), true
+		return e.ComplexityRoot.UpcomingDebtPayment.MonthlyPayment(childComplexity), true
 	case "UpcomingDebtPayment.paymentType":
-		if e.complexity.UpcomingDebtPayment.PaymentType == nil {
+		if e.ComplexityRoot.UpcomingDebtPayment.PaymentType == nil {
 			break
 		}
 
-		return e.complexity.UpcomingDebtPayment.PaymentType(childComplexity), true
+		return e.ComplexityRoot.UpcomingDebtPayment.PaymentType(childComplexity), true
 	case "UpcomingDebtPayment.personName":
-		if e.complexity.UpcomingDebtPayment.PersonName == nil {
+		if e.ComplexityRoot.UpcomingDebtPayment.PersonName == nil {
 			break
 		}
 
-		return e.complexity.UpcomingDebtPayment.PersonName(childComplexity), true
+		return e.ComplexityRoot.UpcomingDebtPayment.PersonName(childComplexity), true
 	case "UpcomingDebtPayment.remainingAmount":
-		if e.complexity.UpcomingDebtPayment.RemainingAmount == nil {
+		if e.ComplexityRoot.UpcomingDebtPayment.RemainingAmount == nil {
 			break
 		}
 
-		return e.complexity.UpcomingDebtPayment.RemainingAmount(childComplexity), true
+		return e.ComplexityRoot.UpcomingDebtPayment.RemainingAmount(childComplexity), true
 
 	case "UpcomingInstallmentPayment.dueDate":
-		if e.complexity.UpcomingInstallmentPayment.DueDate == nil {
+		if e.ComplexityRoot.UpcomingInstallmentPayment.DueDate == nil {
 			break
 		}
 
-		return e.complexity.UpcomingInstallmentPayment.DueDate(childComplexity), true
+		return e.ComplexityRoot.UpcomingInstallmentPayment.DueDate(childComplexity), true
 	case "UpcomingInstallmentPayment.dueDay":
-		if e.complexity.UpcomingInstallmentPayment.DueDay == nil {
+		if e.ComplexityRoot.UpcomingInstallmentPayment.DueDay == nil {
 			break
 		}
 
-		return e.complexity.UpcomingInstallmentPayment.DueDay(childComplexity), true
+		return e.ComplexityRoot.UpcomingInstallmentPayment.DueDay(childComplexity), true
 	case "UpcomingInstallmentPayment.installmentId":
-		if e.complexity.UpcomingInstallmentPayment.InstallmentID == nil {
+		if e.ComplexityRoot.UpcomingInstallmentPayment.InstallmentID == nil {
 			break
 		}
 
-		return e.complexity.UpcomingInstallmentPayment.InstallmentID(childComplexity), true
+		return e.ComplexityRoot.UpcomingInstallmentPayment.InstallmentID(childComplexity), true
 	case "UpcomingInstallmentPayment.monthlyPayment":
-		if e.complexity.UpcomingInstallmentPayment.MonthlyPayment == nil {
+		if e.ComplexityRoot.UpcomingInstallmentPayment.MonthlyPayment == nil {
 			break
 		}
 
-		return e.complexity.UpcomingInstallmentPayment.MonthlyPayment(childComplexity), true
+		return e.ComplexityRoot.UpcomingInstallmentPayment.MonthlyPayment(childComplexity), true
 	case "UpcomingInstallmentPayment.name":
-		if e.complexity.UpcomingInstallmentPayment.Name == nil {
+		if e.ComplexityRoot.UpcomingInstallmentPayment.Name == nil {
 			break
 		}
 
-		return e.complexity.UpcomingInstallmentPayment.Name(childComplexity), true
+		return e.ComplexityRoot.UpcomingInstallmentPayment.Name(childComplexity), true
 	case "UpcomingInstallmentPayment.remainingAmount":
-		if e.complexity.UpcomingInstallmentPayment.RemainingAmount == nil {
+		if e.ComplexityRoot.UpcomingInstallmentPayment.RemainingAmount == nil {
 			break
 		}
 
-		return e.complexity.UpcomingInstallmentPayment.RemainingAmount(childComplexity), true
+		return e.ComplexityRoot.UpcomingInstallmentPayment.RemainingAmount(childComplexity), true
 	case "UpcomingInstallmentPayment.remainingPayments":
-		if e.complexity.UpcomingInstallmentPayment.RemainingPayments == nil {
+		if e.ComplexityRoot.UpcomingInstallmentPayment.RemainingPayments == nil {
 			break
 		}
 
-		return e.complexity.UpcomingInstallmentPayment.RemainingPayments(childComplexity), true
+		return e.ComplexityRoot.UpcomingInstallmentPayment.RemainingPayments(childComplexity), true
 
 	case "UpcomingPaymentsReport.debts":
-		if e.complexity.UpcomingPaymentsReport.Debts == nil {
+		if e.ComplexityRoot.UpcomingPaymentsReport.Debts == nil {
 			break
 		}
 
-		return e.complexity.UpcomingPaymentsReport.Debts(childComplexity), true
+		return e.ComplexityRoot.UpcomingPaymentsReport.Debts(childComplexity), true
 	case "UpcomingPaymentsReport.installments":
-		if e.complexity.UpcomingPaymentsReport.Installments == nil {
+		if e.ComplexityRoot.UpcomingPaymentsReport.Installments == nil {
 			break
 		}
 
-		return e.complexity.UpcomingPaymentsReport.Installments(childComplexity), true
+		return e.ComplexityRoot.UpcomingPaymentsReport.Installments(childComplexity), true
 	case "UpcomingPaymentsReport.totalDebt":
-		if e.complexity.UpcomingPaymentsReport.TotalDebt == nil {
+		if e.ComplexityRoot.UpcomingPaymentsReport.TotalDebt == nil {
 			break
 		}
 
-		return e.complexity.UpcomingPaymentsReport.TotalDebt(childComplexity), true
+		return e.ComplexityRoot.UpcomingPaymentsReport.TotalDebt(childComplexity), true
 	case "UpcomingPaymentsReport.totalInstallment":
-		if e.complexity.UpcomingPaymentsReport.TotalInstallment == nil {
+		if e.ComplexityRoot.UpcomingPaymentsReport.TotalInstallment == nil {
 			break
 		}
 
-		return e.complexity.UpcomingPaymentsReport.TotalInstallment(childComplexity), true
+		return e.ComplexityRoot.UpcomingPaymentsReport.TotalInstallment(childComplexity), true
 	case "UpcomingPaymentsReport.totalPayments":
-		if e.complexity.UpcomingPaymentsReport.TotalPayments == nil {
+		if e.ComplexityRoot.UpcomingPaymentsReport.TotalPayments == nil {
 			break
 		}
 
-		return e.complexity.UpcomingPaymentsReport.TotalPayments(childComplexity), true
+		return e.ComplexityRoot.UpcomingPaymentsReport.TotalPayments(childComplexity), true
 
 	case "User.createdAt":
-		if e.complexity.User.CreatedAt == nil {
+		if e.ComplexityRoot.User.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.User.CreatedAt(childComplexity), true
+		return e.ComplexityRoot.User.CreatedAt(childComplexity), true
 	case "User.email":
-		if e.complexity.User.Email == nil {
+		if e.ComplexityRoot.User.Email == nil {
 			break
 		}
 
-		return e.complexity.User.Email(childComplexity), true
+		return e.ComplexityRoot.User.Email(childComplexity), true
 	case "User.id":
-		if e.complexity.User.ID == nil {
+		if e.ComplexityRoot.User.ID == nil {
 			break
 		}
 
-		return e.complexity.User.ID(childComplexity), true
+		return e.ComplexityRoot.User.ID(childComplexity), true
 	case "User.name":
-		if e.complexity.User.Name == nil {
+		if e.ComplexityRoot.User.Name == nil {
 			break
 		}
 
-		return e.complexity.User.Name(childComplexity), true
+		return e.ComplexityRoot.User.Name(childComplexity), true
 	case "User.notifyDaysBefore":
-		if e.complexity.User.NotifyDaysBefore == nil {
+		if e.ComplexityRoot.User.NotifyDaysBefore == nil {
 			break
 		}
 
-		return e.complexity.User.NotifyDaysBefore(childComplexity), true
+		return e.ComplexityRoot.User.NotifyDaysBefore(childComplexity), true
 	case "User.notifyDebt":
-		if e.complexity.User.NotifyDebt == nil {
+		if e.ComplexityRoot.User.NotifyDebt == nil {
 			break
 		}
 
-		return e.complexity.User.NotifyDebt(childComplexity), true
+		return e.ComplexityRoot.User.NotifyDebt(childComplexity), true
 	case "User.notifyInstallment":
-		if e.complexity.User.NotifyInstallment == nil {
+		if e.ComplexityRoot.User.NotifyInstallment == nil {
 			break
 		}
 
-		return e.complexity.User.NotifyInstallment(childComplexity), true
+		return e.ComplexityRoot.User.NotifyInstallment(childComplexity), true
 	case "User.notifySavingsGoal":
-		if e.complexity.User.NotifySavingsGoal == nil {
+		if e.ComplexityRoot.User.NotifySavingsGoal == nil {
 			break
 		}
 
-		return e.complexity.User.NotifySavingsGoal(childComplexity), true
+		return e.ComplexityRoot.User.NotifySavingsGoal(childComplexity), true
 	case "User.profileImage":
-		if e.complexity.User.ProfileImage == nil {
+		if e.ComplexityRoot.User.ProfileImage == nil {
 			break
 		}
 
-		return e.complexity.User.ProfileImage(childComplexity), true
+		return e.ComplexityRoot.User.ProfileImage(childComplexity), true
 	case "User.twoFAEnabled":
-		if e.complexity.User.TwoFAEnabled == nil {
+		if e.ComplexityRoot.User.TwoFAEnabled == nil {
 			break
 		}
 
-		return e.complexity.User.TwoFAEnabled(childComplexity), true
+		return e.ComplexityRoot.User.TwoFAEnabled(childComplexity), true
 	case "User.updatedAt":
-		if e.complexity.User.UpdatedAt == nil {
+		if e.ComplexityRoot.User.UpdatedAt == nil {
 			break
 		}
 
-		return e.complexity.User.UpdatedAt(childComplexity), true
+		return e.ComplexityRoot.User.UpdatedAt(childComplexity), true
 
 	}
 	return 0, false
@@ -3255,7 +3280,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	opCtx := graphql.GetOperationContext(ctx)
-	ec := executionContext{opCtx, e, 0, 0, make(chan graphql.DeferredResult)}
+	ec := newExecutionContext(opCtx, e, make(chan graphql.DeferredResult))
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputActualPaymentsFilter,
 		ec.unmarshalInputAddSavingsContributionInput,
@@ -3310,9 +3335,9 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 				ctx = graphql.WithUnmarshalerMap(ctx, inputUnmarshalMap)
 				data = ec._Query(ctx, opCtx.Operation.SelectionSet)
 			} else {
-				if atomic.LoadInt32(&ec.pendingDeferred) > 0 {
-					result := <-ec.deferredResults
-					atomic.AddInt32(&ec.pendingDeferred, -1)
+				if atomic.LoadInt32(&ec.PendingDeferred) > 0 {
+					result := <-ec.DeferredResults
+					atomic.AddInt32(&ec.PendingDeferred, -1)
 					data = result.Result
 					response.Path = result.Path
 					response.Label = result.Label
@@ -3324,8 +3349,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 			var buf bytes.Buffer
 			data.MarshalGQL(&buf)
 			response.Data = buf.Bytes()
-			if atomic.LoadInt32(&ec.deferred) > 0 {
-				hasNext := atomic.LoadInt32(&ec.pendingDeferred) > 0
+			if atomic.LoadInt32(&ec.Deferred) > 0 {
+				hasNext := atomic.LoadInt32(&ec.PendingDeferred) > 0
 				response.HasNext = &hasNext
 			}
 
@@ -3353,44 +3378,22 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 }
 
 type executionContext struct {
-	*graphql.OperationContext
-	*executableSchema
-	deferred        int32
-	pendingDeferred int32
-	deferredResults chan graphql.DeferredResult
+	*graphql.ExecutionContextState[ResolverRoot, DirectiveRoot, ComplexityRoot]
 }
 
-func (ec *executionContext) processDeferredGroup(dg graphql.DeferredGroup) {
-	atomic.AddInt32(&ec.pendingDeferred, 1)
-	go func() {
-		ctx := graphql.WithFreshResponseContext(dg.Context)
-		dg.FieldSet.Dispatch(ctx)
-		ds := graphql.DeferredResult{
-			Path:   dg.Path,
-			Label:  dg.Label,
-			Result: dg.FieldSet,
-			Errors: graphql.GetErrors(ctx),
-		}
-		// null fields should bubble up
-		if dg.FieldSet.Invalids > 0 {
-			ds.Result = graphql.Null
-		}
-		ec.deferredResults <- ds
-	}()
-}
-
-func (ec *executionContext) introspectSchema() (*introspection.Schema, error) {
-	if ec.DisableIntrospection {
-		return nil, errors.New("introspection disabled")
+func newExecutionContext(
+	opCtx *graphql.OperationContext,
+	execSchema *executableSchema,
+	deferredResults chan graphql.DeferredResult,
+) executionContext {
+	return executionContext{
+		ExecutionContextState: graphql.NewExecutionContextState[ResolverRoot, DirectiveRoot, ComplexityRoot](
+			opCtx,
+			(*graphql.ExecutableSchemaState[ResolverRoot, DirectiveRoot, ComplexityRoot])(execSchema),
+			parsedSchema,
+			deferredResults,
+		),
 	}
-	return introspection.WrapSchema(ec.Schema()), nil
-}
-
-func (ec *executionContext) introspectType(name string) (*introspection.Type, error) {
-	if ec.DisableIntrospection {
-		return nil, errors.New("introspection disabled")
-	}
-	return introspection.WrapTypeFromDef(ec.Schema(), ec.Schema().Types[name]), nil
 }
 
 //go:embed "schema/account.graphqls" "schema/actual_payments.graphqls" "schema/balance.graphqls" "schema/category.graphqls" "schema/dashboard.graphqls" "schema/debt.graphqls" "schema/expense.graphqls" "schema/income.graphqls" "schema/installment.graphqls" "schema/ledger.graphqls" "schema/monthly_summary.graphqls" "schema/notification.graphqls" "schema/savings_goal.graphqls" "schema/schema.graphqls" "schema/upcoming_payments.graphqls" "schema/user.graphqls"
@@ -3773,6 +3776,17 @@ func (ec *executionContext) field_Mutation_login_args(ctx context.Context, rawAr
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_logout_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "refreshToken", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["refreshToken"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_markDebtComplete_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -3825,6 +3839,17 @@ func (ec *executionContext) field_Mutation_recordInstallmentPayment_args(ctx con
 		return nil, err
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_refreshToken_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "refreshToken", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["refreshToken"] = arg0
 	return args, nil
 }
 
@@ -5138,6 +5163,35 @@ func (ec *executionContext) _AuthPayload_token(ctx context.Context, field graphq
 }
 
 func (ec *executionContext) fieldContext_AuthPayload_token(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AuthPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AuthPayload_refreshToken(ctx context.Context, field graphql.CollectedField, obj *model.AuthPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AuthPayload_refreshToken,
+		func(ctx context.Context) (any, error) {
+			return obj.RefreshToken, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_AuthPayload_refreshToken(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "AuthPayload",
 		Field:      field,
@@ -10690,7 +10744,7 @@ func (ec *executionContext) _Mutation_register(ctx context.Context, field graphq
 		ec.fieldContext_Mutation_register,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().Register(ctx, fc.Args["input"].(model.RegisterInput))
+			return ec.Resolvers.Mutation().Register(ctx, fc.Args["input"].(model.RegisterInput))
 		},
 		nil,
 		ec.marshalNAuthPayload2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐAuthPayload,
@@ -10709,6 +10763,8 @@ func (ec *executionContext) fieldContext_Mutation_register(ctx context.Context, 
 			switch field.Name {
 			case "token":
 				return ec.fieldContext_AuthPayload_token(ctx, field)
+			case "refreshToken":
+				return ec.fieldContext_AuthPayload_refreshToken(ctx, field)
 			case "user":
 				return ec.fieldContext_AuthPayload_user(ctx, field)
 			case "requires2FA":
@@ -10741,7 +10797,7 @@ func (ec *executionContext) _Mutation_login(ctx context.Context, field graphql.C
 		ec.fieldContext_Mutation_login,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().Login(ctx, fc.Args["input"].(model.LoginInput))
+			return ec.Resolvers.Mutation().Login(ctx, fc.Args["input"].(model.LoginInput))
 		},
 		nil,
 		ec.marshalNAuthPayload2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐAuthPayload,
@@ -10760,6 +10816,8 @@ func (ec *executionContext) fieldContext_Mutation_login(ctx context.Context, fie
 			switch field.Name {
 			case "token":
 				return ec.fieldContext_AuthPayload_token(ctx, field)
+			case "refreshToken":
+				return ec.fieldContext_AuthPayload_refreshToken(ctx, field)
 			case "user":
 				return ec.fieldContext_AuthPayload_user(ctx, field)
 			case "requires2FA":
@@ -10792,7 +10850,7 @@ func (ec *executionContext) _Mutation_verifyRegistration(ctx context.Context, fi
 		ec.fieldContext_Mutation_verifyRegistration,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().VerifyRegistration(ctx, fc.Args["input"].(model.Verify2FAInput))
+			return ec.Resolvers.Mutation().VerifyRegistration(ctx, fc.Args["input"].(model.Verify2FAInput))
 		},
 		nil,
 		ec.marshalNTwoFAPayload2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐTwoFAPayload,
@@ -10811,6 +10869,8 @@ func (ec *executionContext) fieldContext_Mutation_verifyRegistration(ctx context
 			switch field.Name {
 			case "token":
 				return ec.fieldContext_TwoFAPayload_token(ctx, field)
+			case "refreshToken":
+				return ec.fieldContext_TwoFAPayload_refreshToken(ctx, field)
 			case "user":
 				return ec.fieldContext_TwoFAPayload_user(ctx, field)
 			}
@@ -10839,7 +10899,7 @@ func (ec *executionContext) _Mutation_verify2FA(ctx context.Context, field graph
 		ec.fieldContext_Mutation_verify2FA,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().Verify2fa(ctx, fc.Args["input"].(model.Verify2FAInput))
+			return ec.Resolvers.Mutation().Verify2fa(ctx, fc.Args["input"].(model.Verify2FAInput))
 		},
 		nil,
 		ec.marshalNTwoFAPayload2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐTwoFAPayload,
@@ -10858,6 +10918,8 @@ func (ec *executionContext) fieldContext_Mutation_verify2FA(ctx context.Context,
 			switch field.Name {
 			case "token":
 				return ec.fieldContext_TwoFAPayload_token(ctx, field)
+			case "refreshToken":
+				return ec.fieldContext_TwoFAPayload_refreshToken(ctx, field)
 			case "user":
 				return ec.fieldContext_TwoFAPayload_user(ctx, field)
 			}
@@ -10886,7 +10948,7 @@ func (ec *executionContext) _Mutation_resend2FACode(ctx context.Context, field g
 		ec.fieldContext_Mutation_resend2FACode,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().Resend2FACode(ctx, fc.Args["tempToken"].(string))
+			return ec.Resolvers.Mutation().Resend2FACode(ctx, fc.Args["tempToken"].(string))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -10919,6 +10981,100 @@ func (ec *executionContext) fieldContext_Mutation_resend2FACode(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_refreshToken(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_refreshToken,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().RefreshToken(ctx, fc.Args["refreshToken"].(string))
+		},
+		nil,
+		ec.marshalNAuthPayload2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐAuthPayload,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_refreshToken(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "token":
+				return ec.fieldContext_AuthPayload_token(ctx, field)
+			case "refreshToken":
+				return ec.fieldContext_AuthPayload_refreshToken(ctx, field)
+			case "user":
+				return ec.fieldContext_AuthPayload_user(ctx, field)
+			case "requires2FA":
+				return ec.fieldContext_AuthPayload_requires2FA(ctx, field)
+			case "tempToken":
+				return ec.fieldContext_AuthPayload_tempToken(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AuthPayload", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_refreshToken_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_logout(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_logout,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().Logout(ctx, fc.Args["refreshToken"].(string))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_logout(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_logout_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_enable2FA(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -10927,7 +11083,7 @@ func (ec *executionContext) _Mutation_enable2FA(ctx context.Context, field graph
 		ec.fieldContext_Mutation_enable2FA,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().Enable2fa(ctx, fc.Args["password"].(string))
+			return ec.Resolvers.Mutation().Enable2fa(ctx, fc.Args["password"].(string))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -10968,7 +11124,7 @@ func (ec *executionContext) _Mutation_disable2FA(ctx context.Context, field grap
 		ec.fieldContext_Mutation_disable2FA,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().Disable2fa(ctx, fc.Args["password"].(string))
+			return ec.Resolvers.Mutation().Disable2fa(ctx, fc.Args["password"].(string))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -11009,7 +11165,7 @@ func (ec *executionContext) _Mutation_updateProfile(ctx context.Context, field g
 		ec.fieldContext_Mutation_updateProfile,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UpdateProfile(ctx, fc.Args["input"].(model.UpdateProfileInput))
+			return ec.Resolvers.Mutation().UpdateProfile(ctx, fc.Args["input"].(model.UpdateProfileInput))
 		},
 		nil,
 		ec.marshalNUser2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐUser,
@@ -11074,7 +11230,7 @@ func (ec *executionContext) _Mutation_updateNotificationSettings(ctx context.Con
 		ec.fieldContext_Mutation_updateNotificationSettings,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UpdateNotificationSettings(ctx, fc.Args["input"].(model.UpdateNotificationSettingsInput))
+			return ec.Resolvers.Mutation().UpdateNotificationSettings(ctx, fc.Args["input"].(model.UpdateNotificationSettingsInput))
 		},
 		nil,
 		ec.marshalNUser2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐUser,
@@ -11139,7 +11295,7 @@ func (ec *executionContext) _Mutation_deleteAccount(ctx context.Context, field g
 		ec.fieldContext_Mutation_deleteAccount,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().DeleteAccount(ctx, fc.Args["input"].(model.DeleteAccountInput))
+			return ec.Resolvers.Mutation().DeleteAccount(ctx, fc.Args["input"].(model.DeleteAccountInput))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -11180,7 +11336,7 @@ func (ec *executionContext) _Mutation_forgotPassword(ctx context.Context, field 
 		ec.fieldContext_Mutation_forgotPassword,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().ForgotPassword(ctx, fc.Args["input"].(model.ForgotPasswordInput))
+			return ec.Resolvers.Mutation().ForgotPassword(ctx, fc.Args["input"].(model.ForgotPasswordInput))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -11221,7 +11377,7 @@ func (ec *executionContext) _Mutation_resetPassword(ctx context.Context, field g
 		ec.fieldContext_Mutation_resetPassword,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().ResetPassword(ctx, fc.Args["input"].(model.ResetPasswordInput))
+			return ec.Resolvers.Mutation().ResetPassword(ctx, fc.Args["input"].(model.ResetPasswordInput))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -11262,7 +11418,7 @@ func (ec *executionContext) _Mutation_createCategory(ctx context.Context, field 
 		ec.fieldContext_Mutation_createCategory,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().CreateCategory(ctx, fc.Args["input"].(model.CreateCategoryInput))
+			return ec.Resolvers.Mutation().CreateCategory(ctx, fc.Args["input"].(model.CreateCategoryInput))
 		},
 		nil,
 		ec.marshalNCategory2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCategory,
@@ -11317,7 +11473,7 @@ func (ec *executionContext) _Mutation_updateCategory(ctx context.Context, field 
 		ec.fieldContext_Mutation_updateCategory,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UpdateCategory(ctx, fc.Args["id"].(uuid.UUID), fc.Args["input"].(model.UpdateCategoryInput))
+			return ec.Resolvers.Mutation().UpdateCategory(ctx, fc.Args["id"].(uuid.UUID), fc.Args["input"].(model.UpdateCategoryInput))
 		},
 		nil,
 		ec.marshalNCategory2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCategory,
@@ -11372,7 +11528,7 @@ func (ec *executionContext) _Mutation_deleteCategory(ctx context.Context, field 
 		ec.fieldContext_Mutation_deleteCategory,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().DeleteCategory(ctx, fc.Args["id"].(uuid.UUID))
+			return ec.Resolvers.Mutation().DeleteCategory(ctx, fc.Args["id"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -11413,7 +11569,7 @@ func (ec *executionContext) _Mutation_createExpense(ctx context.Context, field g
 		ec.fieldContext_Mutation_createExpense,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().CreateExpense(ctx, fc.Args["input"].(model.CreateExpenseInput))
+			return ec.Resolvers.Mutation().CreateExpense(ctx, fc.Args["input"].(model.CreateExpenseInput))
 		},
 		nil,
 		ec.marshalNExpense2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpense,
@@ -11474,7 +11630,7 @@ func (ec *executionContext) _Mutation_updateExpense(ctx context.Context, field g
 		ec.fieldContext_Mutation_updateExpense,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UpdateExpense(ctx, fc.Args["id"].(uuid.UUID), fc.Args["input"].(model.UpdateExpenseInput))
+			return ec.Resolvers.Mutation().UpdateExpense(ctx, fc.Args["id"].(uuid.UUID), fc.Args["input"].(model.UpdateExpenseInput))
 		},
 		nil,
 		ec.marshalNExpense2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpense,
@@ -11535,7 +11691,7 @@ func (ec *executionContext) _Mutation_deleteExpense(ctx context.Context, field g
 		ec.fieldContext_Mutation_deleteExpense,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().DeleteExpense(ctx, fc.Args["id"].(uuid.UUID))
+			return ec.Resolvers.Mutation().DeleteExpense(ctx, fc.Args["id"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -11576,7 +11732,7 @@ func (ec *executionContext) _Mutation_createExpenseTemplateGroup(ctx context.Con
 		ec.fieldContext_Mutation_createExpenseTemplateGroup,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().CreateExpenseTemplateGroup(ctx, fc.Args["input"].(model.CreateExpenseTemplateGroupInput))
+			return ec.Resolvers.Mutation().CreateExpenseTemplateGroup(ctx, fc.Args["input"].(model.CreateExpenseTemplateGroupInput))
 		},
 		nil,
 		ec.marshalNExpenseTemplateGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplateGroup,
@@ -11633,7 +11789,7 @@ func (ec *executionContext) _Mutation_updateExpenseTemplateGroup(ctx context.Con
 		ec.fieldContext_Mutation_updateExpenseTemplateGroup,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UpdateExpenseTemplateGroup(ctx, fc.Args["id"].(uuid.UUID), fc.Args["input"].(model.UpdateExpenseTemplateGroupInput))
+			return ec.Resolvers.Mutation().UpdateExpenseTemplateGroup(ctx, fc.Args["id"].(uuid.UUID), fc.Args["input"].(model.UpdateExpenseTemplateGroupInput))
 		},
 		nil,
 		ec.marshalNExpenseTemplateGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplateGroup,
@@ -11690,7 +11846,7 @@ func (ec *executionContext) _Mutation_deleteExpenseTemplateGroup(ctx context.Con
 		ec.fieldContext_Mutation_deleteExpenseTemplateGroup,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().DeleteExpenseTemplateGroup(ctx, fc.Args["id"].(uuid.UUID))
+			return ec.Resolvers.Mutation().DeleteExpenseTemplateGroup(ctx, fc.Args["id"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -11731,7 +11887,7 @@ func (ec *executionContext) _Mutation_addExpenseTemplateItem(ctx context.Context
 		ec.fieldContext_Mutation_addExpenseTemplateItem,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().AddExpenseTemplateItem(ctx, fc.Args["groupId"].(uuid.UUID), fc.Args["input"].(model.CreateExpenseTemplateItemInput))
+			return ec.Resolvers.Mutation().AddExpenseTemplateItem(ctx, fc.Args["groupId"].(uuid.UUID), fc.Args["input"].(model.CreateExpenseTemplateItemInput))
 		},
 		nil,
 		ec.marshalNExpenseTemplateGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplateGroup,
@@ -11788,7 +11944,7 @@ func (ec *executionContext) _Mutation_updateExpenseTemplateItem(ctx context.Cont
 		ec.fieldContext_Mutation_updateExpenseTemplateItem,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UpdateExpenseTemplateItem(ctx, fc.Args["itemId"].(uuid.UUID), fc.Args["input"].(model.UpdateExpenseTemplateItemInput))
+			return ec.Resolvers.Mutation().UpdateExpenseTemplateItem(ctx, fc.Args["itemId"].(uuid.UUID), fc.Args["input"].(model.UpdateExpenseTemplateItemInput))
 		},
 		nil,
 		ec.marshalNExpenseTemplateItem2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplateItem,
@@ -11845,7 +12001,7 @@ func (ec *executionContext) _Mutation_deleteExpenseTemplateItem(ctx context.Cont
 		ec.fieldContext_Mutation_deleteExpenseTemplateItem,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().DeleteExpenseTemplateItem(ctx, fc.Args["itemId"].(uuid.UUID))
+			return ec.Resolvers.Mutation().DeleteExpenseTemplateItem(ctx, fc.Args["itemId"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -11886,7 +12042,7 @@ func (ec *executionContext) _Mutation_createExpensesFromTemplateGroup(ctx contex
 		ec.fieldContext_Mutation_createExpensesFromTemplateGroup,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().CreateExpensesFromTemplateGroup(ctx, fc.Args["groupId"].(uuid.UUID), fc.Args["expenseDate"].(*time.Time))
+			return ec.Resolvers.Mutation().CreateExpensesFromTemplateGroup(ctx, fc.Args["groupId"].(uuid.UUID), fc.Args["expenseDate"].(*time.Time))
 		},
 		nil,
 		ec.marshalNExpense2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseᚄ,
@@ -11947,7 +12103,7 @@ func (ec *executionContext) _Mutation_createInstallment(ctx context.Context, fie
 		ec.fieldContext_Mutation_createInstallment,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().CreateInstallment(ctx, fc.Args["input"].(model.CreateInstallmentInput))
+			return ec.Resolvers.Mutation().CreateInstallment(ctx, fc.Args["input"].(model.CreateInstallmentInput))
 		},
 		nil,
 		ec.marshalNInstallment2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐInstallment,
@@ -12024,7 +12180,7 @@ func (ec *executionContext) _Mutation_updateInstallment(ctx context.Context, fie
 		ec.fieldContext_Mutation_updateInstallment,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UpdateInstallment(ctx, fc.Args["id"].(uuid.UUID), fc.Args["input"].(model.UpdateInstallmentInput))
+			return ec.Resolvers.Mutation().UpdateInstallment(ctx, fc.Args["id"].(uuid.UUID), fc.Args["input"].(model.UpdateInstallmentInput))
 		},
 		nil,
 		ec.marshalNInstallment2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐInstallment,
@@ -12101,7 +12257,7 @@ func (ec *executionContext) _Mutation_deleteInstallment(ctx context.Context, fie
 		ec.fieldContext_Mutation_deleteInstallment,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().DeleteInstallment(ctx, fc.Args["id"].(uuid.UUID))
+			return ec.Resolvers.Mutation().DeleteInstallment(ctx, fc.Args["id"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -12142,7 +12298,7 @@ func (ec *executionContext) _Mutation_recordInstallmentPayment(ctx context.Conte
 		ec.fieldContext_Mutation_recordInstallmentPayment,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().RecordInstallmentPayment(ctx, fc.Args["input"].(model.RecordInstallmentPaymentInput))
+			return ec.Resolvers.Mutation().RecordInstallmentPayment(ctx, fc.Args["input"].(model.RecordInstallmentPaymentInput))
 		},
 		nil,
 		ec.marshalNInstallmentPayment2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐInstallmentPayment,
@@ -12197,7 +12353,7 @@ func (ec *executionContext) _Mutation_markInstallmentComplete(ctx context.Contex
 		ec.fieldContext_Mutation_markInstallmentComplete,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().MarkInstallmentComplete(ctx, fc.Args["id"].(uuid.UUID))
+			return ec.Resolvers.Mutation().MarkInstallmentComplete(ctx, fc.Args["id"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalNInstallment2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐInstallment,
@@ -12274,7 +12430,7 @@ func (ec *executionContext) _Mutation_createDebt(ctx context.Context, field grap
 		ec.fieldContext_Mutation_createDebt,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().CreateDebt(ctx, fc.Args["input"].(model.CreateDebtInput))
+			return ec.Resolvers.Mutation().CreateDebt(ctx, fc.Args["input"].(model.CreateDebtInput))
 		},
 		nil,
 		ec.marshalNDebt2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐDebt,
@@ -12351,7 +12507,7 @@ func (ec *executionContext) _Mutation_updateDebt(ctx context.Context, field grap
 		ec.fieldContext_Mutation_updateDebt,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UpdateDebt(ctx, fc.Args["id"].(uuid.UUID), fc.Args["input"].(model.UpdateDebtInput))
+			return ec.Resolvers.Mutation().UpdateDebt(ctx, fc.Args["id"].(uuid.UUID), fc.Args["input"].(model.UpdateDebtInput))
 		},
 		nil,
 		ec.marshalNDebt2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐDebt,
@@ -12428,7 +12584,7 @@ func (ec *executionContext) _Mutation_deleteDebt(ctx context.Context, field grap
 		ec.fieldContext_Mutation_deleteDebt,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().DeleteDebt(ctx, fc.Args["id"].(uuid.UUID))
+			return ec.Resolvers.Mutation().DeleteDebt(ctx, fc.Args["id"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -12469,7 +12625,7 @@ func (ec *executionContext) _Mutation_recordDebtPayment(ctx context.Context, fie
 		ec.fieldContext_Mutation_recordDebtPayment,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().RecordDebtPayment(ctx, fc.Args["input"].(model.RecordDebtPaymentInput))
+			return ec.Resolvers.Mutation().RecordDebtPayment(ctx, fc.Args["input"].(model.RecordDebtPaymentInput))
 		},
 		nil,
 		ec.marshalNDebtPayment2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐDebtPayment,
@@ -12524,7 +12680,7 @@ func (ec *executionContext) _Mutation_markDebtComplete(ctx context.Context, fiel
 		ec.fieldContext_Mutation_markDebtComplete,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().MarkDebtComplete(ctx, fc.Args["id"].(uuid.UUID))
+			return ec.Resolvers.Mutation().MarkDebtComplete(ctx, fc.Args["id"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalNDebt2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐDebt,
@@ -12601,7 +12757,7 @@ func (ec *executionContext) _Mutation_createIncomeCategory(ctx context.Context, 
 		ec.fieldContext_Mutation_createIncomeCategory,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().CreateIncomeCategory(ctx, fc.Args["input"].(model.CreateIncomeCategoryInput))
+			return ec.Resolvers.Mutation().CreateIncomeCategory(ctx, fc.Args["input"].(model.CreateIncomeCategoryInput))
 		},
 		nil,
 		ec.marshalNIncomeCategory2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeCategory,
@@ -12656,7 +12812,7 @@ func (ec *executionContext) _Mutation_updateIncomeCategory(ctx context.Context, 
 		ec.fieldContext_Mutation_updateIncomeCategory,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UpdateIncomeCategory(ctx, fc.Args["id"].(uuid.UUID), fc.Args["input"].(model.UpdateIncomeCategoryInput))
+			return ec.Resolvers.Mutation().UpdateIncomeCategory(ctx, fc.Args["id"].(uuid.UUID), fc.Args["input"].(model.UpdateIncomeCategoryInput))
 		},
 		nil,
 		ec.marshalNIncomeCategory2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeCategory,
@@ -12711,7 +12867,7 @@ func (ec *executionContext) _Mutation_deleteIncomeCategory(ctx context.Context, 
 		ec.fieldContext_Mutation_deleteIncomeCategory,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().DeleteIncomeCategory(ctx, fc.Args["id"].(uuid.UUID))
+			return ec.Resolvers.Mutation().DeleteIncomeCategory(ctx, fc.Args["id"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -12752,7 +12908,7 @@ func (ec *executionContext) _Mutation_createIncome(ctx context.Context, field gr
 		ec.fieldContext_Mutation_createIncome,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().CreateIncome(ctx, fc.Args["input"].(model.CreateIncomeInput))
+			return ec.Resolvers.Mutation().CreateIncome(ctx, fc.Args["input"].(model.CreateIncomeInput))
 		},
 		nil,
 		ec.marshalNIncome2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncome,
@@ -12813,7 +12969,7 @@ func (ec *executionContext) _Mutation_updateIncome(ctx context.Context, field gr
 		ec.fieldContext_Mutation_updateIncome,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UpdateIncome(ctx, fc.Args["id"].(uuid.UUID), fc.Args["input"].(model.UpdateIncomeInput))
+			return ec.Resolvers.Mutation().UpdateIncome(ctx, fc.Args["id"].(uuid.UUID), fc.Args["input"].(model.UpdateIncomeInput))
 		},
 		nil,
 		ec.marshalNIncome2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncome,
@@ -12874,7 +13030,7 @@ func (ec *executionContext) _Mutation_deleteIncome(ctx context.Context, field gr
 		ec.fieldContext_Mutation_deleteIncome,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().DeleteIncome(ctx, fc.Args["id"].(uuid.UUID))
+			return ec.Resolvers.Mutation().DeleteIncome(ctx, fc.Args["id"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -12915,7 +13071,7 @@ func (ec *executionContext) _Mutation_createRecurringIncome(ctx context.Context,
 		ec.fieldContext_Mutation_createRecurringIncome,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().CreateRecurringIncome(ctx, fc.Args["input"].(model.CreateRecurringIncomeInput))
+			return ec.Resolvers.Mutation().CreateRecurringIncome(ctx, fc.Args["input"].(model.CreateRecurringIncomeInput))
 		},
 		nil,
 		ec.marshalNRecurringIncome2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecurringIncome,
@@ -12976,7 +13132,7 @@ func (ec *executionContext) _Mutation_updateRecurringIncome(ctx context.Context,
 		ec.fieldContext_Mutation_updateRecurringIncome,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UpdateRecurringIncome(ctx, fc.Args["id"].(uuid.UUID), fc.Args["input"].(model.UpdateRecurringIncomeInput))
+			return ec.Resolvers.Mutation().UpdateRecurringIncome(ctx, fc.Args["id"].(uuid.UUID), fc.Args["input"].(model.UpdateRecurringIncomeInput))
 		},
 		nil,
 		ec.marshalNRecurringIncome2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecurringIncome,
@@ -13037,7 +13193,7 @@ func (ec *executionContext) _Mutation_deleteRecurringIncome(ctx context.Context,
 		ec.fieldContext_Mutation_deleteRecurringIncome,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().DeleteRecurringIncome(ctx, fc.Args["id"].(uuid.UUID))
+			return ec.Resolvers.Mutation().DeleteRecurringIncome(ctx, fc.Args["id"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -13078,7 +13234,7 @@ func (ec *executionContext) _Mutation_createIncomeFromRecurring(ctx context.Cont
 		ec.fieldContext_Mutation_createIncomeFromRecurring,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().CreateIncomeFromRecurring(ctx, fc.Args["recurringId"].(uuid.UUID), fc.Args["incomeDate"].(*time.Time))
+			return ec.Resolvers.Mutation().CreateIncomeFromRecurring(ctx, fc.Args["recurringId"].(uuid.UUID), fc.Args["incomeDate"].(*time.Time))
 		},
 		nil,
 		ec.marshalNIncome2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncome,
@@ -13139,7 +13295,7 @@ func (ec *executionContext) _Mutation_createSavingsGoal(ctx context.Context, fie
 		ec.fieldContext_Mutation_createSavingsGoal,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().CreateSavingsGoal(ctx, fc.Args["input"].(model.CreateSavingsGoalInput))
+			return ec.Resolvers.Mutation().CreateSavingsGoal(ctx, fc.Args["input"].(model.CreateSavingsGoalInput))
 		},
 		nil,
 		ec.marshalNSavingsGoal2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐSavingsGoal,
@@ -13208,7 +13364,7 @@ func (ec *executionContext) _Mutation_updateSavingsGoal(ctx context.Context, fie
 		ec.fieldContext_Mutation_updateSavingsGoal,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UpdateSavingsGoal(ctx, fc.Args["id"].(uuid.UUID), fc.Args["input"].(model.UpdateSavingsGoalInput))
+			return ec.Resolvers.Mutation().UpdateSavingsGoal(ctx, fc.Args["id"].(uuid.UUID), fc.Args["input"].(model.UpdateSavingsGoalInput))
 		},
 		nil,
 		ec.marshalNSavingsGoal2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐSavingsGoal,
@@ -13277,7 +13433,7 @@ func (ec *executionContext) _Mutation_deleteSavingsGoal(ctx context.Context, fie
 		ec.fieldContext_Mutation_deleteSavingsGoal,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().DeleteSavingsGoal(ctx, fc.Args["id"].(uuid.UUID))
+			return ec.Resolvers.Mutation().DeleteSavingsGoal(ctx, fc.Args["id"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -13318,7 +13474,7 @@ func (ec *executionContext) _Mutation_addSavingsContribution(ctx context.Context
 		ec.fieldContext_Mutation_addSavingsContribution,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().AddSavingsContribution(ctx, fc.Args["input"].(model.AddSavingsContributionInput))
+			return ec.Resolvers.Mutation().AddSavingsContribution(ctx, fc.Args["input"].(model.AddSavingsContributionInput))
 		},
 		nil,
 		ec.marshalNSavingsContribution2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐSavingsContribution,
@@ -13373,7 +13529,7 @@ func (ec *executionContext) _Mutation_withdrawSavingsContribution(ctx context.Co
 		ec.fieldContext_Mutation_withdrawSavingsContribution,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().WithdrawSavingsContribution(ctx, fc.Args["id"].(uuid.UUID))
+			return ec.Resolvers.Mutation().WithdrawSavingsContribution(ctx, fc.Args["id"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -13414,7 +13570,7 @@ func (ec *executionContext) _Mutation_markSavingsGoalComplete(ctx context.Contex
 		ec.fieldContext_Mutation_markSavingsGoalComplete,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().MarkSavingsGoalComplete(ctx, fc.Args["id"].(uuid.UUID))
+			return ec.Resolvers.Mutation().MarkSavingsGoalComplete(ctx, fc.Args["id"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalNSavingsGoal2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐSavingsGoal,
@@ -13483,7 +13639,7 @@ func (ec *executionContext) _Mutation_createWalletAccount(ctx context.Context, f
 		ec.fieldContext_Mutation_createWalletAccount,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().CreateWalletAccount(ctx, fc.Args["input"].(model.CreateAccountInput))
+			return ec.Resolvers.Mutation().CreateWalletAccount(ctx, fc.Args["input"].(model.CreateAccountInput))
 		},
 		nil,
 		ec.marshalNAccount2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐAccount,
@@ -13542,7 +13698,7 @@ func (ec *executionContext) _Mutation_updateWalletAccount(ctx context.Context, f
 		ec.fieldContext_Mutation_updateWalletAccount,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UpdateWalletAccount(ctx, fc.Args["id"].(uuid.UUID), fc.Args["input"].(model.UpdateAccountInput))
+			return ec.Resolvers.Mutation().UpdateWalletAccount(ctx, fc.Args["id"].(uuid.UUID), fc.Args["input"].(model.UpdateAccountInput))
 		},
 		nil,
 		ec.marshalNAccount2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐAccount,
@@ -13601,7 +13757,7 @@ func (ec *executionContext) _Mutation_deleteWalletAccount(ctx context.Context, f
 		ec.fieldContext_Mutation_deleteWalletAccount,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().DeleteWalletAccount(ctx, fc.Args["id"].(uuid.UUID))
+			return ec.Resolvers.Mutation().DeleteWalletAccount(ctx, fc.Args["id"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -13815,7 +13971,7 @@ func (ec *executionContext) _Query_me(ctx context.Context, field graphql.Collect
 		field,
 		ec.fieldContext_Query_me,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Query().Me(ctx)
+			return ec.Resolvers.Query().Me(ctx)
 		},
 		nil,
 		ec.marshalNUser2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐUser,
@@ -13869,7 +14025,7 @@ func (ec *executionContext) _Query_checkEmailAvailability(ctx context.Context, f
 		ec.fieldContext_Query_checkEmailAvailability,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().CheckEmailAvailability(ctx, fc.Args["email"].(string))
+			return ec.Resolvers.Query().CheckEmailAvailability(ctx, fc.Args["email"].(string))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -13909,7 +14065,7 @@ func (ec *executionContext) _Query_categories(ctx context.Context, field graphql
 		field,
 		ec.fieldContext_Query_categories,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Query().Categories(ctx)
+			return ec.Resolvers.Query().Categories(ctx)
 		},
 		nil,
 		ec.marshalNCategory2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCategoryᚄ,
@@ -13953,7 +14109,7 @@ func (ec *executionContext) _Query_category(ctx context.Context, field graphql.C
 		ec.fieldContext_Query_category,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Category(ctx, fc.Args["id"].(uuid.UUID))
+			return ec.Resolvers.Query().Category(ctx, fc.Args["id"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalOCategory2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCategory,
@@ -14008,7 +14164,7 @@ func (ec *executionContext) _Query_expenses(ctx context.Context, field graphql.C
 		ec.fieldContext_Query_expenses,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Expenses(ctx, fc.Args["filter"].(*model.ExpenseFilter))
+			return ec.Resolvers.Query().Expenses(ctx, fc.Args["filter"].(*model.ExpenseFilter))
 		},
 		nil,
 		ec.marshalNExpensesWithSummary2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpensesWithSummary,
@@ -14055,7 +14211,7 @@ func (ec *executionContext) _Query_expense(ctx context.Context, field graphql.Co
 		ec.fieldContext_Query_expense,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Expense(ctx, fc.Args["id"].(uuid.UUID))
+			return ec.Resolvers.Query().Expense(ctx, fc.Args["id"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalOExpense2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpense,
@@ -14115,7 +14271,7 @@ func (ec *executionContext) _Query_expenseTemplateGroups(ctx context.Context, fi
 		field,
 		ec.fieldContext_Query_expenseTemplateGroups,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Query().ExpenseTemplateGroups(ctx)
+			return ec.Resolvers.Query().ExpenseTemplateGroups(ctx)
 		},
 		nil,
 		ec.marshalNExpenseTemplateGroup2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplateGroupᚄ,
@@ -14161,7 +14317,7 @@ func (ec *executionContext) _Query_expenseTemplateGroup(ctx context.Context, fie
 		ec.fieldContext_Query_expenseTemplateGroup,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().ExpenseTemplateGroup(ctx, fc.Args["id"].(uuid.UUID))
+			return ec.Resolvers.Query().ExpenseTemplateGroup(ctx, fc.Args["id"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalOExpenseTemplateGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplateGroup,
@@ -14218,7 +14374,7 @@ func (ec *executionContext) _Query_installments(ctx context.Context, field graph
 		ec.fieldContext_Query_installments,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Installments(ctx, fc.Args["status"].(*model.InstallmentStatus))
+			return ec.Resolvers.Query().Installments(ctx, fc.Args["status"].(*model.InstallmentStatus))
 		},
 		nil,
 		ec.marshalNInstallment2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐInstallmentᚄ,
@@ -14295,7 +14451,7 @@ func (ec *executionContext) _Query_installment(ctx context.Context, field graphq
 		ec.fieldContext_Query_installment,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Installment(ctx, fc.Args["id"].(uuid.UUID))
+			return ec.Resolvers.Query().Installment(ctx, fc.Args["id"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalOInstallment2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐInstallment,
@@ -14372,7 +14528,7 @@ func (ec *executionContext) _Query_debts(ctx context.Context, field graphql.Coll
 		ec.fieldContext_Query_debts,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Debts(ctx, fc.Args["status"].(*model.DebtStatus))
+			return ec.Resolvers.Query().Debts(ctx, fc.Args["status"].(*model.DebtStatus))
 		},
 		nil,
 		ec.marshalNDebt2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐDebtᚄ,
@@ -14449,7 +14605,7 @@ func (ec *executionContext) _Query_debt(ctx context.Context, field graphql.Colle
 		ec.fieldContext_Query_debt,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Debt(ctx, fc.Args["id"].(uuid.UUID))
+			return ec.Resolvers.Query().Debt(ctx, fc.Args["id"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalODebt2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐDebt,
@@ -14525,7 +14681,7 @@ func (ec *executionContext) _Query_incomeCategories(ctx context.Context, field g
 		field,
 		ec.fieldContext_Query_incomeCategories,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Query().IncomeCategories(ctx)
+			return ec.Resolvers.Query().IncomeCategories(ctx)
 		},
 		nil,
 		ec.marshalNIncomeCategory2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeCategoryᚄ,
@@ -14569,7 +14725,7 @@ func (ec *executionContext) _Query_incomeCategory(ctx context.Context, field gra
 		ec.fieldContext_Query_incomeCategory,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().IncomeCategory(ctx, fc.Args["id"].(uuid.UUID))
+			return ec.Resolvers.Query().IncomeCategory(ctx, fc.Args["id"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalOIncomeCategory2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeCategory,
@@ -14624,7 +14780,7 @@ func (ec *executionContext) _Query_incomes(ctx context.Context, field graphql.Co
 		ec.fieldContext_Query_incomes,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Incomes(ctx, fc.Args["filter"].(*model.IncomeFilter))
+			return ec.Resolvers.Query().Incomes(ctx, fc.Args["filter"].(*model.IncomeFilter))
 		},
 		nil,
 		ec.marshalNIncomesWithSummary2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomesWithSummary,
@@ -14671,7 +14827,7 @@ func (ec *executionContext) _Query_income(ctx context.Context, field graphql.Col
 		ec.fieldContext_Query_income,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Income(ctx, fc.Args["id"].(uuid.UUID))
+			return ec.Resolvers.Query().Income(ctx, fc.Args["id"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalOIncome2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncome,
@@ -14732,7 +14888,7 @@ func (ec *executionContext) _Query_recurringIncomes(ctx context.Context, field g
 		ec.fieldContext_Query_recurringIncomes,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().RecurringIncomes(ctx, fc.Args["isActive"].(*bool))
+			return ec.Resolvers.Query().RecurringIncomes(ctx, fc.Args["isActive"].(*bool))
 		},
 		nil,
 		ec.marshalNRecurringIncome2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecurringIncomeᚄ,
@@ -14793,7 +14949,7 @@ func (ec *executionContext) _Query_recurringIncome(ctx context.Context, field gr
 		ec.fieldContext_Query_recurringIncome,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().RecurringIncome(ctx, fc.Args["id"].(uuid.UUID))
+			return ec.Resolvers.Query().RecurringIncome(ctx, fc.Args["id"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalORecurringIncome2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecurringIncome,
@@ -14854,7 +15010,7 @@ func (ec *executionContext) _Query_balance(ctx context.Context, field graphql.Co
 		ec.fieldContext_Query_balance,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Balance(ctx, fc.Args["filter"].(model.BalanceFilterInput))
+			return ec.Resolvers.Query().Balance(ctx, fc.Args["filter"].(model.BalanceFilterInput))
 		},
 		nil,
 		ec.marshalNBalanceReport2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐBalanceReport,
@@ -14915,7 +15071,7 @@ func (ec *executionContext) _Query_upcomingPayments(ctx context.Context, field g
 		ec.fieldContext_Query_upcomingPayments,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().UpcomingPayments(ctx, fc.Args["filter"].(model.UpcomingPaymentsFilter))
+			return ec.Resolvers.Query().UpcomingPayments(ctx, fc.Args["filter"].(model.UpcomingPaymentsFilter))
 		},
 		nil,
 		ec.marshalNUpcomingPaymentsReport2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐUpcomingPaymentsReport,
@@ -14968,7 +15124,7 @@ func (ec *executionContext) _Query_actualPayments(ctx context.Context, field gra
 		ec.fieldContext_Query_actualPayments,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().ActualPayments(ctx, fc.Args["filter"].(model.ActualPaymentsFilter))
+			return ec.Resolvers.Query().ActualPayments(ctx, fc.Args["filter"].(model.ActualPaymentsFilter))
 		},
 		nil,
 		ec.marshalNActualPaymentsReport2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐActualPaymentsReport,
@@ -15021,7 +15177,7 @@ func (ec *executionContext) _Query_historySummary(ctx context.Context, field gra
 		ec.fieldContext_Query_historySummary,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().HistorySummary(ctx, fc.Args["filter"].(*model.MonthYearInput))
+			return ec.Resolvers.Query().HistorySummary(ctx, fc.Args["filter"].(*model.MonthYearInput))
 		},
 		nil,
 		ec.marshalNHistorySummary2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐHistorySummary,
@@ -15076,7 +15232,7 @@ func (ec *executionContext) _Query_forecastSummary(ctx context.Context, field gr
 		ec.fieldContext_Query_forecastSummary,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().ForecastSummary(ctx, fc.Args["filter"].(*model.MonthYearInput))
+			return ec.Resolvers.Query().ForecastSummary(ctx, fc.Args["filter"].(*model.MonthYearInput))
 		},
 		nil,
 		ec.marshalNForecastSummary2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐForecastSummary,
@@ -15130,7 +15286,7 @@ func (ec *executionContext) _Query_dashboard(ctx context.Context, field graphql.
 		field,
 		ec.fieldContext_Query_dashboard,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Query().Dashboard(ctx)
+			return ec.Resolvers.Query().Dashboard(ctx)
 		},
 		nil,
 		ec.marshalNDashboard2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐDashboard,
@@ -15180,7 +15336,7 @@ func (ec *executionContext) _Query_savingsGoals(ctx context.Context, field graph
 		ec.fieldContext_Query_savingsGoals,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().SavingsGoals(ctx, fc.Args["status"].(*model.SavingsGoalStatus))
+			return ec.Resolvers.Query().SavingsGoals(ctx, fc.Args["status"].(*model.SavingsGoalStatus))
 		},
 		nil,
 		ec.marshalNSavingsGoal2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐSavingsGoalᚄ,
@@ -15249,7 +15405,7 @@ func (ec *executionContext) _Query_savingsGoal(ctx context.Context, field graphq
 		ec.fieldContext_Query_savingsGoal,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().SavingsGoal(ctx, fc.Args["id"].(uuid.UUID))
+			return ec.Resolvers.Query().SavingsGoal(ctx, fc.Args["id"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalOSavingsGoal2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐSavingsGoal,
@@ -15317,7 +15473,7 @@ func (ec *executionContext) _Query_accounts(ctx context.Context, field graphql.C
 		field,
 		ec.fieldContext_Query_accounts,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Query().Accounts(ctx)
+			return ec.Resolvers.Query().Accounts(ctx)
 		},
 		nil,
 		ec.marshalNAccount2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐAccountᚄ,
@@ -15365,7 +15521,7 @@ func (ec *executionContext) _Query_account(ctx context.Context, field graphql.Co
 		ec.fieldContext_Query_account,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Account(ctx, fc.Args["id"].(uuid.UUID))
+			return ec.Resolvers.Query().Account(ctx, fc.Args["id"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalOAccount2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐAccount,
@@ -15424,7 +15580,7 @@ func (ec *executionContext) _Query_accountsByType(ctx context.Context, field gra
 		ec.fieldContext_Query_accountsByType,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().AccountsByType(ctx, fc.Args["accountType"].(model.AccountType))
+			return ec.Resolvers.Query().AccountsByType(ctx, fc.Args["accountType"].(model.AccountType))
 		},
 		nil,
 		ec.marshalNAccount2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐAccountᚄ,
@@ -15483,7 +15639,7 @@ func (ec *executionContext) _Query_transactions(ctx context.Context, field graph
 		ec.fieldContext_Query_transactions,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Transactions(ctx, fc.Args["filter"].(*model.TransactionFilter))
+			return ec.Resolvers.Query().Transactions(ctx, fc.Args["filter"].(*model.TransactionFilter))
 		},
 		nil,
 		ec.marshalNTransaction2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐTransactionᚄ,
@@ -15540,7 +15696,7 @@ func (ec *executionContext) _Query_transaction(ctx context.Context, field graphq
 		ec.fieldContext_Query_transaction,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Transaction(ctx, fc.Args["id"].(uuid.UUID))
+			return ec.Resolvers.Query().Transaction(ctx, fc.Args["id"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalOTransaction2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐTransaction,
@@ -15596,7 +15752,7 @@ func (ec *executionContext) _Query_notifications(ctx context.Context, field grap
 		field,
 		ec.fieldContext_Query_notifications,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Query().Notifications(ctx)
+			return ec.Resolvers.Query().Notifications(ctx)
 		},
 		nil,
 		ec.marshalNNotificationLog2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐNotificationLogᚄ,
@@ -15640,7 +15796,7 @@ func (ec *executionContext) _Query___type(ctx context.Context, field graphql.Col
 		ec.fieldContext_Query___type,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.introspectType(fc.Args["name"].(string))
+			return ec.IntrospectType(fc.Args["name"].(string))
 		},
 		nil,
 		ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType,
@@ -15704,7 +15860,7 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 		field,
 		ec.fieldContext_Query___schema,
 		func(ctx context.Context) (any, error) {
-			return ec.introspectSchema()
+			return ec.IntrospectSchema()
 		},
 		nil,
 		ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema,
@@ -16972,6 +17128,35 @@ func (ec *executionContext) _TwoFAPayload_token(ctx context.Context, field graph
 }
 
 func (ec *executionContext) fieldContext_TwoFAPayload_token(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TwoFAPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TwoFAPayload_refreshToken(ctx context.Context, field graphql.CollectedField, obj *model.TwoFAPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_TwoFAPayload_refreshToken,
+		func(ctx context.Context) (any, error) {
+			return obj.RefreshToken, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_TwoFAPayload_refreshToken(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "TwoFAPayload",
 		Field:      field,
@@ -19384,7 +19569,6 @@ func (ec *executionContext) unmarshalInputActualPaymentsFilter(ctx context.Conte
 			it.EndDate = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -19432,7 +19616,6 @@ func (ec *executionContext) unmarshalInputAddSavingsContributionInput(ctx contex
 			it.Notes = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -19473,7 +19656,6 @@ func (ec *executionContext) unmarshalInputBalanceFilterInput(ctx context.Context
 			it.EndDate = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -19507,7 +19689,6 @@ func (ec *executionContext) unmarshalInputCreateAccountInput(ctx context.Context
 			it.AccountType = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -19534,7 +19715,6 @@ func (ec *executionContext) unmarshalInputCreateCategoryInput(ctx context.Contex
 			it.Name = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -19610,7 +19790,6 @@ func (ec *executionContext) unmarshalInputCreateDebtInput(ctx context.Context, o
 			it.Notes = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -19672,7 +19851,6 @@ func (ec *executionContext) unmarshalInputCreateExpenseInput(ctx context.Context
 			it.ExpenseDate = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -19720,7 +19898,6 @@ func (ec *executionContext) unmarshalInputCreateExpenseTemplateGroupInput(ctx co
 			it.Items = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -19768,7 +19945,6 @@ func (ec *executionContext) unmarshalInputCreateExpenseTemplateItemInput(ctx con
 			it.Quantity = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -19795,7 +19971,6 @@ func (ec *executionContext) unmarshalInputCreateIncomeCategoryInput(ctx context.
 			it.Name = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -19864,7 +20039,6 @@ func (ec *executionContext) unmarshalInputCreateIncomeInput(ctx context.Context,
 			it.Notes = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -19940,7 +20114,6 @@ func (ec *executionContext) unmarshalInputCreateInstallmentInput(ctx context.Con
 			it.Notes = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -20002,7 +20175,6 @@ func (ec *executionContext) unmarshalInputCreateRecurringIncomeInput(ctx context
 			it.Notes = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -20057,7 +20229,6 @@ func (ec *executionContext) unmarshalInputCreateSavingsGoalInput(ctx context.Con
 			it.Notes = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -20084,7 +20255,6 @@ func (ec *executionContext) unmarshalInputDeleteAccountInput(ctx context.Context
 			it.Password = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -20125,7 +20295,6 @@ func (ec *executionContext) unmarshalInputExpenseFilter(ctx context.Context, obj
 			it.EndDate = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -20152,7 +20321,6 @@ func (ec *executionContext) unmarshalInputForgotPasswordInput(ctx context.Contex
 			it.Email = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -20200,7 +20368,6 @@ func (ec *executionContext) unmarshalInputIncomeFilter(ctx context.Context, obj 
 			it.EndDate = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -20234,7 +20401,6 @@ func (ec *executionContext) unmarshalInputLoginInput(ctx context.Context, obj an
 			it.Password = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -20268,7 +20434,6 @@ func (ec *executionContext) unmarshalInputMonthYearInput(ctx context.Context, ob
 			it.Year = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -20309,7 +20474,6 @@ func (ec *executionContext) unmarshalInputRecordDebtPaymentInput(ctx context.Con
 			it.PaidAt = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -20350,7 +20514,6 @@ func (ec *executionContext) unmarshalInputRecordInstallmentPaymentInput(ctx cont
 			it.PaidAt = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -20391,7 +20554,6 @@ func (ec *executionContext) unmarshalInputRegisterInput(ctx context.Context, obj
 			it.Name = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -20425,7 +20587,6 @@ func (ec *executionContext) unmarshalInputResetPasswordInput(ctx context.Context
 			it.Password = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -20459,7 +20620,6 @@ func (ec *executionContext) unmarshalInputTransactionFilter(ctx context.Context,
 			it.EndDate = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -20493,7 +20653,6 @@ func (ec *executionContext) unmarshalInputUpcomingPaymentsFilter(ctx context.Con
 			it.Year = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -20520,7 +20679,6 @@ func (ec *executionContext) unmarshalInputUpdateAccountInput(ctx context.Context
 			it.Name = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -20547,7 +20705,6 @@ func (ec *executionContext) unmarshalInputUpdateCategoryInput(ctx context.Contex
 			it.Name = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -20630,7 +20787,6 @@ func (ec *executionContext) unmarshalInputUpdateDebtInput(ctx context.Context, o
 			it.Notes = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -20692,7 +20848,6 @@ func (ec *executionContext) unmarshalInputUpdateExpenseInput(ctx context.Context
 			it.ExpenseDate = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -20733,7 +20888,6 @@ func (ec *executionContext) unmarshalInputUpdateExpenseTemplateGroupInput(ctx co
 			it.Notes = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -20781,7 +20935,6 @@ func (ec *executionContext) unmarshalInputUpdateExpenseTemplateItemInput(ctx con
 			it.Quantity = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -20808,7 +20961,6 @@ func (ec *executionContext) unmarshalInputUpdateIncomeCategoryInput(ctx context.
 			it.Name = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -20877,7 +21029,6 @@ func (ec *executionContext) unmarshalInputUpdateIncomeInput(ctx context.Context,
 			it.Notes = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -20960,7 +21111,6 @@ func (ec *executionContext) unmarshalInputUpdateInstallmentInput(ctx context.Con
 			it.Notes = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -21008,7 +21158,6 @@ func (ec *executionContext) unmarshalInputUpdateNotificationSettingsInput(ctx co
 			it.NotifyDaysBefore = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -21063,7 +21212,6 @@ func (ec *executionContext) unmarshalInputUpdateProfileInput(ctx context.Context
 			it.Password = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -21132,7 +21280,6 @@ func (ec *executionContext) unmarshalInputUpdateRecurringIncomeInput(ctx context
 			it.Notes = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -21194,7 +21341,6 @@ func (ec *executionContext) unmarshalInputUpdateSavingsGoalInput(ctx context.Con
 			it.Status = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -21228,7 +21374,6 @@ func (ec *executionContext) unmarshalInputVerify2FAInput(ctx context.Context, ob
 			it.Code = data
 		}
 	}
-
 	return it, nil
 }
 
@@ -21294,10 +21439,10 @@ func (ec *executionContext) _Account(ctx context.Context, sel ast.SelectionSet, 
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -21353,10 +21498,10 @@ func (ec *executionContext) _ActualDebtPayment(ctx context.Context, sel ast.Sele
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -21412,10 +21557,10 @@ func (ec *executionContext) _ActualInstallmentPayment(ctx context.Context, sel a
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -21471,10 +21616,10 @@ func (ec *executionContext) _ActualPaymentsReport(ctx context.Context, sel ast.S
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -21498,6 +21643,8 @@ func (ec *executionContext) _AuthPayload(ctx context.Context, sel ast.SelectionS
 			out.Values[i] = graphql.MarshalString("AuthPayload")
 		case "token":
 			out.Values[i] = ec._AuthPayload_token(ctx, field, obj)
+		case "refreshToken":
+			out.Values[i] = ec._AuthPayload_refreshToken(ctx, field, obj)
 		case "user":
 			out.Values[i] = ec._AuthPayload_user(ctx, field, obj)
 		case "requires2FA":
@@ -21516,10 +21663,10 @@ func (ec *executionContext) _AuthPayload(ctx context.Context, sel ast.SelectionS
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -21560,10 +21707,10 @@ func (ec *executionContext) _BalanceBreakdown(ctx context.Context, sel ast.Selec
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -21639,10 +21786,10 @@ func (ec *executionContext) _BalanceReport(ctx context.Context, sel ast.Selectio
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -21703,10 +21850,10 @@ func (ec *executionContext) _BalanceSummary(ctx context.Context, sel ast.Selecti
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -21767,10 +21914,10 @@ func (ec *executionContext) _Category(ctx context.Context, sel ast.SelectionSet,
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -21816,10 +21963,10 @@ func (ec *executionContext) _CategorySummary(ctx context.Context, sel ast.Select
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -21895,10 +22042,10 @@ func (ec *executionContext) _Dashboard(ctx context.Context, sel ast.SelectionSet
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -21993,10 +22140,10 @@ func (ec *executionContext) _Debt(ctx context.Context, sel ast.SelectionSet, obj
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -22057,10 +22204,10 @@ func (ec *executionContext) _DebtPayment(ctx context.Context, sel ast.SelectionS
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -22130,10 +22277,10 @@ func (ec *executionContext) _Expense(ctx context.Context, sel ast.SelectionSet, 
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -22179,10 +22326,10 @@ func (ec *executionContext) _ExpenseBreakdown(ctx context.Context, sel ast.Selec
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -22228,10 +22375,10 @@ func (ec *executionContext) _ExpenseByCategoryGroup(ctx context.Context, sel ast
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -22277,10 +22424,10 @@ func (ec *executionContext) _ExpenseSummary(ctx context.Context, sel ast.Selecti
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -22340,10 +22487,10 @@ func (ec *executionContext) _ExpenseTemplateGroup(ctx context.Context, sel ast.S
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -22409,10 +22556,10 @@ func (ec *executionContext) _ExpenseTemplateItem(ctx context.Context, sel ast.Se
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -22453,10 +22600,10 @@ func (ec *executionContext) _ExpensesWithSummary(ctx context.Context, sel ast.Se
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -22517,10 +22664,10 @@ func (ec *executionContext) _ForecastSummary(ctx context.Context, sel ast.Select
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -22581,10 +22728,10 @@ func (ec *executionContext) _HistorySummary(ctx context.Context, sel ast.Selecti
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -22657,10 +22804,10 @@ func (ec *executionContext) _Income(ctx context.Context, sel ast.SelectionSet, o
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -22711,10 +22858,10 @@ func (ec *executionContext) _IncomeBreakdown(ctx context.Context, sel ast.Select
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -22760,10 +22907,10 @@ func (ec *executionContext) _IncomeByCategoryGroup(ctx context.Context, sel ast.
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -22809,10 +22956,10 @@ func (ec *executionContext) _IncomeByTypeGroup(ctx context.Context, sel ast.Sele
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -22873,10 +23020,10 @@ func (ec *executionContext) _IncomeCategory(ctx context.Context, sel ast.Selecti
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -22922,10 +23069,10 @@ func (ec *executionContext) _IncomeCategorySummary(ctx context.Context, sel ast.
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -22976,10 +23123,10 @@ func (ec *executionContext) _IncomeSummary(ctx context.Context, sel ast.Selectio
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -23025,10 +23172,10 @@ func (ec *executionContext) _IncomeTypeSummary(ctx context.Context, sel ast.Sele
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -23069,10 +23216,10 @@ func (ec *executionContext) _IncomesWithSummary(ctx context.Context, sel ast.Sel
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -23185,10 +23332,10 @@ func (ec *executionContext) _Installment(ctx context.Context, sel ast.SelectionS
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -23249,10 +23396,10 @@ func (ec *executionContext) _InstallmentPayment(ctx context.Context, sel ast.Sel
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -23308,10 +23455,10 @@ func (ec *executionContext) _LedgerSummary(ctx context.Context, sel ast.Selectio
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -23372,6 +23519,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "resend2FACode":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_resend2FACode(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "refreshToken":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_refreshToken(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "logout":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_logout(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -23728,10 +23889,10 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -23789,10 +23950,10 @@ func (ec *executionContext) _NotificationLog(ctx context.Context, sel ast.Select
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -24510,10 +24671,10 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -24586,10 +24747,10 @@ func (ec *executionContext) _RecurringIncome(ctx context.Context, sel ast.Select
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -24647,10 +24808,10 @@ func (ec *executionContext) _SavingsContribution(ctx context.Context, sel ast.Se
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -24740,10 +24901,10 @@ func (ec *executionContext) _SavingsGoal(ctx context.Context, sel ast.SelectionS
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -24803,10 +24964,10 @@ func (ec *executionContext) _Transaction(ctx context.Context, sel ast.SelectionS
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -24857,10 +25018,10 @@ func (ec *executionContext) _TransactionEntry(ctx context.Context, sel ast.Selec
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -24887,6 +25048,11 @@ func (ec *executionContext) _TwoFAPayload(ctx context.Context, sel ast.Selection
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "refreshToken":
+			out.Values[i] = ec._TwoFAPayload_refreshToken(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "user":
 			out.Values[i] = ec._TwoFAPayload_user(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -24901,10 +25067,10 @@ func (ec *executionContext) _TwoFAPayload(ctx context.Context, sel ast.Selection
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -24965,10 +25131,10 @@ func (ec *executionContext) _UpcomingDebtPayment(ctx context.Context, sel ast.Se
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -25034,10 +25200,10 @@ func (ec *executionContext) _UpcomingInstallmentPayment(ctx context.Context, sel
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -25093,10 +25259,10 @@ func (ec *executionContext) _UpcomingPaymentsReport(ctx context.Context, sel ast
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -25179,10 +25345,10 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -25235,10 +25401,10 @@ func (ec *executionContext) ___Directive(ctx context.Context, sel ast.SelectionS
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -25283,10 +25449,10 @@ func (ec *executionContext) ___EnumValue(ctx context.Context, sel ast.SelectionS
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -25341,10 +25507,10 @@ func (ec *executionContext) ___Field(ctx context.Context, sel ast.SelectionSet, 
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -25396,10 +25562,10 @@ func (ec *executionContext) ___InputValue(ctx context.Context, sel ast.Selection
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -25451,10 +25617,10 @@ func (ec *executionContext) ___Schema(ctx context.Context, sel ast.SelectionSet,
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -25510,10 +25676,10 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 		return graphql.Null
 	}
 
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
 
 	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
 			Label:    label,
 			Path:     graphql.GetPath(ctx),
 			FieldSet: dfs,
@@ -25533,39 +25699,11 @@ func (ec *executionContext) marshalNAccount2githubᚗcomᚋazzamdhxᚋmoneybro�
 }
 
 func (ec *executionContext) marshalNAccount2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐAccountᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Account) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNAccount2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐAccount(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNAccount2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐAccount(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -25597,39 +25735,11 @@ func (ec *executionContext) marshalNAccountType2githubᚗcomᚋazzamdhxᚋmoneyb
 }
 
 func (ec *executionContext) marshalNActualDebtPayment2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐActualDebtPaymentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ActualDebtPayment) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNActualDebtPayment2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐActualDebtPayment(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNActualDebtPayment2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐActualDebtPayment(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -25651,39 +25761,11 @@ func (ec *executionContext) marshalNActualDebtPayment2ᚖgithubᚗcomᚋazzamdhx
 }
 
 func (ec *executionContext) marshalNActualInstallmentPayment2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐActualInstallmentPaymentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ActualInstallmentPayment) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNActualInstallmentPayment2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐActualInstallmentPayment(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNActualInstallmentPayment2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐActualInstallmentPayment(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -25822,39 +25904,11 @@ func (ec *executionContext) marshalNCategory2githubᚗcomᚋazzamdhxᚋmoneybro�
 }
 
 func (ec *executionContext) marshalNCategory2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCategoryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Category) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNCategory2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCategory(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNCategory2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCategory(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -25876,39 +25930,11 @@ func (ec *executionContext) marshalNCategory2ᚖgithubᚗcomᚋazzamdhxᚋmoneyb
 }
 
 func (ec *executionContext) marshalNCategorySummary2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCategorySummaryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CategorySummary) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNCategorySummary2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCategorySummary(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNCategorySummary2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCategorySummary(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -26039,39 +26065,11 @@ func (ec *executionContext) marshalNDebt2githubᚗcomᚋazzamdhxᚋmoneybroᚋba
 }
 
 func (ec *executionContext) marshalNDebt2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐDebtᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Debt) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNDebt2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐDebt(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNDebt2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐDebt(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -26097,39 +26095,11 @@ func (ec *executionContext) marshalNDebtPayment2githubᚗcomᚋazzamdhxᚋmoneyb
 }
 
 func (ec *executionContext) marshalNDebtPayment2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐDebtPaymentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DebtPayment) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNDebtPayment2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐDebtPayment(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNDebtPayment2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐDebtPayment(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -26180,39 +26150,11 @@ func (ec *executionContext) marshalNExpense2githubᚗcomᚋazzamdhxᚋmoneybro�
 }
 
 func (ec *executionContext) marshalNExpense2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Expense) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNExpense2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpense(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNExpense2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpense(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -26244,39 +26186,11 @@ func (ec *executionContext) marshalNExpenseBreakdown2ᚖgithubᚗcomᚋazzamdhx�
 }
 
 func (ec *executionContext) marshalNExpenseByCategoryGroup2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseByCategoryGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ExpenseByCategoryGroup) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNExpenseByCategoryGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseByCategoryGroup(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNExpenseByCategoryGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseByCategoryGroup(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -26312,39 +26226,11 @@ func (ec *executionContext) marshalNExpenseTemplateGroup2githubᚗcomᚋazzamdhx
 }
 
 func (ec *executionContext) marshalNExpenseTemplateGroup2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplateGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ExpenseTemplateGroup) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNExpenseTemplateGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplateGroup(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNExpenseTemplateGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplateGroup(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -26370,39 +26256,11 @@ func (ec *executionContext) marshalNExpenseTemplateItem2githubᚗcomᚋazzamdhx�
 }
 
 func (ec *executionContext) marshalNExpenseTemplateItem2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplateItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ExpenseTemplateItem) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNExpenseTemplateItem2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplateItem(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNExpenseTemplateItem2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐExpenseTemplateItem(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -26507,39 +26365,11 @@ func (ec *executionContext) marshalNIncome2githubᚗcomᚋazzamdhxᚋmoneybroᚋ
 }
 
 func (ec *executionContext) marshalNIncome2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Income) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNIncome2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncome(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNIncome2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncome(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -26571,39 +26401,11 @@ func (ec *executionContext) marshalNIncomeBreakdown2ᚖgithubᚗcomᚋazzamdhx�
 }
 
 func (ec *executionContext) marshalNIncomeByCategoryGroup2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeByCategoryGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.IncomeByCategoryGroup) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNIncomeByCategoryGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeByCategoryGroup(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNIncomeByCategoryGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeByCategoryGroup(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -26625,39 +26427,11 @@ func (ec *executionContext) marshalNIncomeByCategoryGroup2ᚖgithubᚗcomᚋazza
 }
 
 func (ec *executionContext) marshalNIncomeByTypeGroup2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeByTypeGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.IncomeByTypeGroup) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNIncomeByTypeGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeByTypeGroup(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNIncomeByTypeGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeByTypeGroup(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -26683,39 +26457,11 @@ func (ec *executionContext) marshalNIncomeCategory2githubᚗcomᚋazzamdhxᚋmon
 }
 
 func (ec *executionContext) marshalNIncomeCategory2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeCategoryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.IncomeCategory) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNIncomeCategory2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeCategory(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNIncomeCategory2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeCategory(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -26737,39 +26483,11 @@ func (ec *executionContext) marshalNIncomeCategory2ᚖgithubᚗcomᚋazzamdhxᚋ
 }
 
 func (ec *executionContext) marshalNIncomeCategorySummary2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeCategorySummaryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.IncomeCategorySummary) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNIncomeCategorySummary2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeCategorySummary(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNIncomeCategorySummary2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeCategorySummary(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -26811,39 +26529,11 @@ func (ec *executionContext) marshalNIncomeType2githubᚗcomᚋazzamdhxᚋmoneybr
 }
 
 func (ec *executionContext) marshalNIncomeTypeSummary2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeTypeSummaryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.IncomeTypeSummary) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNIncomeTypeSummary2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeTypeSummary(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNIncomeTypeSummary2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeTypeSummary(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -26883,39 +26573,11 @@ func (ec *executionContext) marshalNInstallment2githubᚗcomᚋazzamdhxᚋmoneyb
 }
 
 func (ec *executionContext) marshalNInstallment2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐInstallmentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Installment) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNInstallment2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐInstallment(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNInstallment2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐInstallment(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -26941,39 +26603,11 @@ func (ec *executionContext) marshalNInstallmentPayment2githubᚗcomᚋazzamdhx�
 }
 
 func (ec *executionContext) marshalNInstallmentPayment2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐInstallmentPaymentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.InstallmentPayment) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNInstallmentPayment2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐInstallmentPayment(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNInstallmentPayment2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐInstallmentPayment(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -27026,39 +26660,11 @@ func (ec *executionContext) unmarshalNLoginInput2githubᚗcomᚋazzamdhxᚋmoney
 }
 
 func (ec *executionContext) marshalNNotificationLog2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐNotificationLogᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.NotificationLog) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNNotificationLog2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐNotificationLog(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNNotificationLog2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐNotificationLog(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -27094,39 +26700,11 @@ func (ec *executionContext) marshalNRecurringIncome2githubᚗcomᚋazzamdhxᚋmo
 }
 
 func (ec *executionContext) marshalNRecurringIncome2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecurringIncomeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.RecurringIncome) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNRecurringIncome2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecurringIncome(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNRecurringIncome2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecurringIncome(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -27162,39 +26740,11 @@ func (ec *executionContext) marshalNSavingsContribution2githubᚗcomᚋazzamdhx�
 }
 
 func (ec *executionContext) marshalNSavingsContribution2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐSavingsContributionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SavingsContribution) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNSavingsContribution2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐSavingsContribution(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNSavingsContribution2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐSavingsContribution(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -27220,39 +26770,11 @@ func (ec *executionContext) marshalNSavingsGoal2githubᚗcomᚋazzamdhxᚋmoneyb
 }
 
 func (ec *executionContext) marshalNSavingsGoal2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐSavingsGoalᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SavingsGoal) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNSavingsGoal2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐSavingsGoal(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNSavingsGoal2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐSavingsGoal(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -27346,39 +26868,11 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 }
 
 func (ec *executionContext) marshalNTransaction2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐTransactionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Transaction) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNTransaction2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐTransaction(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNTransaction2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐTransaction(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -27400,39 +26894,11 @@ func (ec *executionContext) marshalNTransaction2ᚖgithubᚗcomᚋazzamdhxᚋmon
 }
 
 func (ec *executionContext) marshalNTransactionEntry2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐTransactionEntryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.TransactionEntry) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNTransactionEntry2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐTransactionEntry(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNTransactionEntry2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐTransactionEntry(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -27484,39 +26950,11 @@ func (ec *executionContext) marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx
 }
 
 func (ec *executionContext) marshalNUpcomingDebtPayment2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐUpcomingDebtPaymentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.UpcomingDebtPayment) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNUpcomingDebtPayment2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐUpcomingDebtPayment(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNUpcomingDebtPayment2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐUpcomingDebtPayment(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -27538,39 +26976,11 @@ func (ec *executionContext) marshalNUpcomingDebtPayment2ᚖgithubᚗcomᚋazzamd
 }
 
 func (ec *executionContext) marshalNUpcomingInstallmentPayment2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐUpcomingInstallmentPaymentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.UpcomingInstallmentPayment) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNUpcomingInstallmentPayment2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐUpcomingInstallmentPayment(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNUpcomingInstallmentPayment2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐUpcomingInstallmentPayment(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -27699,39 +27109,11 @@ func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlge
 }
 
 func (ec *executionContext) marshalN__Directive2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirectiveᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.Directive) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -27774,39 +27156,11 @@ func (ec *executionContext) unmarshalN__DirectiveLocation2ᚕstringᚄ(ctx conte
 }
 
 func (ec *executionContext) marshalN__DirectiveLocation2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__DirectiveLocation2string(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__DirectiveLocation2string(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -27830,39 +27184,11 @@ func (ec *executionContext) marshalN__InputValue2githubᚗcomᚋ99designsᚋgqlg
 }
 
 func (ec *executionContext) marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.InputValue) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__InputValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__InputValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -27878,39 +27204,11 @@ func (ec *executionContext) marshalN__Type2githubᚗcomᚋ99designsᚋgqlgenᚋg
 }
 
 func (ec *executionContext) marshalN__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.Type) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__Type2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__Type2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -28302,39 +27600,11 @@ func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgq
 	if v == nil {
 		return graphql.Null
 	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__EnumValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValue(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__EnumValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValue(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -28349,39 +27619,11 @@ func (ec *executionContext) marshalO__Field2ᚕgithubᚗcomᚋ99designsᚋgqlgen
 	if v == nil {
 		return graphql.Null
 	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__Field2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐField(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__Field2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐField(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -28396,39 +27638,11 @@ func (ec *executionContext) marshalO__InputValue2ᚕgithubᚗcomᚋ99designsᚋg
 	if v == nil {
 		return graphql.Null
 	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__InputValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__InputValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {
@@ -28450,39 +27664,11 @@ func (ec *executionContext) marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgen�
 	if v == nil {
 		return graphql.Null
 	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalN__Type2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalN__Type2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, sel, v[i])
+	})
 
 	for _, e := range ret {
 		if e == graphql.Null {

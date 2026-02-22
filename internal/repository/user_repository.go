@@ -104,6 +104,9 @@ func (r *userRepository) DeleteAllUserData(userID uuid.UUID) error {
 		if err := tx.Exec("DELETE FROM two_fa_codes WHERE user_id = ?", userID).Error; err != nil {
 			return err
 		}
+		if err := tx.Exec("DELETE FROM refresh_tokens WHERE user_id = ?", userID).Error; err != nil {
+			return err
+		}
 
 		// Delete accounts (ledger accounts)
 		if err := tx.Exec("DELETE FROM accounts WHERE user_id = ?", userID).Error; err != nil {

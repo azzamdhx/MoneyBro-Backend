@@ -28,6 +28,7 @@ type Repositories struct {
 	TransactionEntry     TransactionEntryRepository
 	SavingsGoal          SavingsGoalRepository
 	SavingsContribution  SavingsContributionRepository
+	RefreshToken         RefreshTokenRepository
 }
 
 func NewRepositories(db *gorm.DB) *Repositories {
@@ -52,6 +53,7 @@ func NewRepositories(db *gorm.DB) *Repositories {
 		TransactionEntry:     NewTransactionEntryRepository(db),
 		SavingsGoal:          NewSavingsGoalRepository(db),
 		SavingsContribution:  NewSavingsContributionRepository(db),
+		RefreshToken:         NewRefreshTokenRepository(db),
 	}
 }
 
@@ -246,4 +248,13 @@ type SavingsContributionRepository interface {
 	GetBySavingsGoalID(goalID uuid.UUID) ([]models.SavingsContribution, error)
 	Delete(id uuid.UUID) error
 	GetTotalByUserIDAndDateRange(userID uuid.UUID, startDate, endDate string) (int64, error)
+}
+
+type RefreshTokenRepository interface {
+	Create(token *models.RefreshToken) error
+	GetByToken(token string) (*models.RefreshToken, error)
+	RevokeByToken(token string) error
+	RevokeAllByUserID(userID uuid.UUID) error
+	DeleteByUserID(userID uuid.UUID) error
+	DeleteExpired() error
 }

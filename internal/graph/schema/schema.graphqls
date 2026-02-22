@@ -52,6 +52,8 @@ type Mutation {
   verifyRegistration(input: Verify2FAInput!): TwoFAPayload!
   verify2FA(input: Verify2FAInput!): TwoFAPayload!
   resend2FACode(tempToken: String!): Boolean!
+  refreshToken(refreshToken: String!): AuthPayload!
+  logout(refreshToken: String!): Boolean!
   enable2FA(password: String!): Boolean!
   disable2FA(password: String!): Boolean!
   updateProfile(input: UpdateProfileInput!): User!

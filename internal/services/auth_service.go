@@ -21,6 +21,7 @@ type AuthService struct {
 	userRepo          repository.UserRepository
 	passwordResetRepo repository.PasswordResetTokenRepository
 	twoFACodeRepo     repository.TwoFACodeRepository
+	refreshTokenRepo  repository.RefreshTokenRepository
 	emailService      *EmailService
 	jwtSecret         string
 	frontendURL       string
@@ -31,6 +32,7 @@ func NewAuthService(
 	userRepo repository.UserRepository,
 	passwordResetRepo repository.PasswordResetTokenRepository,
 	twoFACodeRepo repository.TwoFACodeRepository,
+	refreshTokenRepo repository.RefreshTokenRepository,
 	emailService *EmailService,
 	jwtSecret string,
 	frontendURL string,
@@ -40,6 +42,7 @@ func NewAuthService(
 		userRepo:          userRepo,
 		passwordResetRepo: passwordResetRepo,
 		twoFACodeRepo:     twoFACodeRepo,
+		refreshTokenRepo:  refreshTokenRepo,
 		emailService:      emailService,
 		jwtSecret:         jwtSecret,
 		frontendURL:       frontendURL,
@@ -48,15 +51,17 @@ func NewAuthService(
 }
 
 type AuthPayload struct {
-	Token       string
-	User        *models.User
-	Requires2FA bool
-	TempToken   string
+	Token        string
+	RefreshToken string
+	User         *models.User
+	Requires2FA  bool
+	TempToken    string
 }
 
 type TwoFAPayload struct {
-	Token string
-	User  *models.User
+	Token        string
+	RefreshToken string
+	User         *models.User
 }
 
 func (s *AuthService) Register(ctx context.Context, email, password, name string) (*AuthPayload, error) {
@@ -161,9 +166,16 @@ func (s *AuthService) VerifyRegistration(ctx context.Context, tempToken, code st
 		return nil, err
 	}
 
+	// Generate refresh token
+	refreshToken, err := s.createRefreshToken(user.ID)
+	if err != nil {
+		return nil, err
+	}
+
 	return &TwoFAPayload{
-		Token: token,
-		User:  user,
+		Token:        token,
+		RefreshToken: refreshToken,
+		User:         user,
 	}, nil
 }
 
@@ -204,9 +216,16 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (*AuthP
 		return nil, err
 	}
 
+	// Generate refresh token
+	refreshToken, err := s.createRefreshToken(user.ID)
+	if err != nil {
+		return nil, err
+	}
+
 	return &AuthPayload{
-		Token: token,
-		User:  user,
+		Token:        token,
+		RefreshToken: refreshToken,
+		User:         user,
 	}, nil
 }
 
@@ -271,9 +290,16 @@ func (s *AuthService) Verify2FA(ctx context.Context, tempToken, code string) (*T
 		return nil, err
 	}
 
+	// Generate refresh token
+	refreshToken, err := s.createRefreshToken(user.ID)
+	if err != nil {
+		return nil, err
+	}
+
 	return &TwoFAPayload{
-		Token: token,
-		User:  user,
+		Token:        token,
+		RefreshToken: refreshToken,
+		User:         user,
 	}, nil
 }
 
@@ -413,4 +439,63 @@ func (s *AuthService) ResetPassword(token, newPassword string) error {
 	}
 
 	return nil
+}
+
+func (s *AuthService) RefreshToken(refreshTokenStr string) (*AuthPayload, error) {
+	// Validate refresh token exists and is not revoked/expired
+	rt, err := s.refreshTokenRepo.GetByToken(refreshTokenStr)
+	if err != nil {
+		return nil, errors.New("invalid or expired refresh token")
+	}
+
+	// Revoke old refresh token (token rotation)
+	_ = s.refreshTokenRepo.RevokeByToken(refreshTokenStr)
+
+	// Get user
+	user, err := s.userRepo.GetByID(rt.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Generate new access token
+	token, err := utils.GenerateJWT(user.ID.String(), s.jwtSecret)
+	if err != nil {
+		return nil, err
+	}
+
+	// Generate new refresh token
+	newRefreshToken, err := s.createRefreshToken(user.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &AuthPayload{
+		Token:        token,
+		RefreshToken: newRefreshToken,
+		User:         user,
+	}, nil
+}
+
+func (s *AuthService) Logout(refreshTokenStr string) error {
+	return s.refreshTokenRepo.RevokeByToken(refreshTokenStr)
+}
+
+func (s *AuthService) createRefreshToken(userID uuid.UUID) (string, error) {
+	tokenStr, err := utils.GenerateRefreshToken()
+	if err != nil {
+		return "", err
+	}
+
+	rt := &models.RefreshToken{
+		ID:        uuid.New(),
+		UserID:    userID,
+		Token:     tokenStr,
+		ExpiresAt: time.Now().Add(utils.RefreshTokenExpiry()),
+	}
+
+	if err := s.refreshTokenRepo.Create(rt); err != nil {
+		return "", err
+	}
+
+	return tokenStr, nil
 }

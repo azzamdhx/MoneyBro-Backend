@@ -21,6 +21,7 @@ input UpdateNotificationSettingsInput {
 
 type AuthPayload {
   token: String
+  refreshToken: String
   user: User
   requires2FA: Boolean!
   tempToken: String
@@ -28,6 +29,7 @@ type AuthPayload {
 
 type TwoFAPayload {
   token: String!
+  refreshToken: String!
   user: User!
 }
 

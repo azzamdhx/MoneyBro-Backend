@@ -50,7 +50,7 @@ func NewServices(cfg Config) *Services {
 	expenseService := NewExpenseService(cfg.Repos.Expense, cfg.Repos.Category, cfg.Repos.Account, ledgerService)
 
 	return &Services{
-		Auth:                 NewAuthService(cfg.Repos.User, cfg.Repos.PasswordResetToken, cfg.Repos.TwoFACode, emailService, cfg.JWTSecret, cfg.FrontendURL, accountService),
+		Auth:                 NewAuthService(cfg.Repos.User, cfg.Repos.PasswordResetToken, cfg.Repos.TwoFACode, cfg.Repos.RefreshToken, emailService, cfg.JWTSecret, cfg.FrontendURL, accountService),
 		User:                 NewUserService(cfg.Repos.User),
 		Category:             NewCategoryService(cfg.Repos.Category, accountService),
 		Expense:              expenseService,
