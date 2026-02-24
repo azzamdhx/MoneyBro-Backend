@@ -31,7 +31,18 @@ func (s *AccountService) CreateAccount(userID uuid.UUID, name string, accountTyp
 }
 
 func (s *AccountService) CreateDefaultAccount(userID uuid.UUID) (*models.Account, error) {
-	return s.CreateAccount(userID, "Cash", models.AccountTypeAsset, true)
+	account := &models.Account{
+		UserID:      userID,
+		Name:        "Dompet Utama",
+		AccountType: models.AccountTypeAsset,
+		IsDefault:   true,
+		IsPocket:    true,
+		SortOrder:   0,
+	}
+	if err := s.accountRepo.Create(account); err != nil {
+		return nil, err
+	}
+	return account, nil
 }
 
 func (s *AccountService) CreateLinkedAccount(userID uuid.UUID, name string, accountType models.AccountType, referenceID uuid.UUID, referenceType string) (*models.Account, error) {
@@ -94,6 +105,90 @@ func (s *AccountService) DeleteAccount(id uuid.UUID) error {
 
 func (s *AccountService) DeleteAccountByReference(referenceID uuid.UUID, referenceType string) error {
 	return s.accountRepo.DeleteByReference(referenceID, referenceType)
+}
+
+// Pocket operations
+
+func (s *AccountService) GetPockets(userID uuid.UUID) ([]models.Account, error) {
+	return s.accountRepo.GetPocketsByUserID(userID)
+}
+
+func (s *AccountService) CreatePocket(userID uuid.UUID, name string, icon *string, cardBgColor *string) (*models.Account, error) {
+	if name == "" {
+		return nil, errors.New("pocket name is required")
+	}
+
+	// Get max sort order
+	pockets, err := s.accountRepo.GetPocketsByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+	maxSort := 0
+	for _, p := range pockets {
+		if p.SortOrder > maxSort {
+			maxSort = p.SortOrder
+		}
+	}
+
+	account := &models.Account{
+		UserID:      userID,
+		Name:        name,
+		AccountType: models.AccountTypeAsset,
+		IsDefault:   false,
+		IsPocket:    true,
+		Icon:        icon,
+		CardBgColor: cardBgColor,
+		SortOrder:   maxSort + 1,
+	}
+	if err := s.accountRepo.Create(account); err != nil {
+		return nil, err
+	}
+	return account, nil
+}
+
+func (s *AccountService) UpdatePocket(id uuid.UUID, name *string, icon *string, cardBgColor *string, sortOrder *int) (*models.Account, error) {
+	account, err := s.accountRepo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if !account.IsPocket {
+		return nil, errors.New("account is not a pocket")
+	}
+
+	if name != nil {
+		account.Name = *name
+	}
+	if icon != nil {
+		account.Icon = icon
+	}
+	if cardBgColor != nil {
+		account.CardBgColor = cardBgColor
+	}
+	if sortOrder != nil {
+		account.SortOrder = *sortOrder
+	}
+
+	if err := s.accountRepo.Update(account); err != nil {
+		return nil, err
+	}
+	return account, nil
+}
+
+func (s *AccountService) DeletePocket(id uuid.UUID) error {
+	account, err := s.accountRepo.GetByID(id)
+	if err != nil {
+		return err
+	}
+	if !account.IsPocket {
+		return errors.New("account is not a pocket")
+	}
+	if account.IsDefault {
+		return errors.New("cannot delete default pocket")
+	}
+	if account.CurrentBalance != 0 {
+		return errors.New("pocket must have zero balance before deleting, please transfer funds first")
+	}
+	return s.accountRepo.Delete(id)
 }
 
 func (s *AccountService) RecalculateBalance(accountID uuid.UUID, entryRepo repository.TransactionEntryRepository) error {

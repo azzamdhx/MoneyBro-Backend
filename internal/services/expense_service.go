@@ -38,6 +38,7 @@ type CreateExpenseInput struct {
 	Quantity    int
 	Notes       *string
 	ExpenseDate *time.Time
+	PocketID    *uuid.UUID
 }
 
 func (s *ExpenseService) Create(userID uuid.UUID, input CreateExpenseInput) (*models.Expense, error) {
@@ -51,6 +52,16 @@ func (s *ExpenseService) Create(userID uuid.UUID, input CreateExpenseInput) (*mo
 		input.Quantity = 1
 	}
 
+	// Resolve pocket: use provided or fall back to default
+	pocketID := input.PocketID
+	if pocketID == nil {
+		defaultAccount, err := s.accountRepo.GetDefaultByUserID(userID)
+		if err != nil {
+			return nil, errors.New("no default pocket found")
+		}
+		pocketID = &defaultAccount.ID
+	}
+
 	expense := &models.Expense{
 		ID:          uuid.New(),
 		UserID:      userID,
@@ -60,6 +71,7 @@ func (s *ExpenseService) Create(userID uuid.UUID, input CreateExpenseInput) (*mo
 		Quantity:    input.Quantity,
 		Notes:       input.Notes,
 		ExpenseDate: input.ExpenseDate,
+		PocketID:    pocketID,
 	}
 
 	if err := s.expenseRepo.Create(expense); err != nil {
@@ -89,6 +101,7 @@ type UpdateExpenseInput struct {
 	Quantity    *int
 	Notes       *string
 	ExpenseDate *time.Time
+	PocketID    *uuid.UUID
 }
 
 func (s *ExpenseService) Update(id uuid.UUID, input UpdateExpenseInput) (*models.Expense, error) {
@@ -114,6 +127,9 @@ func (s *ExpenseService) Update(id uuid.UUID, input UpdateExpenseInput) (*models
 	}
 	if input.ExpenseDate != nil {
 		expense.ExpenseDate = input.ExpenseDate
+	}
+	if input.PocketID != nil {
+		expense.PocketID = input.PocketID
 	}
 
 	if err := s.expenseRepo.Update(expense); err != nil {
@@ -149,8 +165,13 @@ func (s *ExpenseService) createLedgerEntry(userID uuid.UUID, expense *models.Exp
 		return err
 	}
 
-	// Get default cash account
-	cashAccount, err := s.accountRepo.GetDefaultByUserID(userID)
+	// Get pocket account
+	var pocketAccount *models.Account
+	if expense.PocketID != nil {
+		pocketAccount, err = s.accountRepo.GetByID(*expense.PocketID)
+	} else {
+		pocketAccount, err = s.accountRepo.GetDefaultByUserID(userID)
+	}
 	if err != nil {
 		return err
 	}
@@ -163,7 +184,7 @@ func (s *ExpenseService) createLedgerEntry(userID uuid.UUID, expense *models.Exp
 
 	entries := []LedgerEntry{
 		{AccountID: expenseAccount.ID, Debit: amount, Credit: 0},
-		{AccountID: cashAccount.ID, Debit: 0, Credit: amount},
+		{AccountID: pocketAccount.ID, Debit: 0, Credit: amount},
 	}
 
 	_, err = s.ledgerService.CreateJournalEntry(
@@ -188,7 +209,13 @@ func (s *ExpenseService) updateLedgerEntry(expense *models.Expense) error {
 		return err
 	}
 
-	cashAccount, err := s.accountRepo.GetDefaultByUserID(expense.UserID)
+	// Get pocket account
+	var pocketAccount *models.Account
+	if expense.PocketID != nil {
+		pocketAccount, err = s.accountRepo.GetByID(*expense.PocketID)
+	} else {
+		pocketAccount, err = s.accountRepo.GetDefaultByUserID(expense.UserID)
+	}
 	if err != nil {
 		return err
 	}
@@ -201,7 +228,7 @@ func (s *ExpenseService) updateLedgerEntry(expense *models.Expense) error {
 
 	entries := []LedgerEntry{
 		{AccountID: expenseAccount.ID, Debit: amount, Credit: 0},
-		{AccountID: cashAccount.ID, Debit: 0, Credit: amount},
+		{AccountID: pocketAccount.ID, Debit: 0, Credit: amount},
 	}
 
 	_, err = s.ledgerService.UpdateJournalEntry(tx.ID, expenseDate, "Expense: "+expense.ItemName, entries)

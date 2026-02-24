@@ -32,7 +32,6 @@ type CreateRecurringIncomeInput struct {
 	CategoryID   uuid.UUID
 	SourceName   string
 	Amount       int64
-	IncomeType   models.IncomeType
 	RecurringDay int
 	Notes        *string
 }
@@ -41,7 +40,6 @@ type UpdateRecurringIncomeInput struct {
 	CategoryID   *uuid.UUID
 	SourceName   *string
 	Amount       *int64
-	IncomeType   *models.IncomeType
 	RecurringDay *int
 	IsActive     *bool
 	Notes        *string
@@ -69,7 +67,6 @@ func (s *RecurringIncomeService) Create(userID uuid.UUID, input CreateRecurringI
 		CategoryID:   input.CategoryID,
 		SourceName:   input.SourceName,
 		Amount:       input.Amount,
-		IncomeType:   input.IncomeType,
 		RecurringDay: input.RecurringDay,
 		IsActive:     true,
 		Notes:        input.Notes,
@@ -118,10 +115,6 @@ func (s *RecurringIncomeService) Update(id uuid.UUID, input UpdateRecurringIncom
 		recurringIncome.Amount = *input.Amount
 	}
 
-	if input.IncomeType != nil {
-		recurringIncome.IncomeType = *input.IncomeType
-	}
-
 	if input.RecurringDay != nil {
 		if *input.RecurringDay < 1 || *input.RecurringDay > 31 {
 			return nil, errors.New("recurring day must be between 1 and 31")
@@ -163,7 +156,6 @@ func (s *RecurringIncomeService) CreateIncomeFromRecurring(userID uuid.UUID, rec
 		CategoryID:  recurring.CategoryID,
 		SourceName:  recurring.SourceName,
 		Amount:      recurring.Amount,
-		IncomeType:  recurring.IncomeType,
 		IncomeDate:  incomeDate,
 		IsRecurring: true,
 		Notes:       recurring.Notes,

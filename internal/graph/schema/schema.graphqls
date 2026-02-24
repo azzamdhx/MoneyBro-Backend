@@ -42,6 +42,9 @@ type Query {
   accounts: [Account!]!
   account(id: UUID!): Account
   accountsByType(accountType: AccountType!): [Account!]!
+  pockets: [Account!]!
+  pocket(id: UUID!): Account
+  pocketEntries(pocketId: UUID!): [PocketEntry!]!
   transactions(filter: TransactionFilter): [Transaction!]!
   transaction(id: UUID!): Transaction
 }
@@ -113,4 +116,9 @@ type Mutation {
   createWalletAccount(input: CreateAccountInput!): Account!
   updateWalletAccount(id: UUID!, input: UpdateAccountInput!): Account!
   deleteWalletAccount(id: UUID!): Boolean!
+  
+  createPocket(input: CreatePocketInput!): Account!
+  updatePocket(id: UUID!, input: UpdatePocketInput!): Account!
+  deletePocket(id: UUID!): Boolean!
+  transferBetweenPockets(input: TransferPocketInput!): Boolean!
 }

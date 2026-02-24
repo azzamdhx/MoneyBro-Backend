@@ -22,6 +22,10 @@ type Account struct {
 	AccountType    AccountType `gorm:"type:varchar(20);not null" json:"account_type"`
 	CurrentBalance int64       `gorm:"not null;default:0" json:"current_balance"`
 	IsDefault      bool        `gorm:"not null;default:false" json:"is_default"`
+	IsPocket       bool        `gorm:"not null;default:false" json:"is_pocket"`
+	Icon           *string     `gorm:"type:varchar(50)" json:"icon,omitempty"`
+	CardBgColor    *string     `gorm:"type:varchar(50)" json:"card_bg_color,omitempty"`
+	SortOrder      int         `gorm:"not null;default:0" json:"sort_order"`
 	ReferenceID    *uuid.UUID  `gorm:"type:uuid" json:"reference_id,omitempty"`
 	ReferenceType  *string     `gorm:"type:varchar(50)" json:"reference_type,omitempty"`
 	CreatedAt      time.Time   `gorm:"default:now()" json:"created_at"`

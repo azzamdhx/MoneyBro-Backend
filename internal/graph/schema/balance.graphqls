@@ -29,17 +29,10 @@ type IncomeBreakdown {
   total: Int!
   count: Int!
   byCategory: [IncomeCategorySummary!]!
-  byType: [IncomeTypeSummary!]!
 }
 
 type IncomeCategorySummary {
   category: IncomeCategory!
-  totalAmount: Int!
-  incomeCount: Int!
-}
-
-type IncomeTypeSummary {
-  incomeType: IncomeType!
   totalAmount: Int!
   incomeCount: Int!
 }

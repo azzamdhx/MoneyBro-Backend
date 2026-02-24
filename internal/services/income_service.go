@@ -35,20 +35,20 @@ type CreateIncomeInput struct {
 	CategoryID  uuid.UUID
 	SourceName  string
 	Amount      int64
-	IncomeType  models.IncomeType
 	IncomeDate  *time.Time
 	IsRecurring bool
 	Notes       *string
+	PocketID    *uuid.UUID
 }
 
 type UpdateIncomeInput struct {
 	CategoryID  *uuid.UUID
 	SourceName  *string
 	Amount      *int64
-	IncomeType  *models.IncomeType
 	IncomeDate  *time.Time
 	IsRecurring *bool
 	Notes       *string
+	PocketID    *uuid.UUID
 }
 
 func (s *IncomeService) Create(userID uuid.UUID, input CreateIncomeInput) (*models.Income, error) {
@@ -69,16 +69,26 @@ func (s *IncomeService) Create(userID uuid.UUID, input CreateIncomeInput) (*mode
 		incomeDate = *input.IncomeDate
 	}
 
+	// Resolve pocket: use provided or fall back to default
+	pocketID := input.PocketID
+	if pocketID == nil {
+		defaultAccount, defErr := s.accountRepo.GetDefaultByUserID(userID)
+		if defErr != nil {
+			return nil, errors.New("no default pocket found")
+		}
+		pocketID = &defaultAccount.ID
+	}
+
 	income := &models.Income{
 		ID:          uuid.New(),
 		UserID:      userID,
 		CategoryID:  input.CategoryID,
 		SourceName:  input.SourceName,
 		Amount:      input.Amount,
-		IncomeType:  input.IncomeType,
 		IncomeDate:  incomeDate,
 		IsRecurring: input.IsRecurring,
 		Notes:       input.Notes,
+		PocketID:    pocketID,
 	}
 
 	if err := s.incomeRepo.Create(income); err != nil {
@@ -129,10 +139,6 @@ func (s *IncomeService) Update(id uuid.UUID, input UpdateIncomeInput) (*models.I
 		income.Amount = *input.Amount
 	}
 
-	if input.IncomeType != nil {
-		income.IncomeType = *input.IncomeType
-	}
-
 	if input.IncomeDate != nil {
 		income.IncomeDate = *input.IncomeDate
 	}
@@ -143,6 +149,9 @@ func (s *IncomeService) Update(id uuid.UUID, input UpdateIncomeInput) (*models.I
 
 	if input.Notes != nil {
 		income.Notes = input.Notes
+	}
+	if input.PocketID != nil {
+		income.PocketID = input.PocketID
 	}
 
 	if err := s.incomeRepo.Update(income); err != nil {
@@ -178,14 +187,19 @@ func (s *IncomeService) createLedgerEntry(userID uuid.UUID, income *models.Incom
 		return err
 	}
 
-	// Get default cash account
-	cashAccount, err := s.accountRepo.GetDefaultByUserID(userID)
+	// Get pocket account
+	var pocketAccount *models.Account
+	if income.PocketID != nil {
+		pocketAccount, err = s.accountRepo.GetByID(*income.PocketID)
+	} else {
+		pocketAccount, err = s.accountRepo.GetDefaultByUserID(userID)
+	}
 	if err != nil {
 		return err
 	}
 
 	entries := []LedgerEntry{
-		{AccountID: cashAccount.ID, Debit: income.Amount, Credit: 0},
+		{AccountID: pocketAccount.ID, Debit: income.Amount, Credit: 0},
 		{AccountID: incomeAccount.ID, Debit: 0, Credit: income.Amount},
 	}
 
@@ -211,13 +225,19 @@ func (s *IncomeService) updateLedgerEntry(income *models.Income) error {
 		return err
 	}
 
-	cashAccount, err := s.accountRepo.GetDefaultByUserID(income.UserID)
+	// Get pocket account
+	var pocketAccount *models.Account
+	if income.PocketID != nil {
+		pocketAccount, err = s.accountRepo.GetByID(*income.PocketID)
+	} else {
+		pocketAccount, err = s.accountRepo.GetDefaultByUserID(income.UserID)
+	}
 	if err != nil {
 		return err
 	}
 
 	entries := []LedgerEntry{
-		{AccountID: cashAccount.ID, Debit: income.Amount, Credit: 0},
+		{AccountID: pocketAccount.ID, Debit: income.Amount, Credit: 0},
 		{AccountID: incomeAccount.ID, Debit: 0, Credit: income.Amount},
 	}
 

@@ -23,6 +23,15 @@ type LedgerSummary {
   netWorth: Int!
 }
 
+type PocketEntry {
+  id: ID!
+  transactionDate: Time!
+  description: String!
+  debit: Int!
+  credit: Int!
+  referenceType: String
+}
+
 input TransactionFilter {
   startDate: Time
   endDate: Time

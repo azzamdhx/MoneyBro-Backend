@@ -40,13 +40,17 @@ type DirectiveRoot struct {
 type ComplexityRoot struct {
 	Account struct {
 		AccountType    func(childComplexity int) int
+		CardBgColor    func(childComplexity int) int
 		CreatedAt      func(childComplexity int) int
 		CurrentBalance func(childComplexity int) int
 		ID             func(childComplexity int) int
+		Icon           func(childComplexity int) int
 		IsDefault      func(childComplexity int) int
+		IsPocket       func(childComplexity int) int
 		Name           func(childComplexity int) int
 		ReferenceID    func(childComplexity int) int
 		ReferenceType  func(childComplexity int) int
+		SortOrder      func(childComplexity int) int
 	}
 
 	ActualDebtPayment struct {
@@ -136,9 +140,11 @@ type ComplexityRoot struct {
 
 	Debt struct {
 		ActualAmount       func(childComplexity int) int
+		CardBgColor        func(childComplexity int) int
 		CreatedAt          func(childComplexity int) int
 		DueDate            func(childComplexity int) int
 		ID                 func(childComplexity int) int
+		Icon               func(childComplexity int) int
 		InterestAmount     func(childComplexity int) int
 		InterestPercentage func(childComplexity int) int
 		LoanAmount         func(childComplexity int) int
@@ -161,6 +167,7 @@ type ComplexityRoot struct {
 		ID            func(childComplexity int) int
 		PaidAt        func(childComplexity int) int
 		PaymentNumber func(childComplexity int) int
+		PocketID      func(childComplexity int) int
 	}
 
 	Expense struct {
@@ -170,6 +177,7 @@ type ComplexityRoot struct {
 		ID          func(childComplexity int) int
 		ItemName    func(childComplexity int) int
 		Notes       func(childComplexity int) int
+		PocketID    func(childComplexity int) int
 		Quantity    func(childComplexity int) int
 		Total       func(childComplexity int) int
 		UnitPrice   func(childComplexity int) int
@@ -242,15 +250,14 @@ type ComplexityRoot struct {
 		CreatedAt   func(childComplexity int) int
 		ID          func(childComplexity int) int
 		IncomeDate  func(childComplexity int) int
-		IncomeType  func(childComplexity int) int
 		IsRecurring func(childComplexity int) int
 		Notes       func(childComplexity int) int
+		PocketID    func(childComplexity int) int
 		SourceName  func(childComplexity int) int
 	}
 
 	IncomeBreakdown struct {
 		ByCategory func(childComplexity int) int
-		ByType     func(childComplexity int) int
 		Count      func(childComplexity int) int
 		Total      func(childComplexity int) int
 	}
@@ -258,12 +265,6 @@ type ComplexityRoot struct {
 	IncomeByCategoryGroup struct {
 		Category    func(childComplexity int) int
 		Count       func(childComplexity int) int
-		TotalAmount func(childComplexity int) int
-	}
-
-	IncomeByTypeGroup struct {
-		Count       func(childComplexity int) int
-		IncomeType  func(childComplexity int) int
 		TotalAmount func(childComplexity int) int
 	}
 
@@ -284,15 +285,8 @@ type ComplexityRoot struct {
 
 	IncomeSummary struct {
 		ByCategory func(childComplexity int) int
-		ByType     func(childComplexity int) int
 		Count      func(childComplexity int) int
 		Total      func(childComplexity int) int
-	}
-
-	IncomeTypeSummary struct {
-		IncomeCount func(childComplexity int) int
-		IncomeType  func(childComplexity int) int
-		TotalAmount func(childComplexity int) int
 	}
 
 	IncomesWithSummary struct {
@@ -302,9 +296,11 @@ type ComplexityRoot struct {
 
 	Installment struct {
 		ActualAmount       func(childComplexity int) int
+		CardBgColor        func(childComplexity int) int
 		CreatedAt          func(childComplexity int) int
 		DueDay             func(childComplexity int) int
 		ID                 func(childComplexity int) int
+		Icon               func(childComplexity int) int
 		InterestAmount     func(childComplexity int) int
 		InterestPercentage func(childComplexity int) int
 		LoanAmount         func(childComplexity int) int
@@ -327,6 +323,7 @@ type ComplexityRoot struct {
 		Installment   func(childComplexity int) int
 		PaidAt        func(childComplexity int) int
 		PaymentNumber func(childComplexity int) int
+		PocketID      func(childComplexity int) int
 	}
 
 	LedgerSummary struct {
@@ -349,6 +346,7 @@ type ComplexityRoot struct {
 		CreateIncomeCategory            func(childComplexity int, input model.CreateIncomeCategoryInput) int
 		CreateIncomeFromRecurring       func(childComplexity int, recurringID uuid.UUID, incomeDate *time.Time) int
 		CreateInstallment               func(childComplexity int, input model.CreateInstallmentInput) int
+		CreatePocket                    func(childComplexity int, input model.CreatePocketInput) int
 		CreateRecurringIncome           func(childComplexity int, input model.CreateRecurringIncomeInput) int
 		CreateSavingsGoal               func(childComplexity int, input model.CreateSavingsGoalInput) int
 		CreateWalletAccount             func(childComplexity int, input model.CreateAccountInput) int
@@ -361,6 +359,7 @@ type ComplexityRoot struct {
 		DeleteIncome                    func(childComplexity int, id uuid.UUID) int
 		DeleteIncomeCategory            func(childComplexity int, id uuid.UUID) int
 		DeleteInstallment               func(childComplexity int, id uuid.UUID) int
+		DeletePocket                    func(childComplexity int, id uuid.UUID) int
 		DeleteRecurringIncome           func(childComplexity int, id uuid.UUID) int
 		DeleteSavingsGoal               func(childComplexity int, id uuid.UUID) int
 		DeleteWalletAccount             func(childComplexity int, id uuid.UUID) int
@@ -378,6 +377,7 @@ type ComplexityRoot struct {
 		Register                        func(childComplexity int, input model.RegisterInput) int
 		Resend2FACode                   func(childComplexity int, tempToken string) int
 		ResetPassword                   func(childComplexity int, input model.ResetPasswordInput) int
+		TransferBetweenPockets          func(childComplexity int, input model.TransferPocketInput) int
 		UpdateCategory                  func(childComplexity int, id uuid.UUID, input model.UpdateCategoryInput) int
 		UpdateDebt                      func(childComplexity int, id uuid.UUID, input model.UpdateDebtInput) int
 		UpdateExpense                   func(childComplexity int, id uuid.UUID, input model.UpdateExpenseInput) int
@@ -387,6 +387,7 @@ type ComplexityRoot struct {
 		UpdateIncomeCategory            func(childComplexity int, id uuid.UUID, input model.UpdateIncomeCategoryInput) int
 		UpdateInstallment               func(childComplexity int, id uuid.UUID, input model.UpdateInstallmentInput) int
 		UpdateNotificationSettings      func(childComplexity int, input model.UpdateNotificationSettingsInput) int
+		UpdatePocket                    func(childComplexity int, id uuid.UUID, input model.UpdatePocketInput) int
 		UpdateProfile                   func(childComplexity int, input model.UpdateProfileInput) int
 		UpdateRecurringIncome           func(childComplexity int, id uuid.UUID, input model.UpdateRecurringIncomeInput) int
 		UpdateSavingsGoal               func(childComplexity int, id uuid.UUID, input model.UpdateSavingsGoalInput) int
@@ -403,6 +404,15 @@ type ComplexityRoot struct {
 		ReferenceID  func(childComplexity int) int
 		SentAt       func(childComplexity int) int
 		Type         func(childComplexity int) int
+	}
+
+	PocketEntry struct {
+		Credit          func(childComplexity int) int
+		Debit           func(childComplexity int) int
+		Description     func(childComplexity int) int
+		ID              func(childComplexity int) int
+		ReferenceType   func(childComplexity int) int
+		TransactionDate func(childComplexity int) int
 	}
 
 	Query struct {
@@ -431,6 +441,9 @@ type ComplexityRoot struct {
 		Installments           func(childComplexity int, status *model.InstallmentStatus) int
 		Me                     func(childComplexity int) int
 		Notifications          func(childComplexity int) int
+		Pocket                 func(childComplexity int, id uuid.UUID) int
+		PocketEntries          func(childComplexity int, pocketID uuid.UUID) int
+		Pockets                func(childComplexity int) int
 		RecurringIncome        func(childComplexity int, id uuid.UUID) int
 		RecurringIncomes       func(childComplexity int, isActive *bool) int
 		SavingsGoal            func(childComplexity int, id uuid.UUID) int
@@ -445,7 +458,6 @@ type ComplexityRoot struct {
 		Category     func(childComplexity int) int
 		CreatedAt    func(childComplexity int) int
 		ID           func(childComplexity int) int
-		IncomeType   func(childComplexity int) int
 		IsActive     func(childComplexity int) int
 		Notes        func(childComplexity int) int
 		RecurringDay func(childComplexity int) int
@@ -458,10 +470,12 @@ type ComplexityRoot struct {
 		CreatedAt        func(childComplexity int) int
 		ID               func(childComplexity int) int
 		Notes            func(childComplexity int) int
+		PocketID         func(childComplexity int) int
 		SavingsGoal      func(childComplexity int) int
 	}
 
 	SavingsGoal struct {
+		CardBgColor     func(childComplexity int) int
 		Contributions   func(childComplexity int) int
 		CreatedAt       func(childComplexity int) int
 		CurrentAmount   func(childComplexity int) int
@@ -599,6 +613,10 @@ type MutationResolver interface {
 	CreateWalletAccount(ctx context.Context, input model.CreateAccountInput) (*model.Account, error)
 	UpdateWalletAccount(ctx context.Context, id uuid.UUID, input model.UpdateAccountInput) (*model.Account, error)
 	DeleteWalletAccount(ctx context.Context, id uuid.UUID) (bool, error)
+	CreatePocket(ctx context.Context, input model.CreatePocketInput) (*model.Account, error)
+	UpdatePocket(ctx context.Context, id uuid.UUID, input model.UpdatePocketInput) (*model.Account, error)
+	DeletePocket(ctx context.Context, id uuid.UUID) (bool, error)
+	TransferBetweenPockets(ctx context.Context, input model.TransferPocketInput) (bool, error)
 }
 type QueryResolver interface {
 	Me(ctx context.Context) (*model.User, error)
@@ -630,6 +648,9 @@ type QueryResolver interface {
 	Accounts(ctx context.Context) ([]*model.Account, error)
 	Account(ctx context.Context, id uuid.UUID) (*model.Account, error)
 	AccountsByType(ctx context.Context, accountType model.AccountType) ([]*model.Account, error)
+	Pockets(ctx context.Context) ([]*model.Account, error)
+	Pocket(ctx context.Context, id uuid.UUID) (*model.Account, error)
+	PocketEntries(ctx context.Context, pocketID uuid.UUID) ([]*model.PocketEntry, error)
 	Transactions(ctx context.Context, filter *model.TransactionFilter) ([]*model.Transaction, error)
 	Transaction(ctx context.Context, id uuid.UUID) (*model.Transaction, error)
 	Notifications(ctx context.Context) ([]*model.NotificationLog, error)
@@ -655,6 +676,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Account.AccountType(childComplexity), true
+	case "Account.cardBgColor":
+		if e.ComplexityRoot.Account.CardBgColor == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Account.CardBgColor(childComplexity), true
 	case "Account.createdAt":
 		if e.ComplexityRoot.Account.CreatedAt == nil {
 			break
@@ -673,12 +700,24 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Account.ID(childComplexity), true
+	case "Account.icon":
+		if e.ComplexityRoot.Account.Icon == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Account.Icon(childComplexity), true
 	case "Account.isDefault":
 		if e.ComplexityRoot.Account.IsDefault == nil {
 			break
 		}
 
 		return e.ComplexityRoot.Account.IsDefault(childComplexity), true
+	case "Account.isPocket":
+		if e.ComplexityRoot.Account.IsPocket == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Account.IsPocket(childComplexity), true
 	case "Account.name":
 		if e.ComplexityRoot.Account.Name == nil {
 			break
@@ -697,6 +736,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Account.ReferenceType(childComplexity), true
+	case "Account.sortOrder":
+		if e.ComplexityRoot.Account.SortOrder == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Account.SortOrder(childComplexity), true
 
 	case "ActualDebtPayment.amount":
 		if e.ComplexityRoot.ActualDebtPayment.Amount == nil {
@@ -1044,6 +1089,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Debt.ActualAmount(childComplexity), true
+	case "Debt.cardBgColor":
+		if e.ComplexityRoot.Debt.CardBgColor == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Debt.CardBgColor(childComplexity), true
 	case "Debt.createdAt":
 		if e.ComplexityRoot.Debt.CreatedAt == nil {
 			break
@@ -1062,6 +1113,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Debt.ID(childComplexity), true
+	case "Debt.icon":
+		if e.ComplexityRoot.Debt.Icon == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Debt.Icon(childComplexity), true
 	case "Debt.interestAmount":
 		if e.ComplexityRoot.Debt.InterestAmount == nil {
 			break
@@ -1177,6 +1234,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.DebtPayment.PaymentNumber(childComplexity), true
+	case "DebtPayment.pocketId":
+		if e.ComplexityRoot.DebtPayment.PocketID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DebtPayment.PocketID(childComplexity), true
 
 	case "Expense.category":
 		if e.ComplexityRoot.Expense.Category == nil {
@@ -1214,6 +1277,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Expense.Notes(childComplexity), true
+	case "Expense.pocketId":
+		if e.ComplexityRoot.Expense.PocketID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Expense.PocketID(childComplexity), true
 	case "Expense.quantity":
 		if e.ComplexityRoot.Expense.Quantity == nil {
 			break
@@ -1493,12 +1562,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Income.IncomeDate(childComplexity), true
-	case "Income.incomeType":
-		if e.ComplexityRoot.Income.IncomeType == nil {
-			break
-		}
-
-		return e.ComplexityRoot.Income.IncomeType(childComplexity), true
 	case "Income.isRecurring":
 		if e.ComplexityRoot.Income.IsRecurring == nil {
 			break
@@ -1511,6 +1574,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Income.Notes(childComplexity), true
+	case "Income.pocketId":
+		if e.ComplexityRoot.Income.PocketID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Income.PocketID(childComplexity), true
 	case "Income.sourceName":
 		if e.ComplexityRoot.Income.SourceName == nil {
 			break
@@ -1524,12 +1593,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.IncomeBreakdown.ByCategory(childComplexity), true
-	case "IncomeBreakdown.byType":
-		if e.ComplexityRoot.IncomeBreakdown.ByType == nil {
-			break
-		}
-
-		return e.ComplexityRoot.IncomeBreakdown.ByType(childComplexity), true
 	case "IncomeBreakdown.count":
 		if e.ComplexityRoot.IncomeBreakdown.Count == nil {
 			break
@@ -1561,25 +1624,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.IncomeByCategoryGroup.TotalAmount(childComplexity), true
-
-	case "IncomeByTypeGroup.count":
-		if e.ComplexityRoot.IncomeByTypeGroup.Count == nil {
-			break
-		}
-
-		return e.ComplexityRoot.IncomeByTypeGroup.Count(childComplexity), true
-	case "IncomeByTypeGroup.incomeType":
-		if e.ComplexityRoot.IncomeByTypeGroup.IncomeType == nil {
-			break
-		}
-
-		return e.ComplexityRoot.IncomeByTypeGroup.IncomeType(childComplexity), true
-	case "IncomeByTypeGroup.totalAmount":
-		if e.ComplexityRoot.IncomeByTypeGroup.TotalAmount == nil {
-			break
-		}
-
-		return e.ComplexityRoot.IncomeByTypeGroup.TotalAmount(childComplexity), true
 
 	case "IncomeCategory.createdAt":
 		if e.ComplexityRoot.IncomeCategory.CreatedAt == nil {
@@ -1643,12 +1687,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.IncomeSummary.ByCategory(childComplexity), true
-	case "IncomeSummary.byType":
-		if e.ComplexityRoot.IncomeSummary.ByType == nil {
-			break
-		}
-
-		return e.ComplexityRoot.IncomeSummary.ByType(childComplexity), true
 	case "IncomeSummary.count":
 		if e.ComplexityRoot.IncomeSummary.Count == nil {
 			break
@@ -1661,25 +1699,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.IncomeSummary.Total(childComplexity), true
-
-	case "IncomeTypeSummary.incomeCount":
-		if e.ComplexityRoot.IncomeTypeSummary.IncomeCount == nil {
-			break
-		}
-
-		return e.ComplexityRoot.IncomeTypeSummary.IncomeCount(childComplexity), true
-	case "IncomeTypeSummary.incomeType":
-		if e.ComplexityRoot.IncomeTypeSummary.IncomeType == nil {
-			break
-		}
-
-		return e.ComplexityRoot.IncomeTypeSummary.IncomeType(childComplexity), true
-	case "IncomeTypeSummary.totalAmount":
-		if e.ComplexityRoot.IncomeTypeSummary.TotalAmount == nil {
-			break
-		}
-
-		return e.ComplexityRoot.IncomeTypeSummary.TotalAmount(childComplexity), true
 
 	case "IncomesWithSummary.items":
 		if e.ComplexityRoot.IncomesWithSummary.Items == nil {
@@ -1700,6 +1719,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Installment.ActualAmount(childComplexity), true
+	case "Installment.cardBgColor":
+		if e.ComplexityRoot.Installment.CardBgColor == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Installment.CardBgColor(childComplexity), true
 	case "Installment.createdAt":
 		if e.ComplexityRoot.Installment.CreatedAt == nil {
 			break
@@ -1718,6 +1743,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Installment.ID(childComplexity), true
+	case "Installment.icon":
+		if e.ComplexityRoot.Installment.Icon == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Installment.Icon(childComplexity), true
 	case "Installment.interestAmount":
 		if e.ComplexityRoot.Installment.InterestAmount == nil {
 			break
@@ -1833,6 +1864,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.InstallmentPayment.PaymentNumber(childComplexity), true
+	case "InstallmentPayment.pocketId":
+		if e.ComplexityRoot.InstallmentPayment.PocketID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.InstallmentPayment.PocketID(childComplexity), true
 
 	case "LedgerSummary.netWorth":
 		if e.ComplexityRoot.LedgerSummary.NetWorth == nil {
@@ -1986,6 +2023,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.CreateInstallment(childComplexity, args["input"].(model.CreateInstallmentInput)), true
+	case "Mutation.createPocket":
+		if e.ComplexityRoot.Mutation.CreatePocket == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createPocket_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.CreatePocket(childComplexity, args["input"].(model.CreatePocketInput)), true
 	case "Mutation.createRecurringIncome":
 		if e.ComplexityRoot.Mutation.CreateRecurringIncome == nil {
 			break
@@ -2118,6 +2166,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.DeleteInstallment(childComplexity, args["id"].(uuid.UUID)), true
+	case "Mutation.deletePocket":
+		if e.ComplexityRoot.Mutation.DeletePocket == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deletePocket_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.DeletePocket(childComplexity, args["id"].(uuid.UUID)), true
 	case "Mutation.deleteRecurringIncome":
 		if e.ComplexityRoot.Mutation.DeleteRecurringIncome == nil {
 			break
@@ -2305,6 +2364,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.ResetPassword(childComplexity, args["input"].(model.ResetPasswordInput)), true
+	case "Mutation.transferBetweenPockets":
+		if e.ComplexityRoot.Mutation.TransferBetweenPockets == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_transferBetweenPockets_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.TransferBetweenPockets(childComplexity, args["input"].(model.TransferPocketInput)), true
 	case "Mutation.updateCategory":
 		if e.ComplexityRoot.Mutation.UpdateCategory == nil {
 			break
@@ -2404,6 +2474,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.UpdateNotificationSettings(childComplexity, args["input"].(model.UpdateNotificationSettingsInput)), true
+	case "Mutation.updatePocket":
+		if e.ComplexityRoot.Mutation.UpdatePocket == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updatePocket_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.UpdatePocket(childComplexity, args["id"].(uuid.UUID), args["input"].(model.UpdatePocketInput)), true
 	case "Mutation.updateProfile":
 		if e.ComplexityRoot.Mutation.UpdateProfile == nil {
 			break
@@ -2518,6 +2599,43 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.NotificationLog.Type(childComplexity), true
+
+	case "PocketEntry.credit":
+		if e.ComplexityRoot.PocketEntry.Credit == nil {
+			break
+		}
+
+		return e.ComplexityRoot.PocketEntry.Credit(childComplexity), true
+	case "PocketEntry.debit":
+		if e.ComplexityRoot.PocketEntry.Debit == nil {
+			break
+		}
+
+		return e.ComplexityRoot.PocketEntry.Debit(childComplexity), true
+	case "PocketEntry.description":
+		if e.ComplexityRoot.PocketEntry.Description == nil {
+			break
+		}
+
+		return e.ComplexityRoot.PocketEntry.Description(childComplexity), true
+	case "PocketEntry.id":
+		if e.ComplexityRoot.PocketEntry.ID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.PocketEntry.ID(childComplexity), true
+	case "PocketEntry.referenceType":
+		if e.ComplexityRoot.PocketEntry.ReferenceType == nil {
+			break
+		}
+
+		return e.ComplexityRoot.PocketEntry.ReferenceType(childComplexity), true
+	case "PocketEntry.transactionDate":
+		if e.ComplexityRoot.PocketEntry.TransactionDate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.PocketEntry.TransactionDate(childComplexity), true
 
 	case "Query.account":
 		if e.ComplexityRoot.Query.Account == nil {
@@ -2760,6 +2878,34 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.Notifications(childComplexity), true
+	case "Query.pocket":
+		if e.ComplexityRoot.Query.Pocket == nil {
+			break
+		}
+
+		args, err := ec.field_Query_pocket_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.Pocket(childComplexity, args["id"].(uuid.UUID)), true
+	case "Query.pocketEntries":
+		if e.ComplexityRoot.Query.PocketEntries == nil {
+			break
+		}
+
+		args, err := ec.field_Query_pocketEntries_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.PocketEntries(childComplexity, args["pocketId"].(uuid.UUID)), true
+	case "Query.pockets":
+		if e.ComplexityRoot.Query.Pockets == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Query.Pockets(childComplexity), true
 	case "Query.recurringIncome":
 		if e.ComplexityRoot.Query.RecurringIncome == nil {
 			break
@@ -2862,12 +3008,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.RecurringIncome.ID(childComplexity), true
-	case "RecurringIncome.incomeType":
-		if e.ComplexityRoot.RecurringIncome.IncomeType == nil {
-			break
-		}
-
-		return e.ComplexityRoot.RecurringIncome.IncomeType(childComplexity), true
 	case "RecurringIncome.isActive":
 		if e.ComplexityRoot.RecurringIncome.IsActive == nil {
 			break
@@ -2923,6 +3063,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.SavingsContribution.Notes(childComplexity), true
+	case "SavingsContribution.pocketId":
+		if e.ComplexityRoot.SavingsContribution.PocketID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.SavingsContribution.PocketID(childComplexity), true
 	case "SavingsContribution.savingsGoal":
 		if e.ComplexityRoot.SavingsContribution.SavingsGoal == nil {
 			break
@@ -2930,6 +3076,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.SavingsContribution.SavingsGoal(childComplexity), true
 
+	case "SavingsGoal.cardBgColor":
+		if e.ComplexityRoot.SavingsGoal.CardBgColor == nil {
+			break
+		}
+
+		return e.ComplexityRoot.SavingsGoal.CardBgColor(childComplexity), true
 	case "SavingsGoal.contributions":
 		if e.ComplexityRoot.SavingsGoal.Contributions == nil {
 			break
@@ -3294,6 +3446,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCreateIncomeCategoryInput,
 		ec.unmarshalInputCreateIncomeInput,
 		ec.unmarshalInputCreateInstallmentInput,
+		ec.unmarshalInputCreatePocketInput,
 		ec.unmarshalInputCreateRecurringIncomeInput,
 		ec.unmarshalInputCreateSavingsGoalInput,
 		ec.unmarshalInputDeleteAccountInput,
@@ -3307,6 +3460,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputRegisterInput,
 		ec.unmarshalInputResetPasswordInput,
 		ec.unmarshalInputTransactionFilter,
+		ec.unmarshalInputTransferPocketInput,
 		ec.unmarshalInputUpcomingPaymentsFilter,
 		ec.unmarshalInputUpdateAccountInput,
 		ec.unmarshalInputUpdateCategoryInput,
@@ -3318,6 +3472,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputUpdateIncomeInput,
 		ec.unmarshalInputUpdateInstallmentInput,
 		ec.unmarshalInputUpdateNotificationSettingsInput,
+		ec.unmarshalInputUpdatePocketInput,
 		ec.unmarshalInputUpdateProfileInput,
 		ec.unmarshalInputUpdateRecurringIncomeInput,
 		ec.unmarshalInputUpdateSavingsGoalInput,
@@ -3567,6 +3722,17 @@ func (ec *executionContext) field_Mutation_createInstallment_args(ctx context.Co
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_createPocket_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreatePocketInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCreatePocketInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_createRecurringIncome_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -3689,6 +3855,17 @@ func (ec *executionContext) field_Mutation_deleteIncome_args(ctx context.Context
 }
 
 func (ec *executionContext) field_Mutation_deleteInstallment_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deletePocket_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
@@ -3886,6 +4063,17 @@ func (ec *executionContext) field_Mutation_resetPassword_args(ctx context.Contex
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_transferBetweenPockets_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNTransferPocketInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐTransferPocketInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_updateCategory_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -4022,6 +4210,22 @@ func (ec *executionContext) field_Mutation_updateNotificationSettings_args(ctx c
 		return nil, err
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updatePocket_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdatePocketInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐUpdatePocketInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg1
 	return args, nil
 }
 
@@ -4326,6 +4530,28 @@ func (ec *executionContext) field_Query_installments_args(ctx context.Context, r
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_pocketEntries_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "pocketId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
+	if err != nil {
+		return nil, err
+	}
+	args["pocketId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_pocket_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_recurringIncome_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -4595,6 +4821,122 @@ func (ec *executionContext) fieldContext_Account_isDefault(_ context.Context, fi
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Account_isPocket(ctx context.Context, field graphql.CollectedField, obj *model.Account) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Account_isPocket,
+		func(ctx context.Context) (any, error) {
+			return obj.IsPocket, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Account_isPocket(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Account",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Account_icon(ctx context.Context, field graphql.CollectedField, obj *model.Account) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Account_icon,
+		func(ctx context.Context) (any, error) {
+			return obj.Icon, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Account_icon(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Account",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Account_cardBgColor(ctx context.Context, field graphql.CollectedField, obj *model.Account) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Account_cardBgColor,
+		func(ctx context.Context) (any, error) {
+			return obj.CardBgColor, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Account_cardBgColor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Account",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Account_sortOrder(ctx context.Context, field graphql.CollectedField, obj *model.Account) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Account_sortOrder,
+		func(ctx context.Context) (any, error) {
+			return obj.SortOrder, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Account_sortOrder(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Account",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -5490,8 +5832,6 @@ func (ec *executionContext) fieldContext_BalanceReport_income(_ context.Context,
 				return ec.fieldContext_IncomeBreakdown_count(ctx, field)
 			case "byCategory":
 				return ec.fieldContext_IncomeBreakdown_byCategory(ctx, field)
-			case "byType":
-				return ec.fieldContext_IncomeBreakdown_byType(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type IncomeBreakdown", field.Name)
 		},
@@ -5963,6 +6303,8 @@ func (ec *executionContext) fieldContext_Category_expenses(_ context.Context, fi
 				return ec.fieldContext_Expense_notes(ctx, field)
 			case "expenseDate":
 				return ec.fieldContext_Expense_expenseDate(ctx, field)
+			case "pocketId":
+				return ec.fieldContext_Expense_pocketId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Expense_createdAt(ctx, field)
 			case "category":
@@ -6357,6 +6699,8 @@ func (ec *executionContext) fieldContext_Dashboard_activeSavingsGoals(_ context.
 				return ec.fieldContext_SavingsGoal_targetDate(ctx, field)
 			case "icon":
 				return ec.fieldContext_SavingsGoal_icon(ctx, field)
+			case "cardBgColor":
+				return ec.fieldContext_SavingsGoal_cardBgColor(ctx, field)
 			case "status":
 				return ec.fieldContext_SavingsGoal_status(ctx, field)
 			case "notes":
@@ -6453,6 +6797,8 @@ func (ec *executionContext) fieldContext_Dashboard_recentExpenses(_ context.Cont
 				return ec.fieldContext_Expense_notes(ctx, field)
 			case "expenseDate":
 				return ec.fieldContext_Expense_expenseDate(ctx, field)
+			case "pocketId":
+				return ec.fieldContext_Expense_pocketId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Expense_createdAt(ctx, field)
 			case "category":
@@ -6725,6 +7071,64 @@ func (ec *executionContext) fieldContext_Debt_status(_ context.Context, field gr
 	return fc, nil
 }
 
+func (ec *executionContext) _Debt_icon(ctx context.Context, field graphql.CollectedField, obj *model.Debt) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Debt_icon,
+		func(ctx context.Context) (any, error) {
+			return obj.Icon, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Debt_icon(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Debt",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Debt_cardBgColor(ctx context.Context, field graphql.CollectedField, obj *model.Debt) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Debt_cardBgColor,
+		func(ctx context.Context) (any, error) {
+			return obj.CardBgColor, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Debt_cardBgColor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Debt",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Debt_notes(ctx context.Context, field graphql.CollectedField, obj *model.Debt) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -6960,6 +7364,8 @@ func (ec *executionContext) fieldContext_Debt_payments(_ context.Context, field 
 				return ec.fieldContext_DebtPayment_amount(ctx, field)
 			case "paidAt":
 				return ec.fieldContext_DebtPayment_paidAt(ctx, field)
+			case "pocketId":
+				return ec.fieldContext_DebtPayment_pocketId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_DebtPayment_createdAt(ctx, field)
 			case "debt":
@@ -7087,6 +7493,35 @@ func (ec *executionContext) fieldContext_DebtPayment_paidAt(_ context.Context, f
 	return fc, nil
 }
 
+func (ec *executionContext) _DebtPayment_pocketId(ctx context.Context, field graphql.CollectedField, obj *model.DebtPayment) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DebtPayment_pocketId,
+		func(ctx context.Context) (any, error) {
+			return obj.PocketID, nil
+		},
+		nil,
+		ec.marshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_DebtPayment_pocketId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DebtPayment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type UUID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _DebtPayment_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.DebtPayment) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -7158,6 +7593,10 @@ func (ec *executionContext) fieldContext_DebtPayment_debt(_ context.Context, fie
 				return ec.fieldContext_Debt_dueDate(ctx, field)
 			case "status":
 				return ec.fieldContext_Debt_status(ctx, field)
+			case "icon":
+				return ec.fieldContext_Debt_icon(ctx, field)
+			case "cardBgColor":
+				return ec.fieldContext_Debt_cardBgColor(ctx, field)
 			case "notes":
 				return ec.fieldContext_Debt_notes(ctx, field)
 			case "createdAt":
@@ -7379,6 +7818,35 @@ func (ec *executionContext) fieldContext_Expense_expenseDate(_ context.Context, 
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Date does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Expense_pocketId(ctx context.Context, field graphql.CollectedField, obj *model.Expense) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Expense_pocketId,
+		func(ctx context.Context) (any, error) {
+			return obj.PocketID, nil
+		},
+		nil,
+		ec.marshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Expense_pocketId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Expense",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type UUID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -8221,6 +8689,8 @@ func (ec *executionContext) fieldContext_ExpensesWithSummary_items(_ context.Con
 				return ec.fieldContext_Expense_notes(ctx, field)
 			case "expenseDate":
 				return ec.fieldContext_Expense_expenseDate(ctx, field)
+			case "pocketId":
+				return ec.fieldContext_Expense_pocketId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Expense_createdAt(ctx, field)
 			case "category":
@@ -8357,8 +8827,6 @@ func (ec *executionContext) fieldContext_ForecastSummary_incomeSummary(_ context
 				return ec.fieldContext_IncomeSummary_count(ctx, field)
 			case "byCategory":
 				return ec.fieldContext_IncomeSummary_byCategory(ctx, field)
-			case "byType":
-				return ec.fieldContext_IncomeSummary_byType(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type IncomeSummary", field.Name)
 		},
@@ -8561,8 +9029,6 @@ func (ec *executionContext) fieldContext_HistorySummary_incomeSummary(_ context.
 				return ec.fieldContext_IncomeSummary_count(ctx, field)
 			case "byCategory":
 				return ec.fieldContext_IncomeSummary_byCategory(ctx, field)
-			case "byType":
-				return ec.fieldContext_IncomeSummary_byType(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type IncomeSummary", field.Name)
 		},
@@ -8764,35 +9230,6 @@ func (ec *executionContext) fieldContext_Income_amount(_ context.Context, field 
 	return fc, nil
 }
 
-func (ec *executionContext) _Income_incomeType(ctx context.Context, field graphql.CollectedField, obj *model.Income) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_Income_incomeType,
-		func(ctx context.Context) (any, error) {
-			return obj.IncomeType, nil
-		},
-		nil,
-		ec.marshalNIncomeType2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeType,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_Income_incomeType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Income",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type IncomeType does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Income_incomeDate(ctx context.Context, field graphql.CollectedField, obj *model.Income) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -8875,6 +9312,35 @@ func (ec *executionContext) fieldContext_Income_notes(_ context.Context, field g
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Income_pocketId(ctx context.Context, field graphql.CollectedField, obj *model.Income) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Income_pocketId,
+		func(ctx context.Context) (any, error) {
+			return obj.PocketID, nil
+		},
+		nil,
+		ec.marshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Income_pocketId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Income",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type UUID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -9047,43 +9513,6 @@ func (ec *executionContext) fieldContext_IncomeBreakdown_byCategory(_ context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _IncomeBreakdown_byType(ctx context.Context, field graphql.CollectedField, obj *model.IncomeBreakdown) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_IncomeBreakdown_byType,
-		func(ctx context.Context) (any, error) {
-			return obj.ByType, nil
-		},
-		nil,
-		ec.marshalNIncomeTypeSummary2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeTypeSummaryᚄ,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_IncomeBreakdown_byType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "IncomeBreakdown",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "incomeType":
-				return ec.fieldContext_IncomeTypeSummary_incomeType(ctx, field)
-			case "totalAmount":
-				return ec.fieldContext_IncomeTypeSummary_totalAmount(ctx, field)
-			case "incomeCount":
-				return ec.fieldContext_IncomeTypeSummary_incomeCount(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type IncomeTypeSummary", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _IncomeByCategoryGroup_category(ctx context.Context, field graphql.CollectedField, obj *model.IncomeByCategoryGroup) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -9175,93 +9604,6 @@ func (ec *executionContext) _IncomeByCategoryGroup_count(ctx context.Context, fi
 func (ec *executionContext) fieldContext_IncomeByCategoryGroup_count(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "IncomeByCategoryGroup",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _IncomeByTypeGroup_incomeType(ctx context.Context, field graphql.CollectedField, obj *model.IncomeByTypeGroup) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_IncomeByTypeGroup_incomeType,
-		func(ctx context.Context) (any, error) {
-			return obj.IncomeType, nil
-		},
-		nil,
-		ec.marshalNIncomeType2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeType,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_IncomeByTypeGroup_incomeType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "IncomeByTypeGroup",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type IncomeType does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _IncomeByTypeGroup_totalAmount(ctx context.Context, field graphql.CollectedField, obj *model.IncomeByTypeGroup) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_IncomeByTypeGroup_totalAmount,
-		func(ctx context.Context) (any, error) {
-			return obj.TotalAmount, nil
-		},
-		nil,
-		ec.marshalNInt2int,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_IncomeByTypeGroup_totalAmount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "IncomeByTypeGroup",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _IncomeByTypeGroup_count(ctx context.Context, field graphql.CollectedField, obj *model.IncomeByTypeGroup) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_IncomeByTypeGroup_count,
-		func(ctx context.Context) (any, error) {
-			return obj.Count, nil
-		},
-		nil,
-		ec.marshalNInt2int,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_IncomeByTypeGroup_count(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "IncomeByTypeGroup",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -9389,14 +9731,14 @@ func (ec *executionContext) fieldContext_IncomeCategory_incomes(_ context.Contex
 				return ec.fieldContext_Income_sourceName(ctx, field)
 			case "amount":
 				return ec.fieldContext_Income_amount(ctx, field)
-			case "incomeType":
-				return ec.fieldContext_Income_incomeType(ctx, field)
 			case "incomeDate":
 				return ec.fieldContext_Income_incomeDate(ctx, field)
 			case "isRecurring":
 				return ec.fieldContext_Income_isRecurring(ctx, field)
 			case "notes":
 				return ec.fieldContext_Income_notes(ctx, field)
+			case "pocketId":
+				return ec.fieldContext_Income_pocketId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Income_createdAt(ctx, field)
 			case "category":
@@ -9662,130 +10004,6 @@ func (ec *executionContext) fieldContext_IncomeSummary_byCategory(_ context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _IncomeSummary_byType(ctx context.Context, field graphql.CollectedField, obj *model.IncomeSummary) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_IncomeSummary_byType,
-		func(ctx context.Context) (any, error) {
-			return obj.ByType, nil
-		},
-		nil,
-		ec.marshalNIncomeByTypeGroup2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeByTypeGroupᚄ,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_IncomeSummary_byType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "IncomeSummary",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "incomeType":
-				return ec.fieldContext_IncomeByTypeGroup_incomeType(ctx, field)
-			case "totalAmount":
-				return ec.fieldContext_IncomeByTypeGroup_totalAmount(ctx, field)
-			case "count":
-				return ec.fieldContext_IncomeByTypeGroup_count(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type IncomeByTypeGroup", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _IncomeTypeSummary_incomeType(ctx context.Context, field graphql.CollectedField, obj *model.IncomeTypeSummary) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_IncomeTypeSummary_incomeType,
-		func(ctx context.Context) (any, error) {
-			return obj.IncomeType, nil
-		},
-		nil,
-		ec.marshalNIncomeType2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeType,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_IncomeTypeSummary_incomeType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "IncomeTypeSummary",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type IncomeType does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _IncomeTypeSummary_totalAmount(ctx context.Context, field graphql.CollectedField, obj *model.IncomeTypeSummary) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_IncomeTypeSummary_totalAmount,
-		func(ctx context.Context) (any, error) {
-			return obj.TotalAmount, nil
-		},
-		nil,
-		ec.marshalNInt2int,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_IncomeTypeSummary_totalAmount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "IncomeTypeSummary",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _IncomeTypeSummary_incomeCount(ctx context.Context, field graphql.CollectedField, obj *model.IncomeTypeSummary) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_IncomeTypeSummary_incomeCount,
-		func(ctx context.Context) (any, error) {
-			return obj.IncomeCount, nil
-		},
-		nil,
-		ec.marshalNInt2int,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_IncomeTypeSummary_incomeCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "IncomeTypeSummary",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _IncomesWithSummary_items(ctx context.Context, field graphql.CollectedField, obj *model.IncomesWithSummary) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -9816,14 +10034,14 @@ func (ec *executionContext) fieldContext_IncomesWithSummary_items(_ context.Cont
 				return ec.fieldContext_Income_sourceName(ctx, field)
 			case "amount":
 				return ec.fieldContext_Income_amount(ctx, field)
-			case "incomeType":
-				return ec.fieldContext_Income_incomeType(ctx, field)
 			case "incomeDate":
 				return ec.fieldContext_Income_incomeDate(ctx, field)
 			case "isRecurring":
 				return ec.fieldContext_Income_isRecurring(ctx, field)
 			case "notes":
 				return ec.fieldContext_Income_notes(ctx, field)
+			case "pocketId":
+				return ec.fieldContext_Income_pocketId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Income_createdAt(ctx, field)
 			case "category":
@@ -9865,8 +10083,6 @@ func (ec *executionContext) fieldContext_IncomesWithSummary_summary(_ context.Co
 				return ec.fieldContext_IncomeSummary_count(ctx, field)
 			case "byCategory":
 				return ec.fieldContext_IncomeSummary_byCategory(ctx, field)
-			case "byType":
-				return ec.fieldContext_IncomeSummary_byType(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type IncomeSummary", field.Name)
 		},
@@ -10135,6 +10351,64 @@ func (ec *executionContext) fieldContext_Installment_status(_ context.Context, f
 	return fc, nil
 }
 
+func (ec *executionContext) _Installment_icon(ctx context.Context, field graphql.CollectedField, obj *model.Installment) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Installment_icon,
+		func(ctx context.Context) (any, error) {
+			return obj.Icon, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Installment_icon(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Installment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Installment_cardBgColor(ctx context.Context, field graphql.CollectedField, obj *model.Installment) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Installment_cardBgColor,
+		func(ctx context.Context) (any, error) {
+			return obj.CardBgColor, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Installment_cardBgColor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Installment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Installment_notes(ctx context.Context, field graphql.CollectedField, obj *model.Installment) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -10370,6 +10644,8 @@ func (ec *executionContext) fieldContext_Installment_payments(_ context.Context,
 				return ec.fieldContext_InstallmentPayment_amount(ctx, field)
 			case "paidAt":
 				return ec.fieldContext_InstallmentPayment_paidAt(ctx, field)
+			case "pocketId":
+				return ec.fieldContext_InstallmentPayment_pocketId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_InstallmentPayment_createdAt(ctx, field)
 			case "installment":
@@ -10497,6 +10773,35 @@ func (ec *executionContext) fieldContext_InstallmentPayment_paidAt(_ context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _InstallmentPayment_pocketId(ctx context.Context, field graphql.CollectedField, obj *model.InstallmentPayment) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_InstallmentPayment_pocketId,
+		func(ctx context.Context) (any, error) {
+			return obj.PocketID, nil
+		},
+		nil,
+		ec.marshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_InstallmentPayment_pocketId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InstallmentPayment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type UUID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _InstallmentPayment_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.InstallmentPayment) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -10568,6 +10873,10 @@ func (ec *executionContext) fieldContext_InstallmentPayment_installment(_ contex
 				return ec.fieldContext_Installment_dueDay(ctx, field)
 			case "status":
 				return ec.fieldContext_Installment_status(ctx, field)
+			case "icon":
+				return ec.fieldContext_Installment_icon(ctx, field)
+			case "cardBgColor":
+				return ec.fieldContext_Installment_cardBgColor(ctx, field)
 			case "notes":
 				return ec.fieldContext_Installment_notes(ctx, field)
 			case "createdAt":
@@ -11600,6 +11909,8 @@ func (ec *executionContext) fieldContext_Mutation_createExpense(ctx context.Cont
 				return ec.fieldContext_Expense_notes(ctx, field)
 			case "expenseDate":
 				return ec.fieldContext_Expense_expenseDate(ctx, field)
+			case "pocketId":
+				return ec.fieldContext_Expense_pocketId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Expense_createdAt(ctx, field)
 			case "category":
@@ -11661,6 +11972,8 @@ func (ec *executionContext) fieldContext_Mutation_updateExpense(ctx context.Cont
 				return ec.fieldContext_Expense_notes(ctx, field)
 			case "expenseDate":
 				return ec.fieldContext_Expense_expenseDate(ctx, field)
+			case "pocketId":
+				return ec.fieldContext_Expense_pocketId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Expense_createdAt(ctx, field)
 			case "category":
@@ -12073,6 +12386,8 @@ func (ec *executionContext) fieldContext_Mutation_createExpensesFromTemplateGrou
 				return ec.fieldContext_Expense_notes(ctx, field)
 			case "expenseDate":
 				return ec.fieldContext_Expense_expenseDate(ctx, field)
+			case "pocketId":
+				return ec.fieldContext_Expense_pocketId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Expense_createdAt(ctx, field)
 			case "category":
@@ -12138,6 +12453,10 @@ func (ec *executionContext) fieldContext_Mutation_createInstallment(ctx context.
 				return ec.fieldContext_Installment_dueDay(ctx, field)
 			case "status":
 				return ec.fieldContext_Installment_status(ctx, field)
+			case "icon":
+				return ec.fieldContext_Installment_icon(ctx, field)
+			case "cardBgColor":
+				return ec.fieldContext_Installment_cardBgColor(ctx, field)
 			case "notes":
 				return ec.fieldContext_Installment_notes(ctx, field)
 			case "createdAt":
@@ -12215,6 +12534,10 @@ func (ec *executionContext) fieldContext_Mutation_updateInstallment(ctx context.
 				return ec.fieldContext_Installment_dueDay(ctx, field)
 			case "status":
 				return ec.fieldContext_Installment_status(ctx, field)
+			case "icon":
+				return ec.fieldContext_Installment_icon(ctx, field)
+			case "cardBgColor":
+				return ec.fieldContext_Installment_cardBgColor(ctx, field)
 			case "notes":
 				return ec.fieldContext_Installment_notes(ctx, field)
 			case "createdAt":
@@ -12323,6 +12646,8 @@ func (ec *executionContext) fieldContext_Mutation_recordInstallmentPayment(ctx c
 				return ec.fieldContext_InstallmentPayment_amount(ctx, field)
 			case "paidAt":
 				return ec.fieldContext_InstallmentPayment_paidAt(ctx, field)
+			case "pocketId":
+				return ec.fieldContext_InstallmentPayment_pocketId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_InstallmentPayment_createdAt(ctx, field)
 			case "installment":
@@ -12388,6 +12713,10 @@ func (ec *executionContext) fieldContext_Mutation_markInstallmentComplete(ctx co
 				return ec.fieldContext_Installment_dueDay(ctx, field)
 			case "status":
 				return ec.fieldContext_Installment_status(ctx, field)
+			case "icon":
+				return ec.fieldContext_Installment_icon(ctx, field)
+			case "cardBgColor":
+				return ec.fieldContext_Installment_cardBgColor(ctx, field)
 			case "notes":
 				return ec.fieldContext_Installment_notes(ctx, field)
 			case "createdAt":
@@ -12465,6 +12794,10 @@ func (ec *executionContext) fieldContext_Mutation_createDebt(ctx context.Context
 				return ec.fieldContext_Debt_dueDate(ctx, field)
 			case "status":
 				return ec.fieldContext_Debt_status(ctx, field)
+			case "icon":
+				return ec.fieldContext_Debt_icon(ctx, field)
+			case "cardBgColor":
+				return ec.fieldContext_Debt_cardBgColor(ctx, field)
 			case "notes":
 				return ec.fieldContext_Debt_notes(ctx, field)
 			case "createdAt":
@@ -12542,6 +12875,10 @@ func (ec *executionContext) fieldContext_Mutation_updateDebt(ctx context.Context
 				return ec.fieldContext_Debt_dueDate(ctx, field)
 			case "status":
 				return ec.fieldContext_Debt_status(ctx, field)
+			case "icon":
+				return ec.fieldContext_Debt_icon(ctx, field)
+			case "cardBgColor":
+				return ec.fieldContext_Debt_cardBgColor(ctx, field)
 			case "notes":
 				return ec.fieldContext_Debt_notes(ctx, field)
 			case "createdAt":
@@ -12650,6 +12987,8 @@ func (ec *executionContext) fieldContext_Mutation_recordDebtPayment(ctx context.
 				return ec.fieldContext_DebtPayment_amount(ctx, field)
 			case "paidAt":
 				return ec.fieldContext_DebtPayment_paidAt(ctx, field)
+			case "pocketId":
+				return ec.fieldContext_DebtPayment_pocketId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_DebtPayment_createdAt(ctx, field)
 			case "debt":
@@ -12715,6 +13054,10 @@ func (ec *executionContext) fieldContext_Mutation_markDebtComplete(ctx context.C
 				return ec.fieldContext_Debt_dueDate(ctx, field)
 			case "status":
 				return ec.fieldContext_Debt_status(ctx, field)
+			case "icon":
+				return ec.fieldContext_Debt_icon(ctx, field)
+			case "cardBgColor":
+				return ec.fieldContext_Debt_cardBgColor(ctx, field)
 			case "notes":
 				return ec.fieldContext_Debt_notes(ctx, field)
 			case "createdAt":
@@ -12931,14 +13274,14 @@ func (ec *executionContext) fieldContext_Mutation_createIncome(ctx context.Conte
 				return ec.fieldContext_Income_sourceName(ctx, field)
 			case "amount":
 				return ec.fieldContext_Income_amount(ctx, field)
-			case "incomeType":
-				return ec.fieldContext_Income_incomeType(ctx, field)
 			case "incomeDate":
 				return ec.fieldContext_Income_incomeDate(ctx, field)
 			case "isRecurring":
 				return ec.fieldContext_Income_isRecurring(ctx, field)
 			case "notes":
 				return ec.fieldContext_Income_notes(ctx, field)
+			case "pocketId":
+				return ec.fieldContext_Income_pocketId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Income_createdAt(ctx, field)
 			case "category":
@@ -12992,14 +13335,14 @@ func (ec *executionContext) fieldContext_Mutation_updateIncome(ctx context.Conte
 				return ec.fieldContext_Income_sourceName(ctx, field)
 			case "amount":
 				return ec.fieldContext_Income_amount(ctx, field)
-			case "incomeType":
-				return ec.fieldContext_Income_incomeType(ctx, field)
 			case "incomeDate":
 				return ec.fieldContext_Income_incomeDate(ctx, field)
 			case "isRecurring":
 				return ec.fieldContext_Income_isRecurring(ctx, field)
 			case "notes":
 				return ec.fieldContext_Income_notes(ctx, field)
+			case "pocketId":
+				return ec.fieldContext_Income_pocketId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Income_createdAt(ctx, field)
 			case "category":
@@ -13094,8 +13437,6 @@ func (ec *executionContext) fieldContext_Mutation_createRecurringIncome(ctx cont
 				return ec.fieldContext_RecurringIncome_sourceName(ctx, field)
 			case "amount":
 				return ec.fieldContext_RecurringIncome_amount(ctx, field)
-			case "incomeType":
-				return ec.fieldContext_RecurringIncome_incomeType(ctx, field)
 			case "recurringDay":
 				return ec.fieldContext_RecurringIncome_recurringDay(ctx, field)
 			case "isActive":
@@ -13155,8 +13496,6 @@ func (ec *executionContext) fieldContext_Mutation_updateRecurringIncome(ctx cont
 				return ec.fieldContext_RecurringIncome_sourceName(ctx, field)
 			case "amount":
 				return ec.fieldContext_RecurringIncome_amount(ctx, field)
-			case "incomeType":
-				return ec.fieldContext_RecurringIncome_incomeType(ctx, field)
 			case "recurringDay":
 				return ec.fieldContext_RecurringIncome_recurringDay(ctx, field)
 			case "isActive":
@@ -13257,14 +13596,14 @@ func (ec *executionContext) fieldContext_Mutation_createIncomeFromRecurring(ctx 
 				return ec.fieldContext_Income_sourceName(ctx, field)
 			case "amount":
 				return ec.fieldContext_Income_amount(ctx, field)
-			case "incomeType":
-				return ec.fieldContext_Income_incomeType(ctx, field)
 			case "incomeDate":
 				return ec.fieldContext_Income_incomeDate(ctx, field)
 			case "isRecurring":
 				return ec.fieldContext_Income_isRecurring(ctx, field)
 			case "notes":
 				return ec.fieldContext_Income_notes(ctx, field)
+			case "pocketId":
+				return ec.fieldContext_Income_pocketId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Income_createdAt(ctx, field)
 			case "category":
@@ -13324,6 +13663,8 @@ func (ec *executionContext) fieldContext_Mutation_createSavingsGoal(ctx context.
 				return ec.fieldContext_SavingsGoal_targetDate(ctx, field)
 			case "icon":
 				return ec.fieldContext_SavingsGoal_icon(ctx, field)
+			case "cardBgColor":
+				return ec.fieldContext_SavingsGoal_cardBgColor(ctx, field)
 			case "status":
 				return ec.fieldContext_SavingsGoal_status(ctx, field)
 			case "notes":
@@ -13393,6 +13734,8 @@ func (ec *executionContext) fieldContext_Mutation_updateSavingsGoal(ctx context.
 				return ec.fieldContext_SavingsGoal_targetDate(ctx, field)
 			case "icon":
 				return ec.fieldContext_SavingsGoal_icon(ctx, field)
+			case "cardBgColor":
+				return ec.fieldContext_SavingsGoal_cardBgColor(ctx, field)
 			case "status":
 				return ec.fieldContext_SavingsGoal_status(ctx, field)
 			case "notes":
@@ -13499,6 +13842,8 @@ func (ec *executionContext) fieldContext_Mutation_addSavingsContribution(ctx con
 				return ec.fieldContext_SavingsContribution_contributionDate(ctx, field)
 			case "notes":
 				return ec.fieldContext_SavingsContribution_notes(ctx, field)
+			case "pocketId":
+				return ec.fieldContext_SavingsContribution_pocketId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_SavingsContribution_createdAt(ctx, field)
 			case "savingsGoal":
@@ -13599,6 +13944,8 @@ func (ec *executionContext) fieldContext_Mutation_markSavingsGoalComplete(ctx co
 				return ec.fieldContext_SavingsGoal_targetDate(ctx, field)
 			case "icon":
 				return ec.fieldContext_SavingsGoal_icon(ctx, field)
+			case "cardBgColor":
+				return ec.fieldContext_SavingsGoal_cardBgColor(ctx, field)
 			case "status":
 				return ec.fieldContext_SavingsGoal_status(ctx, field)
 			case "notes":
@@ -13666,6 +14013,14 @@ func (ec *executionContext) fieldContext_Mutation_createWalletAccount(ctx contex
 				return ec.fieldContext_Account_currentBalance(ctx, field)
 			case "isDefault":
 				return ec.fieldContext_Account_isDefault(ctx, field)
+			case "isPocket":
+				return ec.fieldContext_Account_isPocket(ctx, field)
+			case "icon":
+				return ec.fieldContext_Account_icon(ctx, field)
+			case "cardBgColor":
+				return ec.fieldContext_Account_cardBgColor(ctx, field)
+			case "sortOrder":
+				return ec.fieldContext_Account_sortOrder(ctx, field)
 			case "referenceId":
 				return ec.fieldContext_Account_referenceId(ctx, field)
 			case "referenceType":
@@ -13725,6 +14080,14 @@ func (ec *executionContext) fieldContext_Mutation_updateWalletAccount(ctx contex
 				return ec.fieldContext_Account_currentBalance(ctx, field)
 			case "isDefault":
 				return ec.fieldContext_Account_isDefault(ctx, field)
+			case "isPocket":
+				return ec.fieldContext_Account_isPocket(ctx, field)
+			case "icon":
+				return ec.fieldContext_Account_icon(ctx, field)
+			case "cardBgColor":
+				return ec.fieldContext_Account_cardBgColor(ctx, field)
+			case "sortOrder":
+				return ec.fieldContext_Account_sortOrder(ctx, field)
 			case "referenceId":
 				return ec.fieldContext_Account_referenceId(ctx, field)
 			case "referenceType":
@@ -13784,6 +14147,222 @@ func (ec *executionContext) fieldContext_Mutation_deleteWalletAccount(ctx contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_deleteWalletAccount_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createPocket(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_createPocket,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().CreatePocket(ctx, fc.Args["input"].(model.CreatePocketInput))
+		},
+		nil,
+		ec.marshalNAccount2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐAccount,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createPocket(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Account_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Account_name(ctx, field)
+			case "accountType":
+				return ec.fieldContext_Account_accountType(ctx, field)
+			case "currentBalance":
+				return ec.fieldContext_Account_currentBalance(ctx, field)
+			case "isDefault":
+				return ec.fieldContext_Account_isDefault(ctx, field)
+			case "isPocket":
+				return ec.fieldContext_Account_isPocket(ctx, field)
+			case "icon":
+				return ec.fieldContext_Account_icon(ctx, field)
+			case "cardBgColor":
+				return ec.fieldContext_Account_cardBgColor(ctx, field)
+			case "sortOrder":
+				return ec.fieldContext_Account_sortOrder(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Account_referenceId(ctx, field)
+			case "referenceType":
+				return ec.fieldContext_Account_referenceType(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Account_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Account", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createPocket_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updatePocket(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_updatePocket,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().UpdatePocket(ctx, fc.Args["id"].(uuid.UUID), fc.Args["input"].(model.UpdatePocketInput))
+		},
+		nil,
+		ec.marshalNAccount2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐAccount,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updatePocket(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Account_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Account_name(ctx, field)
+			case "accountType":
+				return ec.fieldContext_Account_accountType(ctx, field)
+			case "currentBalance":
+				return ec.fieldContext_Account_currentBalance(ctx, field)
+			case "isDefault":
+				return ec.fieldContext_Account_isDefault(ctx, field)
+			case "isPocket":
+				return ec.fieldContext_Account_isPocket(ctx, field)
+			case "icon":
+				return ec.fieldContext_Account_icon(ctx, field)
+			case "cardBgColor":
+				return ec.fieldContext_Account_cardBgColor(ctx, field)
+			case "sortOrder":
+				return ec.fieldContext_Account_sortOrder(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Account_referenceId(ctx, field)
+			case "referenceType":
+				return ec.fieldContext_Account_referenceType(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Account_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Account", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updatePocket_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deletePocket(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_deletePocket,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().DeletePocket(ctx, fc.Args["id"].(uuid.UUID))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deletePocket(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deletePocket_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_transferBetweenPockets(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_transferBetweenPockets,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().TransferBetweenPockets(ctx, fc.Args["input"].(model.TransferPocketInput))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_transferBetweenPockets(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_transferBetweenPockets_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -13959,6 +14538,180 @@ func (ec *executionContext) fieldContext_NotificationLog_createdAt(_ context.Con
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PocketEntry_id(ctx context.Context, field graphql.CollectedField, obj *model.PocketEntry) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PocketEntry_id,
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PocketEntry_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PocketEntry",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PocketEntry_transactionDate(ctx context.Context, field graphql.CollectedField, obj *model.PocketEntry) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PocketEntry_transactionDate,
+		func(ctx context.Context) (any, error) {
+			return obj.TransactionDate, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PocketEntry_transactionDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PocketEntry",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PocketEntry_description(ctx context.Context, field graphql.CollectedField, obj *model.PocketEntry) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PocketEntry_description,
+		func(ctx context.Context) (any, error) {
+			return obj.Description, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PocketEntry_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PocketEntry",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PocketEntry_debit(ctx context.Context, field graphql.CollectedField, obj *model.PocketEntry) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PocketEntry_debit,
+		func(ctx context.Context) (any, error) {
+			return obj.Debit, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PocketEntry_debit(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PocketEntry",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PocketEntry_credit(ctx context.Context, field graphql.CollectedField, obj *model.PocketEntry) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PocketEntry_credit,
+		func(ctx context.Context) (any, error) {
+			return obj.Credit, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PocketEntry_credit(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PocketEntry",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PocketEntry_referenceType(ctx context.Context, field graphql.CollectedField, obj *model.PocketEntry) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PocketEntry_referenceType,
+		func(ctx context.Context) (any, error) {
+			return obj.ReferenceType, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PocketEntry_referenceType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PocketEntry",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -14242,6 +14995,8 @@ func (ec *executionContext) fieldContext_Query_expense(ctx context.Context, fiel
 				return ec.fieldContext_Expense_notes(ctx, field)
 			case "expenseDate":
 				return ec.fieldContext_Expense_expenseDate(ctx, field)
+			case "pocketId":
+				return ec.fieldContext_Expense_pocketId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Expense_createdAt(ctx, field)
 			case "category":
@@ -14409,6 +15164,10 @@ func (ec *executionContext) fieldContext_Query_installments(ctx context.Context,
 				return ec.fieldContext_Installment_dueDay(ctx, field)
 			case "status":
 				return ec.fieldContext_Installment_status(ctx, field)
+			case "icon":
+				return ec.fieldContext_Installment_icon(ctx, field)
+			case "cardBgColor":
+				return ec.fieldContext_Installment_cardBgColor(ctx, field)
 			case "notes":
 				return ec.fieldContext_Installment_notes(ctx, field)
 			case "createdAt":
@@ -14486,6 +15245,10 @@ func (ec *executionContext) fieldContext_Query_installment(ctx context.Context, 
 				return ec.fieldContext_Installment_dueDay(ctx, field)
 			case "status":
 				return ec.fieldContext_Installment_status(ctx, field)
+			case "icon":
+				return ec.fieldContext_Installment_icon(ctx, field)
+			case "cardBgColor":
+				return ec.fieldContext_Installment_cardBgColor(ctx, field)
 			case "notes":
 				return ec.fieldContext_Installment_notes(ctx, field)
 			case "createdAt":
@@ -14563,6 +15326,10 @@ func (ec *executionContext) fieldContext_Query_debts(ctx context.Context, field 
 				return ec.fieldContext_Debt_dueDate(ctx, field)
 			case "status":
 				return ec.fieldContext_Debt_status(ctx, field)
+			case "icon":
+				return ec.fieldContext_Debt_icon(ctx, field)
+			case "cardBgColor":
+				return ec.fieldContext_Debt_cardBgColor(ctx, field)
 			case "notes":
 				return ec.fieldContext_Debt_notes(ctx, field)
 			case "createdAt":
@@ -14640,6 +15407,10 @@ func (ec *executionContext) fieldContext_Query_debt(ctx context.Context, field g
 				return ec.fieldContext_Debt_dueDate(ctx, field)
 			case "status":
 				return ec.fieldContext_Debt_status(ctx, field)
+			case "icon":
+				return ec.fieldContext_Debt_icon(ctx, field)
+			case "cardBgColor":
+				return ec.fieldContext_Debt_cardBgColor(ctx, field)
 			case "notes":
 				return ec.fieldContext_Debt_notes(ctx, field)
 			case "createdAt":
@@ -14850,14 +15621,14 @@ func (ec *executionContext) fieldContext_Query_income(ctx context.Context, field
 				return ec.fieldContext_Income_sourceName(ctx, field)
 			case "amount":
 				return ec.fieldContext_Income_amount(ctx, field)
-			case "incomeType":
-				return ec.fieldContext_Income_incomeType(ctx, field)
 			case "incomeDate":
 				return ec.fieldContext_Income_incomeDate(ctx, field)
 			case "isRecurring":
 				return ec.fieldContext_Income_isRecurring(ctx, field)
 			case "notes":
 				return ec.fieldContext_Income_notes(ctx, field)
+			case "pocketId":
+				return ec.fieldContext_Income_pocketId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Income_createdAt(ctx, field)
 			case "category":
@@ -14911,8 +15682,6 @@ func (ec *executionContext) fieldContext_Query_recurringIncomes(ctx context.Cont
 				return ec.fieldContext_RecurringIncome_sourceName(ctx, field)
 			case "amount":
 				return ec.fieldContext_RecurringIncome_amount(ctx, field)
-			case "incomeType":
-				return ec.fieldContext_RecurringIncome_incomeType(ctx, field)
 			case "recurringDay":
 				return ec.fieldContext_RecurringIncome_recurringDay(ctx, field)
 			case "isActive":
@@ -14972,8 +15741,6 @@ func (ec *executionContext) fieldContext_Query_recurringIncome(ctx context.Conte
 				return ec.fieldContext_RecurringIncome_sourceName(ctx, field)
 			case "amount":
 				return ec.fieldContext_RecurringIncome_amount(ctx, field)
-			case "incomeType":
-				return ec.fieldContext_RecurringIncome_incomeType(ctx, field)
 			case "recurringDay":
 				return ec.fieldContext_RecurringIncome_recurringDay(ctx, field)
 			case "isActive":
@@ -15365,6 +16132,8 @@ func (ec *executionContext) fieldContext_Query_savingsGoals(ctx context.Context,
 				return ec.fieldContext_SavingsGoal_targetDate(ctx, field)
 			case "icon":
 				return ec.fieldContext_SavingsGoal_icon(ctx, field)
+			case "cardBgColor":
+				return ec.fieldContext_SavingsGoal_cardBgColor(ctx, field)
 			case "status":
 				return ec.fieldContext_SavingsGoal_status(ctx, field)
 			case "notes":
@@ -15434,6 +16203,8 @@ func (ec *executionContext) fieldContext_Query_savingsGoal(ctx context.Context, 
 				return ec.fieldContext_SavingsGoal_targetDate(ctx, field)
 			case "icon":
 				return ec.fieldContext_SavingsGoal_icon(ctx, field)
+			case "cardBgColor":
+				return ec.fieldContext_SavingsGoal_cardBgColor(ctx, field)
 			case "status":
 				return ec.fieldContext_SavingsGoal_status(ctx, field)
 			case "notes":
@@ -15500,6 +16271,14 @@ func (ec *executionContext) fieldContext_Query_accounts(_ context.Context, field
 				return ec.fieldContext_Account_currentBalance(ctx, field)
 			case "isDefault":
 				return ec.fieldContext_Account_isDefault(ctx, field)
+			case "isPocket":
+				return ec.fieldContext_Account_isPocket(ctx, field)
+			case "icon":
+				return ec.fieldContext_Account_icon(ctx, field)
+			case "cardBgColor":
+				return ec.fieldContext_Account_cardBgColor(ctx, field)
+			case "sortOrder":
+				return ec.fieldContext_Account_sortOrder(ctx, field)
 			case "referenceId":
 				return ec.fieldContext_Account_referenceId(ctx, field)
 			case "referenceType":
@@ -15548,6 +16327,14 @@ func (ec *executionContext) fieldContext_Query_account(ctx context.Context, fiel
 				return ec.fieldContext_Account_currentBalance(ctx, field)
 			case "isDefault":
 				return ec.fieldContext_Account_isDefault(ctx, field)
+			case "isPocket":
+				return ec.fieldContext_Account_isPocket(ctx, field)
+			case "icon":
+				return ec.fieldContext_Account_icon(ctx, field)
+			case "cardBgColor":
+				return ec.fieldContext_Account_cardBgColor(ctx, field)
+			case "sortOrder":
+				return ec.fieldContext_Account_sortOrder(ctx, field)
 			case "referenceId":
 				return ec.fieldContext_Account_referenceId(ctx, field)
 			case "referenceType":
@@ -15607,6 +16394,14 @@ func (ec *executionContext) fieldContext_Query_accountsByType(ctx context.Contex
 				return ec.fieldContext_Account_currentBalance(ctx, field)
 			case "isDefault":
 				return ec.fieldContext_Account_isDefault(ctx, field)
+			case "isPocket":
+				return ec.fieldContext_Account_isPocket(ctx, field)
+			case "icon":
+				return ec.fieldContext_Account_icon(ctx, field)
+			case "cardBgColor":
+				return ec.fieldContext_Account_cardBgColor(ctx, field)
+			case "sortOrder":
+				return ec.fieldContext_Account_sortOrder(ctx, field)
 			case "referenceId":
 				return ec.fieldContext_Account_referenceId(ctx, field)
 			case "referenceType":
@@ -15625,6 +16420,183 @@ func (ec *executionContext) fieldContext_Query_accountsByType(ctx context.Contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_accountsByType_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_pockets(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_pockets,
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Query().Pockets(ctx)
+		},
+		nil,
+		ec.marshalNAccount2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐAccountᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_pockets(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Account_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Account_name(ctx, field)
+			case "accountType":
+				return ec.fieldContext_Account_accountType(ctx, field)
+			case "currentBalance":
+				return ec.fieldContext_Account_currentBalance(ctx, field)
+			case "isDefault":
+				return ec.fieldContext_Account_isDefault(ctx, field)
+			case "isPocket":
+				return ec.fieldContext_Account_isPocket(ctx, field)
+			case "icon":
+				return ec.fieldContext_Account_icon(ctx, field)
+			case "cardBgColor":
+				return ec.fieldContext_Account_cardBgColor(ctx, field)
+			case "sortOrder":
+				return ec.fieldContext_Account_sortOrder(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Account_referenceId(ctx, field)
+			case "referenceType":
+				return ec.fieldContext_Account_referenceType(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Account_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Account", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_pocket(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_pocket,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().Pocket(ctx, fc.Args["id"].(uuid.UUID))
+		},
+		nil,
+		ec.marshalOAccount2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐAccount,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_pocket(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Account_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Account_name(ctx, field)
+			case "accountType":
+				return ec.fieldContext_Account_accountType(ctx, field)
+			case "currentBalance":
+				return ec.fieldContext_Account_currentBalance(ctx, field)
+			case "isDefault":
+				return ec.fieldContext_Account_isDefault(ctx, field)
+			case "isPocket":
+				return ec.fieldContext_Account_isPocket(ctx, field)
+			case "icon":
+				return ec.fieldContext_Account_icon(ctx, field)
+			case "cardBgColor":
+				return ec.fieldContext_Account_cardBgColor(ctx, field)
+			case "sortOrder":
+				return ec.fieldContext_Account_sortOrder(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Account_referenceId(ctx, field)
+			case "referenceType":
+				return ec.fieldContext_Account_referenceType(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Account_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Account", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_pocket_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_pocketEntries(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_pocketEntries,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().PocketEntries(ctx, fc.Args["pocketId"].(uuid.UUID))
+		},
+		nil,
+		ec.marshalNPocketEntry2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐPocketEntryᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_pocketEntries(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PocketEntry_id(ctx, field)
+			case "transactionDate":
+				return ec.fieldContext_PocketEntry_transactionDate(ctx, field)
+			case "description":
+				return ec.fieldContext_PocketEntry_description(ctx, field)
+			case "debit":
+				return ec.fieldContext_PocketEntry_debit(ctx, field)
+			case "credit":
+				return ec.fieldContext_PocketEntry_credit(ctx, field)
+			case "referenceType":
+				return ec.fieldContext_PocketEntry_referenceType(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PocketEntry", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_pocketEntries_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -15983,35 +16955,6 @@ func (ec *executionContext) fieldContext_RecurringIncome_amount(_ context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _RecurringIncome_incomeType(ctx context.Context, field graphql.CollectedField, obj *model.RecurringIncome) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_RecurringIncome_incomeType,
-		func(ctx context.Context) (any, error) {
-			return obj.IncomeType, nil
-		},
-		nil,
-		ec.marshalNIncomeType2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeType,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_RecurringIncome_incomeType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "RecurringIncome",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type IncomeType does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _RecurringIncome_recurringDay(ctx context.Context, field graphql.CollectedField, obj *model.RecurringIncome) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -16287,6 +17230,35 @@ func (ec *executionContext) fieldContext_SavingsContribution_notes(_ context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _SavingsContribution_pocketId(ctx context.Context, field graphql.CollectedField, obj *model.SavingsContribution) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SavingsContribution_pocketId,
+		func(ctx context.Context) (any, error) {
+			return obj.PocketID, nil
+		},
+		nil,
+		ec.marshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_SavingsContribution_pocketId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SavingsContribution",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type UUID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _SavingsContribution_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.SavingsContribution) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -16352,6 +17324,8 @@ func (ec *executionContext) fieldContext_SavingsContribution_savingsGoal(_ conte
 				return ec.fieldContext_SavingsGoal_targetDate(ctx, field)
 			case "icon":
 				return ec.fieldContext_SavingsGoal_icon(ctx, field)
+			case "cardBgColor":
+				return ec.fieldContext_SavingsGoal_cardBgColor(ctx, field)
 			case "status":
 				return ec.fieldContext_SavingsGoal_status(ctx, field)
 			case "notes":
@@ -16535,6 +17509,35 @@ func (ec *executionContext) _SavingsGoal_icon(ctx context.Context, field graphql
 }
 
 func (ec *executionContext) fieldContext_SavingsGoal_icon(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SavingsGoal",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SavingsGoal_cardBgColor(ctx context.Context, field graphql.CollectedField, obj *model.SavingsGoal) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SavingsGoal_cardBgColor,
+		func(ctx context.Context) (any, error) {
+			return obj.CardBgColor, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_SavingsGoal_cardBgColor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SavingsGoal",
 		Field:      field,
@@ -16753,6 +17756,8 @@ func (ec *executionContext) fieldContext_SavingsGoal_contributions(_ context.Con
 				return ec.fieldContext_SavingsContribution_contributionDate(ctx, field)
 			case "notes":
 				return ec.fieldContext_SavingsContribution_notes(ctx, field)
+			case "pocketId":
+				return ec.fieldContext_SavingsContribution_pocketId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_SavingsContribution_createdAt(ctx, field)
 			case "savingsGoal":
@@ -17040,6 +18045,14 @@ func (ec *executionContext) fieldContext_TransactionEntry_account(_ context.Cont
 				return ec.fieldContext_Account_currentBalance(ctx, field)
 			case "isDefault":
 				return ec.fieldContext_Account_isDefault(ctx, field)
+			case "isPocket":
+				return ec.fieldContext_Account_isPocket(ctx, field)
+			case "icon":
+				return ec.fieldContext_Account_icon(ctx, field)
+			case "cardBgColor":
+				return ec.fieldContext_Account_cardBgColor(ctx, field)
+			case "sortOrder":
+				return ec.fieldContext_Account_sortOrder(ctx, field)
 			case "referenceId":
 				return ec.fieldContext_Account_referenceId(ctx, field)
 			case "referenceType":
@@ -19579,7 +20592,7 @@ func (ec *executionContext) unmarshalInputAddSavingsContributionInput(ctx contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"savingsGoalId", "amount", "contributionDate", "notes"}
+	fieldsInOrder := [...]string{"savingsGoalId", "amount", "contributionDate", "notes", "pocketId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -19614,6 +20627,13 @@ func (ec *executionContext) unmarshalInputAddSavingsContributionInput(ctx contex
 				return it, err
 			}
 			it.Notes = data
+		case "pocketId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pocketId"))
+			data, err := ec.unmarshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PocketID = data
 		}
 	}
 	return it, nil
@@ -19725,7 +20745,7 @@ func (ec *executionContext) unmarshalInputCreateDebtInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"personName", "actualAmount", "loanAmount", "paymentType", "monthlyPayment", "tenor", "dueDate", "notes"}
+	fieldsInOrder := [...]string{"personName", "actualAmount", "loanAmount", "paymentType", "monthlyPayment", "tenor", "dueDate", "icon", "cardBgColor", "notes"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -19781,6 +20801,20 @@ func (ec *executionContext) unmarshalInputCreateDebtInput(ctx context.Context, o
 				return it, err
 			}
 			it.DueDate = data
+		case "icon":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("icon"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Icon = data
+		case "cardBgColor":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cardBgColor"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CardBgColor = data
 		case "notes":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -19800,7 +20834,7 @@ func (ec *executionContext) unmarshalInputCreateExpenseInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"categoryId", "itemName", "unitPrice", "quantity", "notes", "expenseDate"}
+	fieldsInOrder := [...]string{"categoryId", "itemName", "unitPrice", "quantity", "notes", "expenseDate", "pocketId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -19849,6 +20883,13 @@ func (ec *executionContext) unmarshalInputCreateExpenseInput(ctx context.Context
 				return it, err
 			}
 			it.ExpenseDate = data
+		case "pocketId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pocketId"))
+			data, err := ec.unmarshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PocketID = data
 		}
 	}
 	return it, nil
@@ -19981,7 +21022,7 @@ func (ec *executionContext) unmarshalInputCreateIncomeInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"categoryId", "sourceName", "amount", "incomeType", "incomeDate", "isRecurring", "notes"}
+	fieldsInOrder := [...]string{"categoryId", "sourceName", "amount", "incomeDate", "isRecurring", "notes", "pocketId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -20009,13 +21050,6 @@ func (ec *executionContext) unmarshalInputCreateIncomeInput(ctx context.Context,
 				return it, err
 			}
 			it.Amount = data
-		case "incomeType":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("incomeType"))
-			data, err := ec.unmarshalNIncomeType2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeType(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.IncomeType = data
 		case "incomeDate":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("incomeDate"))
 			data, err := ec.unmarshalODate2ᚖtimeᚐTime(ctx, v)
@@ -20037,6 +21071,13 @@ func (ec *executionContext) unmarshalInputCreateIncomeInput(ctx context.Context,
 				return it, err
 			}
 			it.Notes = data
+		case "pocketId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pocketId"))
+			data, err := ec.unmarshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PocketID = data
 		}
 	}
 	return it, nil
@@ -20049,7 +21090,7 @@ func (ec *executionContext) unmarshalInputCreateInstallmentInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "actualAmount", "loanAmount", "monthlyPayment", "tenor", "startDate", "dueDay", "notes"}
+	fieldsInOrder := [...]string{"name", "actualAmount", "loanAmount", "monthlyPayment", "tenor", "startDate", "dueDay", "icon", "cardBgColor", "notes"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -20105,6 +21146,20 @@ func (ec *executionContext) unmarshalInputCreateInstallmentInput(ctx context.Con
 				return it, err
 			}
 			it.DueDay = data
+		case "icon":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("icon"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Icon = data
+		case "cardBgColor":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cardBgColor"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CardBgColor = data
 		case "notes":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -20117,6 +21172,46 @@ func (ec *executionContext) unmarshalInputCreateInstallmentInput(ctx context.Con
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputCreatePocketInput(ctx context.Context, obj any) (model.CreatePocketInput, error) {
+	var it model.CreatePocketInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name", "icon", "cardBgColor"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "icon":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("icon"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Icon = data
+		case "cardBgColor":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cardBgColor"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CardBgColor = data
+		}
+	}
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputCreateRecurringIncomeInput(ctx context.Context, obj any) (model.CreateRecurringIncomeInput, error) {
 	var it model.CreateRecurringIncomeInput
 	asMap := map[string]any{}
@@ -20124,7 +21219,7 @@ func (ec *executionContext) unmarshalInputCreateRecurringIncomeInput(ctx context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"categoryId", "sourceName", "amount", "incomeType", "recurringDay", "notes"}
+	fieldsInOrder := [...]string{"categoryId", "sourceName", "amount", "recurringDay", "notes"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -20152,13 +21247,6 @@ func (ec *executionContext) unmarshalInputCreateRecurringIncomeInput(ctx context
 				return it, err
 			}
 			it.Amount = data
-		case "incomeType":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("incomeType"))
-			data, err := ec.unmarshalNIncomeType2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeType(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.IncomeType = data
 		case "recurringDay":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("recurringDay"))
 			data, err := ec.unmarshalNInt2int(ctx, v)
@@ -20185,7 +21273,7 @@ func (ec *executionContext) unmarshalInputCreateSavingsGoalInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "targetAmount", "targetDate", "icon", "notes"}
+	fieldsInOrder := [...]string{"name", "targetAmount", "targetDate", "icon", "cardBgColor", "notes"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -20220,6 +21308,13 @@ func (ec *executionContext) unmarshalInputCreateSavingsGoalInput(ctx context.Con
 				return it, err
 			}
 			it.Icon = data
+		case "cardBgColor":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cardBgColor"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CardBgColor = data
 		case "notes":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -20331,7 +21426,7 @@ func (ec *executionContext) unmarshalInputIncomeFilter(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"categoryId", "incomeType", "startDate", "endDate"}
+	fieldsInOrder := [...]string{"categoryId", "startDate", "endDate"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -20345,13 +21440,6 @@ func (ec *executionContext) unmarshalInputIncomeFilter(ctx context.Context, obj 
 				return it, err
 			}
 			it.CategoryID = data
-		case "incomeType":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("incomeType"))
-			data, err := ec.unmarshalOIncomeType2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeType(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.IncomeType = data
 		case "startDate":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startDate"))
 			data, err := ec.unmarshalODate2ᚖtimeᚐTime(ctx, v)
@@ -20444,7 +21532,7 @@ func (ec *executionContext) unmarshalInputRecordDebtPaymentInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"debtId", "amount", "paidAt"}
+	fieldsInOrder := [...]string{"debtId", "amount", "paidAt", "pocketId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -20472,6 +21560,13 @@ func (ec *executionContext) unmarshalInputRecordDebtPaymentInput(ctx context.Con
 				return it, err
 			}
 			it.PaidAt = data
+		case "pocketId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pocketId"))
+			data, err := ec.unmarshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PocketID = data
 		}
 	}
 	return it, nil
@@ -20484,7 +21579,7 @@ func (ec *executionContext) unmarshalInputRecordInstallmentPaymentInput(ctx cont
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"installmentId", "amount", "paidAt"}
+	fieldsInOrder := [...]string{"installmentId", "amount", "paidAt", "pocketId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -20512,6 +21607,13 @@ func (ec *executionContext) unmarshalInputRecordInstallmentPaymentInput(ctx cont
 				return it, err
 			}
 			it.PaidAt = data
+		case "pocketId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pocketId"))
+			data, err := ec.unmarshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PocketID = data
 		}
 	}
 	return it, nil
@@ -20623,6 +21725,53 @@ func (ec *executionContext) unmarshalInputTransactionFilter(ctx context.Context,
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputTransferPocketInput(ctx context.Context, obj any) (model.TransferPocketInput, error) {
+	var it model.TransferPocketInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"fromPocketId", "toPocketId", "amount", "description"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "fromPocketId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fromPocketId"))
+			data, err := ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FromPocketID = data
+		case "toPocketId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("toPocketId"))
+			data, err := ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ToPocketID = data
+		case "amount":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amount"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Amount = data
+		case "description":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Description = data
+		}
+	}
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputUpcomingPaymentsFilter(ctx context.Context, obj any) (model.UpcomingPaymentsFilter, error) {
 	var it model.UpcomingPaymentsFilter
 	asMap := map[string]any{}
@@ -20715,7 +21864,7 @@ func (ec *executionContext) unmarshalInputUpdateDebtInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"personName", "actualAmount", "loanAmount", "paymentType", "monthlyPayment", "tenor", "dueDate", "status", "notes"}
+	fieldsInOrder := [...]string{"personName", "actualAmount", "loanAmount", "paymentType", "monthlyPayment", "tenor", "dueDate", "status", "icon", "cardBgColor", "notes"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -20778,6 +21927,20 @@ func (ec *executionContext) unmarshalInputUpdateDebtInput(ctx context.Context, o
 				return it, err
 			}
 			it.Status = data
+		case "icon":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("icon"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Icon = data
+		case "cardBgColor":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cardBgColor"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CardBgColor = data
 		case "notes":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -20797,7 +21960,7 @@ func (ec *executionContext) unmarshalInputUpdateExpenseInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"categoryId", "itemName", "unitPrice", "quantity", "notes", "expenseDate"}
+	fieldsInOrder := [...]string{"categoryId", "itemName", "unitPrice", "quantity", "notes", "expenseDate", "pocketId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -20846,6 +22009,13 @@ func (ec *executionContext) unmarshalInputUpdateExpenseInput(ctx context.Context
 				return it, err
 			}
 			it.ExpenseDate = data
+		case "pocketId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pocketId"))
+			data, err := ec.unmarshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PocketID = data
 		}
 	}
 	return it, nil
@@ -20971,7 +22141,7 @@ func (ec *executionContext) unmarshalInputUpdateIncomeInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"categoryId", "sourceName", "amount", "incomeType", "incomeDate", "isRecurring", "notes"}
+	fieldsInOrder := [...]string{"categoryId", "sourceName", "amount", "incomeDate", "isRecurring", "notes", "pocketId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -20999,13 +22169,6 @@ func (ec *executionContext) unmarshalInputUpdateIncomeInput(ctx context.Context,
 				return it, err
 			}
 			it.Amount = data
-		case "incomeType":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("incomeType"))
-			data, err := ec.unmarshalOIncomeType2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeType(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.IncomeType = data
 		case "incomeDate":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("incomeDate"))
 			data, err := ec.unmarshalODate2ᚖtimeᚐTime(ctx, v)
@@ -21027,6 +22190,13 @@ func (ec *executionContext) unmarshalInputUpdateIncomeInput(ctx context.Context,
 				return it, err
 			}
 			it.Notes = data
+		case "pocketId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pocketId"))
+			data, err := ec.unmarshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PocketID = data
 		}
 	}
 	return it, nil
@@ -21039,7 +22209,7 @@ func (ec *executionContext) unmarshalInputUpdateInstallmentInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "actualAmount", "loanAmount", "monthlyPayment", "tenor", "startDate", "dueDay", "status", "notes"}
+	fieldsInOrder := [...]string{"name", "actualAmount", "loanAmount", "monthlyPayment", "tenor", "startDate", "dueDay", "status", "icon", "cardBgColor", "notes"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -21102,6 +22272,20 @@ func (ec *executionContext) unmarshalInputUpdateInstallmentInput(ctx context.Con
 				return it, err
 			}
 			it.Status = data
+		case "icon":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("icon"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Icon = data
+		case "cardBgColor":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cardBgColor"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CardBgColor = data
 		case "notes":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -21156,6 +22340,53 @@ func (ec *executionContext) unmarshalInputUpdateNotificationSettingsInput(ctx co
 				return it, err
 			}
 			it.NotifyDaysBefore = data
+		}
+	}
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpdatePocketInput(ctx context.Context, obj any) (model.UpdatePocketInput, error) {
+	var it model.UpdatePocketInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name", "icon", "cardBgColor", "sortOrder"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "icon":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("icon"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Icon = data
+		case "cardBgColor":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cardBgColor"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CardBgColor = data
+		case "sortOrder":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sortOrder"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SortOrder = data
 		}
 	}
 	return it, nil
@@ -21222,7 +22453,7 @@ func (ec *executionContext) unmarshalInputUpdateRecurringIncomeInput(ctx context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"categoryId", "sourceName", "amount", "incomeType", "recurringDay", "isActive", "notes"}
+	fieldsInOrder := [...]string{"categoryId", "sourceName", "amount", "recurringDay", "isActive", "notes"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -21250,13 +22481,6 @@ func (ec *executionContext) unmarshalInputUpdateRecurringIncomeInput(ctx context
 				return it, err
 			}
 			it.Amount = data
-		case "incomeType":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("incomeType"))
-			data, err := ec.unmarshalOIncomeType2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeType(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.IncomeType = data
 		case "recurringDay":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("recurringDay"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
@@ -21290,7 +22514,7 @@ func (ec *executionContext) unmarshalInputUpdateSavingsGoalInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "targetAmount", "targetDate", "icon", "notes", "status"}
+	fieldsInOrder := [...]string{"name", "targetAmount", "targetDate", "icon", "cardBgColor", "notes", "status"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -21325,6 +22549,13 @@ func (ec *executionContext) unmarshalInputUpdateSavingsGoalInput(ctx context.Con
 				return it, err
 			}
 			it.Icon = data
+		case "cardBgColor":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cardBgColor"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CardBgColor = data
 		case "notes":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -21418,6 +22649,20 @@ func (ec *executionContext) _Account(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "isDefault":
 			out.Values[i] = ec._Account_isDefault(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "isPocket":
+			out.Values[i] = ec._Account_isPocket(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "icon":
+			out.Values[i] = ec._Account_icon(ctx, field, obj)
+		case "cardBgColor":
+			out.Values[i] = ec._Account_cardBgColor(ctx, field, obj)
+		case "sortOrder":
+			out.Values[i] = ec._Account_sortOrder(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -22100,6 +23345,10 @@ func (ec *executionContext) _Debt(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "icon":
+			out.Values[i] = ec._Debt_icon(ctx, field, obj)
+		case "cardBgColor":
+			out.Values[i] = ec._Debt_cardBgColor(ctx, field, obj)
 		case "notes":
 			out.Values[i] = ec._Debt_notes(ctx, field, obj)
 		case "createdAt":
@@ -22185,6 +23434,8 @@ func (ec *executionContext) _DebtPayment(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "pocketId":
+			out.Values[i] = ec._DebtPayment_pocketId(ctx, field, obj)
 		case "createdAt":
 			out.Values[i] = ec._DebtPayment_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -22258,6 +23509,8 @@ func (ec *executionContext) _Expense(ctx context.Context, sel ast.SelectionSet, 
 			out.Values[i] = ec._Expense_notes(ctx, field, obj)
 		case "expenseDate":
 			out.Values[i] = ec._Expense_expenseDate(ctx, field, obj)
+		case "pocketId":
+			out.Values[i] = ec._Expense_pocketId(ctx, field, obj)
 		case "createdAt":
 			out.Values[i] = ec._Expense_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -22768,11 +24021,6 @@ func (ec *executionContext) _Income(ctx context.Context, sel ast.SelectionSet, o
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "incomeType":
-			out.Values[i] = ec._Income_incomeType(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "incomeDate":
 			out.Values[i] = ec._Income_incomeDate(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -22785,6 +24033,8 @@ func (ec *executionContext) _Income(ctx context.Context, sel ast.SelectionSet, o
 			}
 		case "notes":
 			out.Values[i] = ec._Income_notes(ctx, field, obj)
+		case "pocketId":
+			out.Values[i] = ec._Income_pocketId(ctx, field, obj)
 		case "createdAt":
 			out.Values[i] = ec._Income_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -22844,11 +24094,6 @@ func (ec *executionContext) _IncomeBreakdown(ctx context.Context, sel ast.Select
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "byType":
-			out.Values[i] = ec._IncomeBreakdown_byType(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -22895,55 +24140,6 @@ func (ec *executionContext) _IncomeByCategoryGroup(ctx context.Context, sel ast.
 			}
 		case "count":
 			out.Values[i] = ec._IncomeByCategoryGroup_count(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.ProcessDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var incomeByTypeGroupImplementors = []string{"IncomeByTypeGroup"}
-
-func (ec *executionContext) _IncomeByTypeGroup(ctx context.Context, sel ast.SelectionSet, obj *model.IncomeByTypeGroup) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, incomeByTypeGroupImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("IncomeByTypeGroup")
-		case "incomeType":
-			out.Values[i] = ec._IncomeByTypeGroup_incomeType(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "totalAmount":
-			out.Values[i] = ec._IncomeByTypeGroup_totalAmount(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "count":
-			out.Values[i] = ec._IncomeByTypeGroup_count(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -23109,60 +24305,6 @@ func (ec *executionContext) _IncomeSummary(ctx context.Context, sel ast.Selectio
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "byType":
-			out.Values[i] = ec._IncomeSummary_byType(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.ProcessDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var incomeTypeSummaryImplementors = []string{"IncomeTypeSummary"}
-
-func (ec *executionContext) _IncomeTypeSummary(ctx context.Context, sel ast.SelectionSet, obj *model.IncomeTypeSummary) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, incomeTypeSummaryImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("IncomeTypeSummary")
-		case "incomeType":
-			out.Values[i] = ec._IncomeTypeSummary_incomeType(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "totalAmount":
-			out.Values[i] = ec._IncomeTypeSummary_totalAmount(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "incomeCount":
-			out.Values[i] = ec._IncomeTypeSummary_incomeCount(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -23286,6 +24428,10 @@ func (ec *executionContext) _Installment(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "icon":
+			out.Values[i] = ec._Installment_icon(ctx, field, obj)
+		case "cardBgColor":
+			out.Values[i] = ec._Installment_cardBgColor(ctx, field, obj)
 		case "notes":
 			out.Values[i] = ec._Installment_notes(ctx, field, obj)
 		case "createdAt":
@@ -23377,6 +24523,8 @@ func (ec *executionContext) _InstallmentPayment(ctx context.Context, sel ast.Sel
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "pocketId":
+			out.Values[i] = ec._InstallmentPayment_pocketId(ctx, field, obj)
 		case "createdAt":
 			out.Values[i] = ec._InstallmentPayment_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -23880,6 +25028,34 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "createPocket":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createPocket(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updatePocket":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updatePocket(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deletePocket":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deletePocket(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "transferBetweenPockets":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_transferBetweenPockets(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -23941,6 +25117,67 @@ func (ec *executionContext) _NotificationLog(ctx context.Context, sel ast.Select
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var pocketEntryImplementors = []string{"PocketEntry"}
+
+func (ec *executionContext) _PocketEntry(ctx context.Context, sel ast.SelectionSet, obj *model.PocketEntry) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, pocketEntryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PocketEntry")
+		case "id":
+			out.Values[i] = ec._PocketEntry_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "transactionDate":
+			out.Values[i] = ec._PocketEntry_transactionDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "description":
+			out.Values[i] = ec._PocketEntry_description(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "debit":
+			out.Values[i] = ec._PocketEntry_debit(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "credit":
+			out.Values[i] = ec._PocketEntry_credit(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "referenceType":
+			out.Values[i] = ec._PocketEntry_referenceType(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -24591,6 +25828,69 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "pockets":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_pockets(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "pocket":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_pocket(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "pocketEntries":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_pocketEntries(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "transactions":
 			field := field
 
@@ -24711,11 +26011,6 @@ func (ec *executionContext) _RecurringIncome(ctx context.Context, sel ast.Select
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "incomeType":
-			out.Values[i] = ec._RecurringIncome_incomeType(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "recurringDay":
 			out.Values[i] = ec._RecurringIncome_recurringDay(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -24789,6 +26084,8 @@ func (ec *executionContext) _SavingsContribution(ctx context.Context, sel ast.Se
 			}
 		case "notes":
 			out.Values[i] = ec._SavingsContribution_notes(ctx, field, obj)
+		case "pocketId":
+			out.Values[i] = ec._SavingsContribution_pocketId(ctx, field, obj)
 		case "createdAt":
 			out.Values[i] = ec._SavingsContribution_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -24860,6 +26157,8 @@ func (ec *executionContext) _SavingsGoal(ctx context.Context, sel ast.SelectionS
 			}
 		case "icon":
 			out.Values[i] = ec._SavingsGoal_icon(ctx, field, obj)
+		case "cardBgColor":
+			out.Values[i] = ec._SavingsGoal_cardBgColor(ctx, field, obj)
 		case "status":
 			out.Values[i] = ec._SavingsGoal_status(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -26020,6 +27319,11 @@ func (ec *executionContext) unmarshalNCreateInstallmentInput2githubᚗcomᚋazza
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNCreatePocketInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCreatePocketInput(ctx context.Context, v any) (model.CreatePocketInput, error) {
+	res, err := ec.unmarshalInputCreatePocketInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNCreateRecurringIncomeInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCreateRecurringIncomeInput(ctx context.Context, v any) (model.CreateRecurringIncomeInput, error) {
 	res, err := ec.unmarshalInputCreateRecurringIncomeInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -26426,32 +27730,6 @@ func (ec *executionContext) marshalNIncomeByCategoryGroup2ᚖgithubᚗcomᚋazza
 	return ec._IncomeByCategoryGroup(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNIncomeByTypeGroup2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeByTypeGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.IncomeByTypeGroup) graphql.Marshaler {
-	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
-		fc := graphql.GetFieldContext(ctx)
-		fc.Result = &v[i]
-		return ec.marshalNIncomeByTypeGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeByTypeGroup(ctx, sel, v[i])
-	})
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalNIncomeByTypeGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeByTypeGroup(ctx context.Context, sel ast.SelectionSet, v *model.IncomeByTypeGroup) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._IncomeByTypeGroup(ctx, sel, v)
-}
-
 func (ec *executionContext) marshalNIncomeCategory2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeCategory(ctx context.Context, sel ast.SelectionSet, v model.IncomeCategory) graphql.Marshaler {
 	return ec._IncomeCategory(ctx, sel, &v)
 }
@@ -26516,42 +27794,6 @@ func (ec *executionContext) marshalNIncomeSummary2ᚖgithubᚗcomᚋazzamdhxᚋm
 		return graphql.Null
 	}
 	return ec._IncomeSummary(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNIncomeType2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeType(ctx context.Context, v any) (model.IncomeType, error) {
-	var res model.IncomeType
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNIncomeType2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeType(ctx context.Context, sel ast.SelectionSet, v model.IncomeType) graphql.Marshaler {
-	return v
-}
-
-func (ec *executionContext) marshalNIncomeTypeSummary2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeTypeSummaryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.IncomeTypeSummary) graphql.Marshaler {
-	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
-		fc := graphql.GetFieldContext(ctx)
-		fc.Result = &v[i]
-		return ec.marshalNIncomeTypeSummary2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeTypeSummary(ctx, sel, v[i])
-	})
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalNIncomeTypeSummary2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeTypeSummary(ctx context.Context, sel ast.SelectionSet, v *model.IncomeTypeSummary) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._IncomeTypeSummary(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNIncomesWithSummary2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomesWithSummary(ctx context.Context, sel ast.SelectionSet, v model.IncomesWithSummary) graphql.Marshaler {
@@ -26683,6 +27925,32 @@ func (ec *executionContext) marshalNNotificationLog2ᚖgithubᚗcomᚋazzamdhx�
 		return graphql.Null
 	}
 	return ec._NotificationLog(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNPocketEntry2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐPocketEntryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.PocketEntry) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNPocketEntry2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐPocketEntry(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNPocketEntry2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐPocketEntry(ctx context.Context, sel ast.SelectionSet, v *model.PocketEntry) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._PocketEntry(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNRecordDebtPaymentInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecordDebtPaymentInput(ctx context.Context, v any) (model.RecordDebtPaymentInput, error) {
@@ -26919,6 +28187,11 @@ func (ec *executionContext) marshalNTransactionEntry2ᚖgithubᚗcomᚋazzamdhx�
 	return ec._TransactionEntry(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNTransferPocketInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐTransferPocketInput(ctx context.Context, v any) (model.TransferPocketInput, error) {
+	res, err := ec.unmarshalInputTransferPocketInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNTwoFAPayload2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐTwoFAPayload(ctx context.Context, sel ast.SelectionSet, v model.TwoFAPayload) graphql.Marshaler {
 	return ec._TwoFAPayload(ctx, sel, &v)
 }
@@ -27067,6 +28340,11 @@ func (ec *executionContext) unmarshalNUpdateInstallmentInput2githubᚗcomᚋazza
 
 func (ec *executionContext) unmarshalNUpdateNotificationSettingsInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐUpdateNotificationSettingsInput(ctx context.Context, v any) (model.UpdateNotificationSettingsInput, error) {
 	res, err := ec.unmarshalInputUpdateNotificationSettingsInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpdatePocketInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐUpdatePocketInput(ctx context.Context, v any) (model.UpdatePocketInput, error) {
+	res, err := ec.unmarshalInputUpdatePocketInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -27423,22 +28701,6 @@ func (ec *executionContext) unmarshalOIncomeFilter2ᚖgithubᚗcomᚋazzamdhxᚋ
 	}
 	res, err := ec.unmarshalInputIncomeFilter(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalOIncomeType2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeType(ctx context.Context, v any) (*model.IncomeType, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var res = new(model.IncomeType)
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOIncomeType2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeType(ctx context.Context, sel ast.SelectionSet, v *model.IncomeType) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return v
 }
 
 func (ec *executionContext) marshalOInstallment2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐInstallment(ctx context.Context, sel ast.SelectionSet, v *model.Installment) graphql.Marshaler {

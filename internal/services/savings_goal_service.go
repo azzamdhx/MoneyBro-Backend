@@ -39,6 +39,7 @@ type CreateSavingsGoalInput struct {
 	TargetAmount int64
 	TargetDate   time.Time
 	Icon         *string
+	CardBgColor  *string
 	Notes        *string
 }
 
@@ -60,6 +61,7 @@ func (s *SavingsGoalService) Create(userID uuid.UUID, input CreateSavingsGoalInp
 		TargetAmount: input.TargetAmount,
 		TargetDate:   input.TargetDate,
 		Icon:         input.Icon,
+		CardBgColor:  input.CardBgColor,
 		Status:       models.SavingsGoalStatusActive,
 		Notes:        input.Notes,
 	}
@@ -94,6 +96,7 @@ type UpdateSavingsGoalInput struct {
 	TargetAmount *int64
 	TargetDate   *time.Time
 	Icon         *string
+	CardBgColor  *string
 	Notes        *string
 	Status       *models.SavingsGoalStatus
 }
@@ -118,6 +121,9 @@ func (s *SavingsGoalService) Update(id uuid.UUID, input UpdateSavingsGoalInput) 
 	}
 	if input.Icon != nil {
 		goal.Icon = input.Icon
+	}
+	if input.CardBgColor != nil {
+		goal.CardBgColor = input.CardBgColor
 	}
 	if input.Notes != nil {
 		goal.Notes = input.Notes
@@ -152,7 +158,7 @@ func (s *SavingsGoalService) Delete(id uuid.UUID) error {
 	return s.goalRepo.Delete(id)
 }
 
-func (s *SavingsGoalService) AddContribution(goalID uuid.UUID, amount int64, contributionDate time.Time, notes *string) (*models.SavingsContribution, error) {
+func (s *SavingsGoalService) AddContribution(goalID uuid.UUID, amount int64, contributionDate time.Time, notes *string, pocketID *uuid.UUID) (*models.SavingsContribution, error) {
 	goal, err := s.goalRepo.GetByID(goalID)
 	if err != nil {
 		return nil, err
@@ -172,6 +178,7 @@ func (s *SavingsGoalService) AddContribution(goalID uuid.UUID, amount int64, con
 		Amount:           amount,
 		ContributionDate: contributionDate,
 		Notes:            notes,
+		PocketID:         pocketID,
 	}
 
 	if err := s.contributionRepo.Create(contribution); err != nil {
@@ -255,15 +262,20 @@ func (s *SavingsGoalService) createContributionLedgerEntry(userID uuid.UUID, goa
 		return err
 	}
 
-	// Get default cash account
-	cashAccount, err := s.accountRepo.GetDefaultByUserID(userID)
+	// Get pocket account
+	var pocketAccount *models.Account
+	if contribution.PocketID != nil {
+		pocketAccount, err = s.accountRepo.GetByID(*contribution.PocketID)
+	} else {
+		pocketAccount, err = s.accountRepo.GetDefaultByUserID(userID)
+	}
 	if err != nil {
 		return err
 	}
 
 	entries := []LedgerEntry{
 		{AccountID: savingsAccount.ID, Debit: contribution.Amount, Credit: 0},
-		{AccountID: cashAccount.ID, Debit: 0, Credit: contribution.Amount},
+		{AccountID: pocketAccount.ID, Debit: 0, Credit: contribution.Amount},
 	}
 
 	_, err = s.ledgerService.CreateJournalEntry(

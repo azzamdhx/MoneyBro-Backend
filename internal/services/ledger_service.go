@@ -203,6 +203,10 @@ func (s *LedgerService) DeleteByReference(referenceID uuid.UUID, referenceType s
 	return s.DeleteJournalEntry(transaction.ID)
 }
 
+func (s *LedgerService) GetEntriesByAccountID(accountID uuid.UUID) ([]models.TransactionEntry, error) {
+	return s.entryRepo.GetByAccountID(accountID)
+}
+
 func (s *LedgerService) GetTransaction(id uuid.UUID) (*models.Transaction, error) {
 	return s.transactionRepo.GetByID(id)
 }

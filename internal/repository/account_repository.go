@@ -55,6 +55,12 @@ func (r *accountRepository) GetByReference(referenceID uuid.UUID, referenceType 
 	return &account, err
 }
 
+func (r *accountRepository) GetPocketsByUserID(userID uuid.UUID) ([]models.Account, error) {
+	var accounts []models.Account
+	err := r.db.Where("user_id = ? AND is_pocket = ?", userID, true).Order("sort_order, created_at").Find(&accounts).Error
+	return accounts, err
+}
+
 func (r *accountRepository) Update(account *models.Account) error {
 	return r.db.Save(account).Error
 }

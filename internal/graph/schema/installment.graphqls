@@ -13,6 +13,8 @@ type Installment {
   startDate: Date!
   dueDay: Int!
   status: InstallmentStatus!
+  icon: String
+  cardBgColor: String
   notes: String
   createdAt: Time!
   
@@ -30,6 +32,7 @@ type InstallmentPayment {
   paymentNumber: Int!
   amount: Int!
   paidAt: Date!
+  pocketId: UUID
   createdAt: Time!
   
   installment: Installment!
@@ -43,6 +46,8 @@ input CreateInstallmentInput {
   tenor: Int!
   startDate: Date!
   dueDay: Int!
+  icon: String
+  cardBgColor: String
   notes: String
 }
 
@@ -55,6 +60,8 @@ input UpdateInstallmentInput {
   startDate: Date
   dueDay: Int
   status: InstallmentStatus
+  icon: String
+  cardBgColor: String
   notes: String
 }
 
@@ -62,4 +69,5 @@ input RecordInstallmentPaymentInput {
   installmentId: UUID!
   amount: Int!
   paidAt: Date!
+  pocketId: UUID
 }

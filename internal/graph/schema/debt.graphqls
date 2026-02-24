@@ -18,6 +18,8 @@ type Debt {
   tenor: Int
   dueDate: Date
   status: DebtStatus!
+  icon: String
+  cardBgColor: String
   notes: String
   createdAt: Time!
   
@@ -35,6 +37,7 @@ type DebtPayment {
   paymentNumber: Int!
   amount: Int!
   paidAt: Date!
+  pocketId: UUID
   createdAt: Time!
   
   debt: Debt!
@@ -48,6 +51,8 @@ input CreateDebtInput {
   monthlyPayment: Int
   tenor: Int
   dueDate: Date
+  icon: String
+  cardBgColor: String
   notes: String
 }
 
@@ -60,6 +65,8 @@ input UpdateDebtInput {
   tenor: Int
   dueDate: Date
   status: DebtStatus
+  icon: String
+  cardBgColor: String
   notes: String
 }
 
@@ -67,4 +74,5 @@ input RecordDebtPaymentInput {
   debtId: UUID!
   amount: Int!
   paidAt: Date!
+  pocketId: UUID
 }

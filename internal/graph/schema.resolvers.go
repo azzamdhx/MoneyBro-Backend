@@ -229,6 +229,7 @@ func (r *mutationResolver) CreateExpense(ctx context.Context, input model.Create
 		Quantity:    input.Quantity,
 		Notes:       input.Notes,
 		ExpenseDate: input.ExpenseDate,
+		PocketID:    input.PocketID,
 	})
 	if err != nil {
 		return nil, err
@@ -250,6 +251,7 @@ func (r *mutationResolver) UpdateExpense(ctx context.Context, id uuid.UUID, inpu
 		Quantity:    input.Quantity,
 		Notes:       input.Notes,
 		ExpenseDate: input.ExpenseDate,
+		PocketID:    input.PocketID,
 	})
 	if err != nil {
 		return nil, err
@@ -379,6 +381,8 @@ func (r *mutationResolver) CreateInstallment(ctx context.Context, input model.Cr
 		Tenor:          input.Tenor,
 		StartDate:      input.StartDate,
 		DueDay:         input.DueDay,
+		Icon:           input.Icon,
+		CardBgColor:    input.CardBgColor,
 		Notes:          input.Notes,
 	})
 	if err != nil {
@@ -434,6 +438,8 @@ func (r *mutationResolver) UpdateInstallment(ctx context.Context, id uuid.UUID, 
 		Tenor:          tenor,
 		StartDate:      startDate,
 		DueDay:         dueDay,
+		Icon:           input.Icon,
+		CardBgColor:    input.CardBgColor,
 		Notes:          input.Notes,
 	}, status)
 	if err != nil {
@@ -450,7 +456,7 @@ func (r *mutationResolver) DeleteInstallment(ctx context.Context, id uuid.UUID) 
 
 // RecordInstallmentPayment is the resolver for the recordInstallmentPayment field.
 func (r *mutationResolver) RecordInstallmentPayment(ctx context.Context, input model.RecordInstallmentPaymentInput) (*model.InstallmentPayment, error) {
-	payment, err := r.Services.Installment.RecordPayment(input.InstallmentID, int64(input.Amount), input.PaidAt)
+	payment, err := r.Services.Installment.RecordPayment(input.InstallmentID, int64(input.Amount), input.PaidAt, input.PocketID)
 	if err != nil {
 		return nil, err
 	}
@@ -490,6 +496,8 @@ func (r *mutationResolver) CreateDebt(ctx context.Context, input model.CreateDeb
 		MonthlyPayment: monthlyPayment,
 		Tenor:          input.Tenor,
 		DueDate:        input.DueDate,
+		Icon:           input.Icon,
+		CardBgColor:    input.CardBgColor,
 		Notes:          input.Notes,
 	})
 	if err != nil {
@@ -547,6 +555,8 @@ func (r *mutationResolver) UpdateDebt(ctx context.Context, id uuid.UUID, input m
 		MonthlyPayment: monthlyPayment,
 		Tenor:          tenor,
 		DueDate:        dueDate,
+		Icon:           input.Icon,
+		CardBgColor:    input.CardBgColor,
 		Notes:          input.Notes,
 	}, status)
 	if err != nil {
@@ -563,7 +573,7 @@ func (r *mutationResolver) DeleteDebt(ctx context.Context, id uuid.UUID) (bool, 
 
 // RecordDebtPayment is the resolver for the recordDebtPayment field.
 func (r *mutationResolver) RecordDebtPayment(ctx context.Context, input model.RecordDebtPaymentInput) (*model.DebtPayment, error) {
-	payment, err := r.Services.Debt.RecordPayment(input.DebtID, int64(input.Amount), input.PaidAt)
+	payment, err := r.Services.Debt.RecordPayment(input.DebtID, int64(input.Amount), input.PaidAt, input.PocketID)
 	if err != nil {
 		return nil, err
 	}
@@ -621,10 +631,10 @@ func (r *mutationResolver) CreateIncome(ctx context.Context, input model.CreateI
 		CategoryID:  input.CategoryID,
 		SourceName:  input.SourceName,
 		Amount:      int64(input.Amount),
-		IncomeType:  models.IncomeType(input.IncomeType),
 		IncomeDate:  input.IncomeDate,
 		IsRecurring: isRecurring,
 		Notes:       input.Notes,
+		PocketID:    input.PocketID,
 	})
 	if err != nil {
 		return nil, err
@@ -639,19 +649,14 @@ func (r *mutationResolver) UpdateIncome(ctx context.Context, id uuid.UUID, input
 		v := int64(*input.Amount)
 		amount = &v
 	}
-	var incomeType *models.IncomeType
-	if input.IncomeType != nil {
-		v := models.IncomeType(*input.IncomeType)
-		incomeType = &v
-	}
 	inc, err := r.Services.Income.Update(id, services.UpdateIncomeInput{
 		CategoryID:  input.CategoryID,
 		SourceName:  input.SourceName,
 		Amount:      amount,
-		IncomeType:  incomeType,
 		IncomeDate:  input.IncomeDate,
 		IsRecurring: input.IsRecurring,
 		Notes:       input.Notes,
+		PocketID:    input.PocketID,
 	})
 	if err != nil {
 		return nil, err
@@ -675,7 +680,6 @@ func (r *mutationResolver) CreateRecurringIncome(ctx context.Context, input mode
 		CategoryID:   input.CategoryID,
 		SourceName:   input.SourceName,
 		Amount:       int64(input.Amount),
-		IncomeType:   models.IncomeType(input.IncomeType),
 		RecurringDay: input.RecurringDay,
 		Notes:        input.Notes,
 	})
@@ -692,16 +696,10 @@ func (r *mutationResolver) UpdateRecurringIncome(ctx context.Context, id uuid.UU
 		v := int64(*input.Amount)
 		amount = &v
 	}
-	var incomeType *models.IncomeType
-	if input.IncomeType != nil {
-		v := models.IncomeType(*input.IncomeType)
-		incomeType = &v
-	}
 	ri, err := r.Services.RecurringIncome.Update(id, services.UpdateRecurringIncomeInput{
 		CategoryID:   input.CategoryID,
 		SourceName:   input.SourceName,
 		Amount:       amount,
-		IncomeType:   incomeType,
 		RecurringDay: input.RecurringDay,
 		IsActive:     input.IsActive,
 		Notes:        input.Notes,
@@ -743,6 +741,7 @@ func (r *mutationResolver) CreateSavingsGoal(ctx context.Context, input model.Cr
 		TargetAmount: int64(input.TargetAmount),
 		TargetDate:   input.TargetDate,
 		Icon:         input.Icon,
+		CardBgColor:  input.CardBgColor,
 		Notes:        input.Notes,
 	})
 	if err != nil {
@@ -755,9 +754,10 @@ func (r *mutationResolver) CreateSavingsGoal(ctx context.Context, input model.Cr
 // UpdateSavingsGoal is the resolver for the updateSavingsGoal field.
 func (r *mutationResolver) UpdateSavingsGoal(ctx context.Context, id uuid.UUID, input model.UpdateSavingsGoalInput) (*model.SavingsGoal, error) {
 	svcInput := services.UpdateSavingsGoalInput{
-		Name:  input.Name,
-		Icon:  input.Icon,
-		Notes: input.Notes,
+		Name:        input.Name,
+		Icon:        input.Icon,
+		CardBgColor: input.CardBgColor,
+		Notes:       input.Notes,
 	}
 	if input.TargetAmount != nil {
 		v := int64(*input.TargetAmount)
@@ -787,7 +787,7 @@ func (r *mutationResolver) DeleteSavingsGoal(ctx context.Context, id uuid.UUID) 
 
 // AddSavingsContribution is the resolver for the addSavingsContribution field.
 func (r *mutationResolver) AddSavingsContribution(ctx context.Context, input model.AddSavingsContributionInput) (*model.SavingsContribution, error) {
-	contribution, err := r.Services.SavingsGoal.AddContribution(input.SavingsGoalID, int64(input.Amount), input.ContributionDate, input.Notes)
+	contribution, err := r.Services.SavingsGoal.AddContribution(input.SavingsGoalID, int64(input.Amount), input.ContributionDate, input.Notes, input.PocketID)
 	if err != nil {
 		return nil, err
 	}
@@ -842,6 +842,72 @@ func (r *mutationResolver) DeleteWalletAccount(ctx context.Context, id uuid.UUID
 		return false, utils.UnauthorizedError(ctx)
 	}
 	if err := r.Services.Account.DeleteAccount(id); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// CreatePocket is the resolver for the createPocket field.
+func (r *mutationResolver) CreatePocket(ctx context.Context, input model.CreatePocketInput) (*model.Account, error) {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
+		return nil, utils.UnauthorizedError(ctx)
+	}
+	acc, err := r.Services.Account.CreatePocket(userID, input.Name, input.Icon, input.CardBgColor)
+	if err != nil {
+		return nil, err
+	}
+	return accountToModel(acc), nil
+}
+
+// UpdatePocket is the resolver for the updatePocket field.
+func (r *mutationResolver) UpdatePocket(ctx context.Context, id uuid.UUID, input model.UpdatePocketInput) (*model.Account, error) {
+	_, ok := middleware.GetUserID(ctx)
+	if !ok {
+		return nil, utils.UnauthorizedError(ctx)
+	}
+	acc, err := r.Services.Account.UpdatePocket(id, input.Name, input.Icon, input.CardBgColor, input.SortOrder)
+	if err != nil {
+		return nil, err
+	}
+	return accountToModel(acc), nil
+}
+
+// DeletePocket is the resolver for the deletePocket field.
+func (r *mutationResolver) DeletePocket(ctx context.Context, id uuid.UUID) (bool, error) {
+	_, ok := middleware.GetUserID(ctx)
+	if !ok {
+		return false, utils.UnauthorizedError(ctx)
+	}
+	if err := r.Services.Account.DeletePocket(id); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// TransferBetweenPockets is the resolver for the transferBetweenPockets field.
+func (r *mutationResolver) TransferBetweenPockets(ctx context.Context, input model.TransferPocketInput) (bool, error) {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
+		return false, utils.UnauthorizedError(ctx)
+	}
+	description := "Transfer antar pocket"
+	if input.Description != nil {
+		description = *input.Description
+	}
+	entries := []services.LedgerEntry{
+		{AccountID: input.ToPocketID, Debit: int64(input.Amount), Credit: 0},
+		{AccountID: input.FromPocketID, Debit: 0, Credit: int64(input.Amount)},
+	}
+	_, err := r.Services.Ledger.CreateJournalEntry(
+		userID,
+		time.Now(),
+		description,
+		entries,
+		nil,
+		"pocket_transfer",
+	)
+	if err != nil {
 		return false, err
 	}
 	return true, nil
@@ -1064,10 +1130,6 @@ func (r *queryResolver) Incomes(ctx context.Context, filter *model.IncomeFilter)
 	if filter != nil {
 		repoFilter = &repository.IncomeFilter{
 			CategoryID: filter.CategoryID,
-		}
-		if filter.IncomeType != nil {
-			v := models.IncomeType(*filter.IncomeType)
-			repoFilter.IncomeType = &v
 		}
 		if filter.StartDate != nil {
 			s := filter.StartDate.Format("2006-01-02")
@@ -1322,6 +1384,63 @@ func (r *queryResolver) AccountsByType(ctx context.Context, accountType model.Ac
 	result := make([]*model.Account, len(accs))
 	for i, a := range accs {
 		result[i] = accountToModel(&a)
+	}
+	return result, nil
+}
+
+// Pockets is the resolver for the pockets field.
+func (r *queryResolver) Pockets(ctx context.Context) ([]*model.Account, error) {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
+		return nil, utils.UnauthorizedError(ctx)
+	}
+	pockets, err := r.Services.Account.GetPockets(userID)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*model.Account, len(pockets))
+	for i, p := range pockets {
+		result[i] = accountToModel(&p)
+	}
+	return result, nil
+}
+
+// Pocket is the resolver for the pocket field.
+func (r *queryResolver) Pocket(ctx context.Context, id uuid.UUID) (*model.Account, error) {
+	_, ok := middleware.GetUserID(ctx)
+	if !ok {
+		return nil, utils.UnauthorizedError(ctx)
+	}
+	acc, err := r.Services.Account.GetAccount(id)
+	if err != nil {
+		return nil, err
+	}
+	return accountToModel(acc), nil
+}
+
+// PocketEntries is the resolver for the pocketEntries field.
+func (r *queryResolver) PocketEntries(ctx context.Context, pocketID uuid.UUID) ([]*model.PocketEntry, error) {
+	_, ok := middleware.GetUserID(ctx)
+	if !ok {
+		return nil, utils.UnauthorizedError(ctx)
+	}
+	entries, err := r.Services.Ledger.GetEntriesByAccountID(pocketID)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*model.PocketEntry, len(entries))
+	for i, e := range entries {
+		entry := &model.PocketEntry{
+			ID:              e.ID.String(),
+			TransactionDate: e.Transaction.TransactionDate,
+			Description:     e.Transaction.Description,
+			Debit:           int(e.Debit),
+			Credit:          int(e.Credit),
+		}
+		if e.Transaction.ReferenceType != nil {
+			entry.ReferenceType = e.Transaction.ReferenceType
+		}
+		result[i] = entry
 	}
 	return result, nil
 }

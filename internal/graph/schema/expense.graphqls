@@ -6,6 +6,7 @@ type Expense {
   total: Int!
   notes: String
   expenseDate: Date
+  pocketId: UUID
   createdAt: Time!
   
   category: Category!
@@ -63,6 +64,7 @@ input CreateExpenseInput {
   quantity: Int!
   notes: String
   expenseDate: Date
+  pocketId: UUID
 }
 
 input UpdateExpenseInput {
@@ -72,6 +74,7 @@ input UpdateExpenseInput {
   quantity: Int
   notes: String
   expenseDate: Date
+  pocketId: UUID
 }
 
 input CreateExpenseTemplateGroupInput {

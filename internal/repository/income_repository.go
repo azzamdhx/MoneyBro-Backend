@@ -36,9 +36,6 @@ func (r *incomeRepository) GetByUserID(userID uuid.UUID, filter *IncomeFilter) (
 		if filter.CategoryID != nil {
 			query = query.Where("category_id = ?", *filter.CategoryID)
 		}
-		if filter.IncomeType != nil {
-			query = query.Where("income_type = ?", *filter.IncomeType)
-		}
 		if filter.StartDate != nil {
 			query = query.Where("income_date >= ?", *filter.StartDate)
 		}

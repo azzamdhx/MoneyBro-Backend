@@ -15,10 +15,12 @@ type Expense struct {
 	Quantity    int        `gorm:"not null;default:1" json:"quantity"`
 	Notes       *string    `gorm:"type:text" json:"notes,omitempty"`
 	ExpenseDate *time.Time `gorm:"type:date" json:"expense_date,omitempty"`
+	PocketID    *uuid.UUID `gorm:"type:uuid" json:"pocket_id,omitempty"`
 	CreatedAt   time.Time  `gorm:"default:now()" json:"created_at"`
 
 	User     *User     `gorm:"foreignKey:UserID" json:"user,omitempty"`
 	Category *Category `gorm:"foreignKey:CategoryID" json:"category,omitempty"`
+	Pocket   *Account  `gorm:"foreignKey:PocketID" json:"pocket,omitempty"`
 }
 
 func (Expense) TableName() string {

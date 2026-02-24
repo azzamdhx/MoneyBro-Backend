@@ -41,6 +41,7 @@ func expenseToModel(e *models.Expense) *model.Expense {
 		Total:       int(e.Total()),
 		Notes:       e.Notes,
 		ExpenseDate: e.ExpenseDate,
+		PocketID:    e.PocketID,
 		CreatedAt:   e.CreatedAt,
 	}
 	if e.Category != nil {
@@ -94,6 +95,8 @@ func installmentToModel(i *models.Installment) *model.Installment {
 		StartDate:          i.StartDate,
 		DueDay:             i.DueDay,
 		Status:             model.InstallmentStatus(i.Status),
+		Icon:               i.Icon,
+		CardBgColor:        i.CardBgColor,
 		Notes:              i.Notes,
 		CreatedAt:          i.CreatedAt,
 		InterestAmount:     int(i.InterestAmount()),
@@ -118,6 +121,7 @@ func installmentPaymentToModel(p *models.InstallmentPayment) *model.InstallmentP
 		PaymentNumber: p.PaymentNumber,
 		Amount:        int(p.Amount),
 		PaidAt:        p.PaidAt,
+		PocketID:      p.PocketID,
 		CreatedAt:     p.CreatedAt,
 	}
 }
@@ -129,6 +133,8 @@ func debtToModel(d *models.Debt) *model.Debt {
 		ActualAmount:    int(d.ActualAmount),
 		PaymentType:     model.DebtPaymentType(d.PaymentType),
 		Status:          model.DebtStatus(d.Status),
+		Icon:            d.Icon,
+		CardBgColor:     d.CardBgColor,
 		Notes:           d.Notes,
 		DueDate:         d.DueDate,
 		CreatedAt:       d.CreatedAt,
@@ -168,6 +174,7 @@ func debtPaymentToModel(p *models.DebtPayment) *model.DebtPayment {
 		PaymentNumber: p.PaymentNumber,
 		Amount:        int(p.Amount),
 		PaidAt:        p.PaidAt,
+		PocketID:      p.PocketID,
 		CreatedAt:     p.CreatedAt,
 	}
 }
@@ -185,10 +192,10 @@ func incomeToModel(i *models.Income) *model.Income {
 		ID:          i.ID,
 		SourceName:  i.SourceName,
 		Amount:      int(i.Amount),
-		IncomeType:  model.IncomeType(i.IncomeType),
 		IncomeDate:  i.IncomeDate,
 		IsRecurring: i.IsRecurring,
 		Notes:       i.Notes,
+		PocketID:    i.PocketID,
 		CreatedAt:   i.CreatedAt,
 	}
 	if i.Category != nil {
@@ -202,7 +209,6 @@ func recurringIncomeToModel(r *models.RecurringIncome) *model.RecurringIncome {
 		ID:           r.ID,
 		SourceName:   r.SourceName,
 		Amount:       int(r.Amount),
-		IncomeType:   model.IncomeType(r.IncomeType),
 		RecurringDay: r.RecurringDay,
 		IsActive:     r.IsActive,
 		Notes:        r.Notes,
@@ -263,19 +269,6 @@ func balanceReportToModel(r *services.BalanceReport) *model.BalanceReport {
 		report.Income.ByCategory = cats
 	}
 
-	// Income by type
-	if len(r.Income.ByType) > 0 {
-		types := make([]*model.IncomeTypeSummary, len(r.Income.ByType))
-		for i, t := range r.Income.ByType {
-			types[i] = &model.IncomeTypeSummary{
-				IncomeType:  model.IncomeType(t.IncomeType),
-				TotalAmount: int(t.TotalAmount),
-				IncomeCount: t.IncomeCount,
-			}
-		}
-		report.Income.ByType = types
-	}
-
 	// Expense by category
 	if len(r.Expense.ByCategory) > 0 {
 		cats := make([]*model.CategorySummary, len(r.Expense.ByCategory))
@@ -299,6 +292,10 @@ func accountToModel(a *models.Account) *model.Account {
 		AccountType:    model.AccountType(a.AccountType),
 		CurrentBalance: int(a.CurrentBalance),
 		IsDefault:      a.IsDefault,
+		IsPocket:       a.IsPocket,
+		Icon:           a.Icon,
+		CardBgColor:    a.CardBgColor,
+		SortOrder:      a.SortOrder,
 		CreatedAt:      a.CreatedAt,
 	}
 	if a.ReferenceID != nil {
@@ -492,7 +489,6 @@ func calculateIncomeSummary(incomes []models.Income) *model.IncomeSummary {
 	var total int64
 	count := len(incomes)
 	categoryMap := make(map[string]*model.IncomeByCategoryGroup)
-	typeMap := make(map[model.IncomeType]*model.IncomeByTypeGroup)
 
 	for _, inc := range incomes {
 		total += inc.Amount
@@ -511,19 +507,6 @@ func calculateIncomeSummary(incomes []models.Income) *model.IncomeSummary {
 				}
 			}
 		}
-
-		// Group by type
-		incomeType := model.IncomeType(inc.IncomeType)
-		if group, exists := typeMap[incomeType]; exists {
-			group.TotalAmount += int(inc.Amount)
-			group.Count++
-		} else {
-			typeMap[incomeType] = &model.IncomeByTypeGroup{
-				IncomeType:  incomeType,
-				TotalAmount: int(inc.Amount),
-				Count:       1,
-			}
-		}
 	}
 
 	// Convert maps to slices
@@ -532,16 +515,10 @@ func calculateIncomeSummary(incomes []models.Income) *model.IncomeSummary {
 		byCategory = append(byCategory, group)
 	}
 
-	byType := make([]*model.IncomeByTypeGroup, 0, len(typeMap))
-	for _, group := range typeMap {
-		byType = append(byType, group)
-	}
-
 	return &model.IncomeSummary{
 		Total:      int(total),
 		Count:      count,
 		ByCategory: byCategory,
-		ByType:     byType,
 	}
 }
 
@@ -553,6 +530,7 @@ func savingsGoalToModel(g *models.SavingsGoal) *model.SavingsGoal {
 		CurrentAmount:   int(g.CurrentAmount),
 		TargetDate:      g.TargetDate,
 		Icon:            g.Icon,
+		CardBgColor:     g.CardBgColor,
 		Status:          model.SavingsGoalStatus(g.Status),
 		Notes:           g.Notes,
 		Progress:        g.Progress(),
@@ -576,6 +554,7 @@ func savingsContributionToModel(c *models.SavingsContribution) *model.SavingsCon
 		Amount:           int(c.Amount),
 		ContributionDate: c.ContributionDate,
 		Notes:            c.Notes,
+		PocketID:         c.PocketID,
 		CreatedAt:        c.CreatedAt,
 	}
 	if c.SavingsGoal != nil {
@@ -593,19 +572,10 @@ func incomeBreakdownToIncomeSummary(b *services.IncomeBreakdown) *model.IncomeSu
 			Count:       cs.IncomeCount,
 		}
 	}
-	byType := make([]*model.IncomeByTypeGroup, len(b.ByType))
-	for i, ts := range b.ByType {
-		byType[i] = &model.IncomeByTypeGroup{
-			IncomeType:  model.IncomeType(ts.IncomeType),
-			TotalAmount: int(ts.TotalAmount),
-			Count:       ts.IncomeCount,
-		}
-	}
 	return &model.IncomeSummary{
 		Total:      int(b.Total),
 		Count:      b.Count,
 		ByCategory: byCategory,
-		ByType:     byType,
 	}
 }
 

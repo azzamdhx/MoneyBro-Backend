@@ -42,6 +42,8 @@ type CreateDebtInput struct {
 	MonthlyPayment *int64
 	Tenor          *int
 	DueDate        *time.Time
+	Icon           *string
+	CardBgColor    *string
 	Notes          *string
 }
 
@@ -78,6 +80,8 @@ func (s *DebtService) Create(userID uuid.UUID, input CreateDebtInput) (*models.D
 		Tenor:          input.Tenor,
 		DueDate:        input.DueDate,
 		Status:         models.DebtStatusActive,
+		Icon:           input.Icon,
+		CardBgColor:    input.CardBgColor,
 		Notes:          input.Notes,
 	}
 
@@ -129,6 +133,8 @@ func (s *DebtService) Update(id uuid.UUID, input CreateDebtInput, status *models
 	debt.MonthlyPayment = input.MonthlyPayment
 	debt.Tenor = input.Tenor
 	debt.DueDate = input.DueDate
+	debt.Icon = input.Icon
+	debt.CardBgColor = input.CardBgColor
 	debt.Notes = input.Notes
 
 	if status != nil {
@@ -162,7 +168,7 @@ func (s *DebtService) Delete(id uuid.UUID) error {
 	return s.debtRepo.Delete(id)
 }
 
-func (s *DebtService) RecordPayment(debtID uuid.UUID, amount int64, paidAt time.Time) (*models.DebtPayment, error) {
+func (s *DebtService) RecordPayment(debtID uuid.UUID, amount int64, paidAt time.Time, pocketID *uuid.UUID) (*models.DebtPayment, error) {
 	debt, err := s.debtRepo.GetByID(debtID)
 	if err != nil {
 		return nil, err
@@ -179,6 +185,7 @@ func (s *DebtService) RecordPayment(debtID uuid.UUID, amount int64, paidAt time.
 		PaymentNumber: lastNumber + 1,
 		Amount:        amount,
 		PaidAt:        paidAt,
+		PocketID:      pocketID,
 	}
 
 	if err := s.paymentRepo.Create(payment); err != nil {
@@ -222,15 +229,20 @@ func (s *DebtService) createPaymentLedgerEntry(userID uuid.UUID, debt *models.De
 		return err
 	}
 
-	// Get default cash account
-	cashAccount, err := s.accountRepo.GetDefaultByUserID(userID)
+	// Get pocket account
+	var pocketAccount *models.Account
+	if payment.PocketID != nil {
+		pocketAccount, err = s.accountRepo.GetByID(*payment.PocketID)
+	} else {
+		pocketAccount, err = s.accountRepo.GetDefaultByUserID(userID)
+	}
 	if err != nil {
 		return err
 	}
 
 	entries := []LedgerEntry{
 		{AccountID: liabilityAccount.ID, Debit: payment.Amount, Credit: 0},
-		{AccountID: cashAccount.ID, Debit: 0, Credit: payment.Amount},
+		{AccountID: pocketAccount.ID, Debit: 0, Credit: payment.Amount},
 	}
 
 	_, err = s.ledgerService.CreateJournalEntry(

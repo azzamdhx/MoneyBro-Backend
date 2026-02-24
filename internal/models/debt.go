@@ -28,6 +28,8 @@ type Debt struct {
 	Tenor          *int            `json:"tenor,omitempty"`
 	DueDate        *time.Time      `gorm:"type:date" json:"due_date,omitempty"`
 	Status         DebtStatus      `gorm:"type:varchar(20);not null;default:'ACTIVE'" json:"status"`
+	Icon           *string         `gorm:"type:varchar(50)" json:"icon,omitempty"`
+	CardBgColor    *string         `gorm:"type:varchar(50)" json:"card_bg_color,omitempty"`
 	Notes          *string         `gorm:"type:text" json:"notes,omitempty"`
 	CreatedAt      time.Time       `gorm:"default:now()" json:"created_at"`
 

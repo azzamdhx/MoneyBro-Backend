@@ -43,17 +43,10 @@ type IncomeCategorySummary struct {
 	IncomeCount int
 }
 
-type IncomeTypeSummary struct {
-	IncomeType  models.IncomeType
-	TotalAmount int64
-	IncomeCount int
-}
-
 type IncomeBreakdown struct {
 	Total      int64
 	Count      int
 	ByCategory []IncomeCategorySummary
-	ByType     []IncomeTypeSummary
 }
 
 type ExpenseBreakdown struct {
@@ -101,7 +94,6 @@ func (s *BalanceService) GetBalance(userID uuid.UUID, filter BalanceFilterInput)
 	}
 
 	incomeCategoryMap := make(map[uuid.UUID]*IncomeCategorySummary)
-	incomeTypeMap := make(map[models.IncomeType]*IncomeTypeSummary)
 
 	for _, inc := range incomes {
 		report.Income.Total += inc.Amount
@@ -115,22 +107,10 @@ func (s *BalanceService) GetBalance(userID uuid.UUID, filter BalanceFilterInput)
 		}
 		incomeCategoryMap[inc.CategoryID].TotalAmount += inc.Amount
 		incomeCategoryMap[inc.CategoryID].IncomeCount++
-
-		// By type
-		if _, exists := incomeTypeMap[inc.IncomeType]; !exists {
-			incomeTypeMap[inc.IncomeType] = &IncomeTypeSummary{
-				IncomeType: inc.IncomeType,
-			}
-		}
-		incomeTypeMap[inc.IncomeType].TotalAmount += inc.Amount
-		incomeTypeMap[inc.IncomeType].IncomeCount++
 	}
 
 	for _, summary := range incomeCategoryMap {
 		report.Income.ByCategory = append(report.Income.ByCategory, *summary)
-	}
-	for _, summary := range incomeTypeMap {
-		report.Income.ByType = append(report.Income.ByType, *summary)
 	}
 
 	// Get expenses for the period

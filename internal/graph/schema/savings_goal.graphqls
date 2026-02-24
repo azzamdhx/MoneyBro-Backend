@@ -11,6 +11,7 @@ type SavingsGoal {
   currentAmount: Int!
   targetDate: Date!
   icon: String
+  cardBgColor: String
   status: SavingsGoalStatus!
   notes: String
   progress: Float!
@@ -26,6 +27,7 @@ type SavingsContribution {
   amount: Int!
   contributionDate: Date!
   notes: String
+  pocketId: UUID
   createdAt: Time!
   
   savingsGoal: SavingsGoal!
@@ -36,6 +38,7 @@ input CreateSavingsGoalInput {
   targetAmount: Int!
   targetDate: Date!
   icon: String
+  cardBgColor: String
   notes: String
 }
 
@@ -44,6 +47,7 @@ input UpdateSavingsGoalInput {
   targetAmount: Int
   targetDate: Date
   icon: String
+  cardBgColor: String
   notes: String
   status: SavingsGoalStatus
 }
@@ -53,4 +57,5 @@ input AddSavingsContributionInput {
   amount: Int!
   contributionDate: Date!
   notes: String
+  pocketId: UUID
 }

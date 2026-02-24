@@ -18,6 +18,10 @@ type Account struct {
 	AccountType    AccountType `json:"accountType"`
 	CurrentBalance int         `json:"currentBalance"`
 	IsDefault      bool        `json:"isDefault"`
+	IsPocket       bool        `json:"isPocket"`
+	Icon           *string     `json:"icon,omitempty"`
+	CardBgColor    *string     `json:"cardBgColor,omitempty"`
+	SortOrder      int         `json:"sortOrder"`
 	ReferenceID    *string     `json:"referenceId,omitempty"`
 	ReferenceType  *string     `json:"referenceType,omitempty"`
 	CreatedAt      time.Time   `json:"createdAt"`
@@ -53,10 +57,11 @@ type ActualPaymentsReport struct {
 }
 
 type AddSavingsContributionInput struct {
-	SavingsGoalID    uuid.UUID `json:"savingsGoalId"`
-	Amount           int       `json:"amount"`
-	ContributionDate time.Time `json:"contributionDate"`
-	Notes            *string   `json:"notes,omitempty"`
+	SavingsGoalID    uuid.UUID  `json:"savingsGoalId"`
+	Amount           int        `json:"amount"`
+	ContributionDate time.Time  `json:"contributionDate"`
+	Notes            *string    `json:"notes,omitempty"`
+	PocketID         *uuid.UUID `json:"pocketId,omitempty"`
 }
 
 type AuthPayload struct {
@@ -131,6 +136,8 @@ type CreateDebtInput struct {
 	MonthlyPayment *int            `json:"monthlyPayment,omitempty"`
 	Tenor          *int            `json:"tenor,omitempty"`
 	DueDate        *time.Time      `json:"dueDate,omitempty"`
+	Icon           *string         `json:"icon,omitempty"`
+	CardBgColor    *string         `json:"cardBgColor,omitempty"`
 	Notes          *string         `json:"notes,omitempty"`
 }
 
@@ -141,6 +148,7 @@ type CreateExpenseInput struct {
 	Quantity    int        `json:"quantity"`
 	Notes       *string    `json:"notes,omitempty"`
 	ExpenseDate *time.Time `json:"expenseDate,omitempty"`
+	PocketID    *uuid.UUID `json:"pocketId,omitempty"`
 }
 
 type CreateExpenseTemplateGroupInput struct {
@@ -165,10 +173,10 @@ type CreateIncomeInput struct {
 	CategoryID  uuid.UUID  `json:"categoryId"`
 	SourceName  string     `json:"sourceName"`
 	Amount      int        `json:"amount"`
-	IncomeType  IncomeType `json:"incomeType"`
 	IncomeDate  *time.Time `json:"incomeDate,omitempty"`
 	IsRecurring *bool      `json:"isRecurring,omitempty"`
 	Notes       *string    `json:"notes,omitempty"`
+	PocketID    *uuid.UUID `json:"pocketId,omitempty"`
 }
 
 type CreateInstallmentInput struct {
@@ -179,16 +187,23 @@ type CreateInstallmentInput struct {
 	Tenor          int       `json:"tenor"`
 	StartDate      time.Time `json:"startDate"`
 	DueDay         int       `json:"dueDay"`
+	Icon           *string   `json:"icon,omitempty"`
+	CardBgColor    *string   `json:"cardBgColor,omitempty"`
 	Notes          *string   `json:"notes,omitempty"`
 }
 
+type CreatePocketInput struct {
+	Name        string  `json:"name"`
+	Icon        *string `json:"icon,omitempty"`
+	CardBgColor *string `json:"cardBgColor,omitempty"`
+}
+
 type CreateRecurringIncomeInput struct {
-	CategoryID   uuid.UUID  `json:"categoryId"`
-	SourceName   string     `json:"sourceName"`
-	Amount       int        `json:"amount"`
-	IncomeType   IncomeType `json:"incomeType"`
-	RecurringDay int        `json:"recurringDay"`
-	Notes        *string    `json:"notes,omitempty"`
+	CategoryID   uuid.UUID `json:"categoryId"`
+	SourceName   string    `json:"sourceName"`
+	Amount       int       `json:"amount"`
+	RecurringDay int       `json:"recurringDay"`
+	Notes        *string   `json:"notes,omitempty"`
 }
 
 type CreateSavingsGoalInput struct {
@@ -196,6 +211,7 @@ type CreateSavingsGoalInput struct {
 	TargetAmount int       `json:"targetAmount"`
 	TargetDate   time.Time `json:"targetDate"`
 	Icon         *string   `json:"icon,omitempty"`
+	CardBgColor  *string   `json:"cardBgColor,omitempty"`
 	Notes        *string   `json:"notes,omitempty"`
 }
 
@@ -221,6 +237,8 @@ type Debt struct {
 	Tenor              *int            `json:"tenor,omitempty"`
 	DueDate            *time.Time      `json:"dueDate,omitempty"`
 	Status             DebtStatus      `json:"status"`
+	Icon               *string         `json:"icon,omitempty"`
+	CardBgColor        *string         `json:"cardBgColor,omitempty"`
 	Notes              *string         `json:"notes,omitempty"`
 	CreatedAt          time.Time       `json:"createdAt"`
 	InterestAmount     *int            `json:"interestAmount,omitempty"`
@@ -232,12 +250,13 @@ type Debt struct {
 }
 
 type DebtPayment struct {
-	ID            uuid.UUID `json:"id"`
-	PaymentNumber int       `json:"paymentNumber"`
-	Amount        int       `json:"amount"`
-	PaidAt        time.Time `json:"paidAt"`
-	CreatedAt     time.Time `json:"createdAt"`
-	Debt          *Debt     `json:"debt"`
+	ID            uuid.UUID  `json:"id"`
+	PaymentNumber int        `json:"paymentNumber"`
+	Amount        int        `json:"amount"`
+	PaidAt        time.Time  `json:"paidAt"`
+	PocketID      *uuid.UUID `json:"pocketId,omitempty"`
+	CreatedAt     time.Time  `json:"createdAt"`
+	Debt          *Debt      `json:"debt"`
 }
 
 type DeleteAccountInput struct {
@@ -252,6 +271,7 @@ type Expense struct {
 	Total       int        `json:"total"`
 	Notes       *string    `json:"notes,omitempty"`
 	ExpenseDate *time.Time `json:"expenseDate,omitempty"`
+	PocketID    *uuid.UUID `json:"pocketId,omitempty"`
 	CreatedAt   time.Time  `json:"createdAt"`
 	Category    *Category  `json:"category"`
 }
@@ -331,10 +351,10 @@ type Income struct {
 	ID          uuid.UUID       `json:"id"`
 	SourceName  string          `json:"sourceName"`
 	Amount      int             `json:"amount"`
-	IncomeType  IncomeType      `json:"incomeType"`
 	IncomeDate  time.Time       `json:"incomeDate"`
 	IsRecurring bool            `json:"isRecurring"`
 	Notes       *string         `json:"notes,omitempty"`
+	PocketID    *uuid.UUID      `json:"pocketId,omitempty"`
 	CreatedAt   time.Time       `json:"createdAt"`
 	Category    *IncomeCategory `json:"category"`
 }
@@ -343,19 +363,12 @@ type IncomeBreakdown struct {
 	Total      int                      `json:"total"`
 	Count      int                      `json:"count"`
 	ByCategory []*IncomeCategorySummary `json:"byCategory"`
-	ByType     []*IncomeTypeSummary     `json:"byType"`
 }
 
 type IncomeByCategoryGroup struct {
 	Category    *IncomeCategory `json:"category"`
 	TotalAmount int             `json:"totalAmount"`
 	Count       int             `json:"count"`
-}
-
-type IncomeByTypeGroup struct {
-	IncomeType  IncomeType `json:"incomeType"`
-	TotalAmount int        `json:"totalAmount"`
-	Count       int        `json:"count"`
 }
 
 type IncomeCategory struct {
@@ -374,23 +387,15 @@ type IncomeCategorySummary struct {
 }
 
 type IncomeFilter struct {
-	CategoryID *uuid.UUID  `json:"categoryId,omitempty"`
-	IncomeType *IncomeType `json:"incomeType,omitempty"`
-	StartDate  *time.Time  `json:"startDate,omitempty"`
-	EndDate    *time.Time  `json:"endDate,omitempty"`
+	CategoryID *uuid.UUID `json:"categoryId,omitempty"`
+	StartDate  *time.Time `json:"startDate,omitempty"`
+	EndDate    *time.Time `json:"endDate,omitempty"`
 }
 
 type IncomeSummary struct {
 	Total      int                      `json:"total"`
 	Count      int                      `json:"count"`
 	ByCategory []*IncomeByCategoryGroup `json:"byCategory"`
-	ByType     []*IncomeByTypeGroup     `json:"byType"`
-}
-
-type IncomeTypeSummary struct {
-	IncomeType  IncomeType `json:"incomeType"`
-	TotalAmount int        `json:"totalAmount"`
-	IncomeCount int        `json:"incomeCount"`
 }
 
 type IncomesWithSummary struct {
@@ -408,6 +413,8 @@ type Installment struct {
 	StartDate          time.Time             `json:"startDate"`
 	DueDay             int                   `json:"dueDay"`
 	Status             InstallmentStatus     `json:"status"`
+	Icon               *string               `json:"icon,omitempty"`
+	CardBgColor        *string               `json:"cardBgColor,omitempty"`
 	Notes              *string               `json:"notes,omitempty"`
 	CreatedAt          time.Time             `json:"createdAt"`
 	InterestAmount     int                   `json:"interestAmount"`
@@ -423,6 +430,7 @@ type InstallmentPayment struct {
 	PaymentNumber int          `json:"paymentNumber"`
 	Amount        int          `json:"amount"`
 	PaidAt        time.Time    `json:"paidAt"`
+	PocketID      *uuid.UUID   `json:"pocketId,omitempty"`
 	CreatedAt     time.Time    `json:"createdAt"`
 	Installment   *Installment `json:"installment"`
 }
@@ -457,26 +465,36 @@ type NotificationLog struct {
 	CreatedAt    time.Time `json:"createdAt"`
 }
 
+type PocketEntry struct {
+	ID              string    `json:"id"`
+	TransactionDate time.Time `json:"transactionDate"`
+	Description     string    `json:"description"`
+	Debit           int       `json:"debit"`
+	Credit          int       `json:"credit"`
+	ReferenceType   *string   `json:"referenceType,omitempty"`
+}
+
 type Query struct {
 }
 
 type RecordDebtPaymentInput struct {
-	DebtID uuid.UUID `json:"debtId"`
-	Amount int       `json:"amount"`
-	PaidAt time.Time `json:"paidAt"`
+	DebtID   uuid.UUID  `json:"debtId"`
+	Amount   int        `json:"amount"`
+	PaidAt   time.Time  `json:"paidAt"`
+	PocketID *uuid.UUID `json:"pocketId,omitempty"`
 }
 
 type RecordInstallmentPaymentInput struct {
-	InstallmentID uuid.UUID `json:"installmentId"`
-	Amount        int       `json:"amount"`
-	PaidAt        time.Time `json:"paidAt"`
+	InstallmentID uuid.UUID  `json:"installmentId"`
+	Amount        int        `json:"amount"`
+	PaidAt        time.Time  `json:"paidAt"`
+	PocketID      *uuid.UUID `json:"pocketId,omitempty"`
 }
 
 type RecurringIncome struct {
 	ID           uuid.UUID       `json:"id"`
 	SourceName   string          `json:"sourceName"`
 	Amount       int             `json:"amount"`
-	IncomeType   IncomeType      `json:"incomeType"`
 	RecurringDay int             `json:"recurringDay"`
 	IsActive     bool            `json:"isActive"`
 	Notes        *string         `json:"notes,omitempty"`
@@ -500,6 +518,7 @@ type SavingsContribution struct {
 	Amount           int          `json:"amount"`
 	ContributionDate time.Time    `json:"contributionDate"`
 	Notes            *string      `json:"notes,omitempty"`
+	PocketID         *uuid.UUID   `json:"pocketId,omitempty"`
 	CreatedAt        time.Time    `json:"createdAt"`
 	SavingsGoal      *SavingsGoal `json:"savingsGoal"`
 }
@@ -511,6 +530,7 @@ type SavingsGoal struct {
 	CurrentAmount   int                    `json:"currentAmount"`
 	TargetDate      time.Time              `json:"targetDate"`
 	Icon            *string                `json:"icon,omitempty"`
+	CardBgColor     *string                `json:"cardBgColor,omitempty"`
 	Status          SavingsGoalStatus      `json:"status"`
 	Notes           *string                `json:"notes,omitempty"`
 	Progress        float64                `json:"progress"`
@@ -540,6 +560,13 @@ type TransactionEntry struct {
 type TransactionFilter struct {
 	StartDate *time.Time `json:"startDate,omitempty"`
 	EndDate   *time.Time `json:"endDate,omitempty"`
+}
+
+type TransferPocketInput struct {
+	FromPocketID uuid.UUID `json:"fromPocketId"`
+	ToPocketID   uuid.UUID `json:"toPocketId"`
+	Amount       int       `json:"amount"`
+	Description  *string   `json:"description,omitempty"`
 }
 
 type TwoFAPayload struct {
@@ -597,6 +624,8 @@ type UpdateDebtInput struct {
 	Tenor          *int             `json:"tenor,omitempty"`
 	DueDate        *time.Time       `json:"dueDate,omitempty"`
 	Status         *DebtStatus      `json:"status,omitempty"`
+	Icon           *string          `json:"icon,omitempty"`
+	CardBgColor    *string          `json:"cardBgColor,omitempty"`
 	Notes          *string          `json:"notes,omitempty"`
 }
 
@@ -607,6 +636,7 @@ type UpdateExpenseInput struct {
 	Quantity    *int       `json:"quantity,omitempty"`
 	Notes       *string    `json:"notes,omitempty"`
 	ExpenseDate *time.Time `json:"expenseDate,omitempty"`
+	PocketID    *uuid.UUID `json:"pocketId,omitempty"`
 }
 
 type UpdateExpenseTemplateGroupInput struct {
@@ -627,13 +657,13 @@ type UpdateIncomeCategoryInput struct {
 }
 
 type UpdateIncomeInput struct {
-	CategoryID  *uuid.UUID  `json:"categoryId,omitempty"`
-	SourceName  *string     `json:"sourceName,omitempty"`
-	Amount      *int        `json:"amount,omitempty"`
-	IncomeType  *IncomeType `json:"incomeType,omitempty"`
-	IncomeDate  *time.Time  `json:"incomeDate,omitempty"`
-	IsRecurring *bool       `json:"isRecurring,omitempty"`
-	Notes       *string     `json:"notes,omitempty"`
+	CategoryID  *uuid.UUID `json:"categoryId,omitempty"`
+	SourceName  *string    `json:"sourceName,omitempty"`
+	Amount      *int       `json:"amount,omitempty"`
+	IncomeDate  *time.Time `json:"incomeDate,omitempty"`
+	IsRecurring *bool      `json:"isRecurring,omitempty"`
+	Notes       *string    `json:"notes,omitempty"`
+	PocketID    *uuid.UUID `json:"pocketId,omitempty"`
 }
 
 type UpdateInstallmentInput struct {
@@ -645,6 +675,8 @@ type UpdateInstallmentInput struct {
 	StartDate      *time.Time         `json:"startDate,omitempty"`
 	DueDay         *int               `json:"dueDay,omitempty"`
 	Status         *InstallmentStatus `json:"status,omitempty"`
+	Icon           *string            `json:"icon,omitempty"`
+	CardBgColor    *string            `json:"cardBgColor,omitempty"`
 	Notes          *string            `json:"notes,omitempty"`
 }
 
@@ -653,6 +685,13 @@ type UpdateNotificationSettingsInput struct {
 	NotifyDebt        *bool `json:"notifyDebt,omitempty"`
 	NotifySavingsGoal *bool `json:"notifySavingsGoal,omitempty"`
 	NotifyDaysBefore  *int  `json:"notifyDaysBefore,omitempty"`
+}
+
+type UpdatePocketInput struct {
+	Name        *string `json:"name,omitempty"`
+	Icon        *string `json:"icon,omitempty"`
+	CardBgColor *string `json:"cardBgColor,omitempty"`
+	SortOrder   *int    `json:"sortOrder,omitempty"`
 }
 
 type UpdateProfileInput struct {
@@ -664,13 +703,12 @@ type UpdateProfileInput struct {
 }
 
 type UpdateRecurringIncomeInput struct {
-	CategoryID   *uuid.UUID  `json:"categoryId,omitempty"`
-	SourceName   *string     `json:"sourceName,omitempty"`
-	Amount       *int        `json:"amount,omitempty"`
-	IncomeType   *IncomeType `json:"incomeType,omitempty"`
-	RecurringDay *int        `json:"recurringDay,omitempty"`
-	IsActive     *bool       `json:"isActive,omitempty"`
-	Notes        *string     `json:"notes,omitempty"`
+	CategoryID   *uuid.UUID `json:"categoryId,omitempty"`
+	SourceName   *string    `json:"sourceName,omitempty"`
+	Amount       *int       `json:"amount,omitempty"`
+	RecurringDay *int       `json:"recurringDay,omitempty"`
+	IsActive     *bool      `json:"isActive,omitempty"`
+	Notes        *string    `json:"notes,omitempty"`
 }
 
 type UpdateSavingsGoalInput struct {
@@ -678,6 +716,7 @@ type UpdateSavingsGoalInput struct {
 	TargetAmount *int               `json:"targetAmount,omitempty"`
 	TargetDate   *time.Time         `json:"targetDate,omitempty"`
 	Icon         *string            `json:"icon,omitempty"`
+	CardBgColor  *string            `json:"cardBgColor,omitempty"`
 	Notes        *string            `json:"notes,omitempty"`
 	Status       *SavingsGoalStatus `json:"status,omitempty"`
 }
@@ -981,73 +1020,6 @@ func (e *DebtStatus) UnmarshalJSON(b []byte) error {
 }
 
 func (e DebtStatus) MarshalJSON() ([]byte, error) {
-	var buf bytes.Buffer
-	e.MarshalGQL(&buf)
-	return buf.Bytes(), nil
-}
-
-type IncomeType string
-
-const (
-	IncomeTypeSalary     IncomeType = "SALARY"
-	IncomeTypeFreelance  IncomeType = "FREELANCE"
-	IncomeTypeInvestment IncomeType = "INVESTMENT"
-	IncomeTypeGift       IncomeType = "GIFT"
-	IncomeTypeBonus      IncomeType = "BONUS"
-	IncomeTypeRefund     IncomeType = "REFUND"
-	IncomeTypeBusiness   IncomeType = "BUSINESS"
-	IncomeTypeOther      IncomeType = "OTHER"
-)
-
-var AllIncomeType = []IncomeType{
-	IncomeTypeSalary,
-	IncomeTypeFreelance,
-	IncomeTypeInvestment,
-	IncomeTypeGift,
-	IncomeTypeBonus,
-	IncomeTypeRefund,
-	IncomeTypeBusiness,
-	IncomeTypeOther,
-}
-
-func (e IncomeType) IsValid() bool {
-	switch e {
-	case IncomeTypeSalary, IncomeTypeFreelance, IncomeTypeInvestment, IncomeTypeGift, IncomeTypeBonus, IncomeTypeRefund, IncomeTypeBusiness, IncomeTypeOther:
-		return true
-	}
-	return false
-}
-
-func (e IncomeType) String() string {
-	return string(e)
-}
-
-func (e *IncomeType) UnmarshalGQL(v any) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = IncomeType(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid IncomeType", str)
-	}
-	return nil
-}
-
-func (e IncomeType) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-func (e *IncomeType) UnmarshalJSON(b []byte) error {
-	s, err := strconv.Unquote(string(b))
-	if err != nil {
-		return err
-	}
-	return e.UnmarshalGQL(s)
-}
-
-func (e IncomeType) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil

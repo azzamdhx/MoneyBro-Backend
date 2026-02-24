@@ -131,7 +131,6 @@ func (s *MonthlySummaryService) calculateIncomeSummary(userID uuid.UUID, startDa
 
 	summary.Count = len(incomes)
 	categoryMap := make(map[uuid.UUID]*IncomeCategorySummary)
-	typeMap := make(map[models.IncomeType]*IncomeTypeSummary)
 
 	for _, inc := range incomes {
 		summary.Total += inc.Amount
@@ -148,24 +147,10 @@ func (s *MonthlySummaryService) calculateIncomeSummary(userID uuid.UUID, startDa
 				}
 			}
 		}
-
-		if ts, exists := typeMap[inc.IncomeType]; exists {
-			ts.TotalAmount += inc.Amount
-			ts.IncomeCount++
-		} else {
-			typeMap[inc.IncomeType] = &IncomeTypeSummary{
-				IncomeType:  inc.IncomeType,
-				TotalAmount: inc.Amount,
-				IncomeCount: 1,
-			}
-		}
 	}
 
 	for _, cs := range categoryMap {
 		summary.ByCategory = append(summary.ByCategory, *cs)
-	}
-	for _, ts := range typeMap {
-		summary.ByType = append(summary.ByType, *ts)
 	}
 
 	return summary

@@ -42,6 +42,8 @@ type CreateInstallmentInput struct {
 	Tenor          int
 	StartDate      time.Time
 	DueDay         int
+	Icon           *string
+	CardBgColor    *string
 	Notes          *string
 }
 
@@ -76,6 +78,8 @@ func (s *InstallmentService) Create(userID uuid.UUID, input CreateInstallmentInp
 		StartDate:      input.StartDate,
 		DueDay:         input.DueDay,
 		Status:         models.InstallmentStatusActive,
+		Icon:           input.Icon,
+		CardBgColor:    input.CardBgColor,
 		Notes:          input.Notes,
 	}
 
@@ -112,6 +116,8 @@ func (s *InstallmentService) Update(id uuid.UUID, input CreateInstallmentInput, 
 	installment.Tenor = input.Tenor
 	installment.StartDate = input.StartDate
 	installment.DueDay = input.DueDay
+	installment.Icon = input.Icon
+	installment.CardBgColor = input.CardBgColor
 	installment.Notes = input.Notes
 
 	if status != nil {
@@ -145,7 +151,7 @@ func (s *InstallmentService) Delete(id uuid.UUID) error {
 	return s.installmentRepo.Delete(id)
 }
 
-func (s *InstallmentService) RecordPayment(installmentID uuid.UUID, amount int64, paidAt time.Time) (*models.InstallmentPayment, error) {
+func (s *InstallmentService) RecordPayment(installmentID uuid.UUID, amount int64, paidAt time.Time, pocketID *uuid.UUID) (*models.InstallmentPayment, error) {
 	installment, err := s.installmentRepo.GetByID(installmentID)
 	if err != nil {
 		return nil, err
@@ -162,6 +168,7 @@ func (s *InstallmentService) RecordPayment(installmentID uuid.UUID, amount int64
 		PaymentNumber: lastNumber + 1,
 		Amount:        amount,
 		PaidAt:        paidAt,
+		PocketID:      pocketID,
 	}
 
 	if err := s.paymentRepo.Create(payment); err != nil {
@@ -204,15 +211,20 @@ func (s *InstallmentService) createPaymentLedgerEntry(userID uuid.UUID, installm
 		return err
 	}
 
-	// Get default cash account
-	cashAccount, err := s.accountRepo.GetDefaultByUserID(userID)
+	// Get pocket account
+	var pocketAccount *models.Account
+	if payment.PocketID != nil {
+		pocketAccount, err = s.accountRepo.GetByID(*payment.PocketID)
+	} else {
+		pocketAccount, err = s.accountRepo.GetDefaultByUserID(userID)
+	}
 	if err != nil {
 		return err
 	}
 
 	entries := []LedgerEntry{
 		{AccountID: liabilityAccount.ID, Debit: payment.Amount, Credit: 0},
-		{AccountID: cashAccount.ID, Debit: 0, Credit: payment.Amount},
+		{AccountID: pocketAccount.ID, Debit: 0, Credit: payment.Amount},
 	}
 
 	// Calculate period date based on installment start_date + (payment_number - 1) months

@@ -23,11 +23,12 @@ type SavingsGoal struct {
 	CurrentAmount int64             `gorm:"not null;default:0" json:"current_amount"`
 	TargetDate    time.Time         `gorm:"type:date;not null" json:"target_date"`
 	Icon          *string           `gorm:"type:varchar(50)" json:"icon,omitempty"`
+	CardBgColor   *string           `gorm:"type:varchar(50)" json:"card_bg_color,omitempty"`
 	Status        SavingsGoalStatus `gorm:"type:varchar(20);not null;default:'ACTIVE'" json:"status"`
 	Notes         *string           `gorm:"type:text" json:"notes,omitempty"`
 	CreatedAt     time.Time         `gorm:"default:now()" json:"created_at"`
 
-	User          *User                `gorm:"foreignKey:UserID" json:"user,omitempty"`
+	User          *User                 `gorm:"foreignKey:UserID" json:"user,omitempty"`
 	Contributions []SavingsContribution `gorm:"foreignKey:SavingsGoalID" json:"contributions,omitempty"`
 }
 

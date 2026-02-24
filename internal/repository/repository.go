@@ -154,7 +154,6 @@ type IncomeCategoryRepository interface {
 
 type IncomeFilter struct {
 	CategoryID *uuid.UUID
-	IncomeType *models.IncomeType
 	StartDate  *string
 	EndDate    *string
 }
@@ -202,6 +201,7 @@ type AccountRepository interface {
 	GetByUserIDAndTypeAndReferenceType(userID uuid.UUID, accountType models.AccountType, referenceType string) ([]models.Account, error)
 	GetDefaultByUserID(userID uuid.UUID) (*models.Account, error)
 	GetByReference(referenceID uuid.UUID, referenceType string) (*models.Account, error)
+	GetPocketsByUserID(userID uuid.UUID) ([]models.Account, error)
 	Update(account *models.Account) error
 	UpdateBalance(id uuid.UUID, balance int64) error
 	AddToBalance(id uuid.UUID, amount int64) error

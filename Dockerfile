@@ -27,4 +27,4 @@ ENV TZ=Asia/Jakarta
 
 EXPOSE 8080
 
-CMD ["/bin/sh", "-c", "/app/migrate up && /app/server"]
+CMD ["/app/server"]

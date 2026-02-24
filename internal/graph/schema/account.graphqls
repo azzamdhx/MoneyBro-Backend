@@ -11,6 +11,10 @@ type Account {
   accountType: AccountType!
   currentBalance: Int!
   isDefault: Boolean!
+  isPocket: Boolean!
+  icon: String
+  cardBgColor: String
+  sortOrder: Int!
   referenceId: ID
   referenceType: String
   createdAt: Time!
@@ -23,4 +27,24 @@ input CreateAccountInput {
 
 input UpdateAccountInput {
   name: String!
+}
+
+input CreatePocketInput {
+  name: String!
+  icon: String
+  cardBgColor: String
+}
+
+input UpdatePocketInput {
+  name: String
+  icon: String
+  cardBgColor: String
+  sortOrder: Int
+}
+
+input TransferPocketInput {
+  fromPocketId: UUID!
+  toPocketId: UUID!
+  amount: Int!
+  description: String
 }
