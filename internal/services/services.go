@@ -30,7 +30,7 @@ type Services struct {
 	Notification         *NotificationService
 	IncomeCategory       *IncomeCategoryService
 	Income               *IncomeService
-	RecurringIncome      *RecurringIncomeService
+	RecurringIncome      *RecurringIncomeGroupService
 	Balance              *BalanceService
 	Account              *AccountService
 	Ledger               *LedgerService
@@ -62,7 +62,7 @@ func NewServices(cfg Config) *Services {
 		Notification:         NewNotificationService(cfg.Repos, emailService),
 		IncomeCategory:       NewIncomeCategoryService(cfg.Repos.IncomeCategory, accountService),
 		Income:               incomeService,
-		RecurringIncome:      NewRecurringIncomeService(cfg.Repos.RecurringIncome, incomeService, cfg.Repos.IncomeCategory),
+		RecurringIncome:      NewRecurringIncomeGroupService(cfg.Repos.RecurringIncomeGroup, incomeService, cfg.Repos.IncomeCategory),
 		Balance:              NewBalanceService(cfg.Repos, ledgerService),
 		Account:              accountService,
 		Ledger:               ledgerService,

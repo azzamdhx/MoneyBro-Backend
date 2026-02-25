@@ -670,36 +670,37 @@ func (r *mutationResolver) DeleteIncome(ctx context.Context, id uuid.UUID) (bool
 	return err == nil, err
 }
 
-// CreateRecurringIncome is the resolver for the createRecurringIncome field.
-func (r *mutationResolver) CreateRecurringIncome(ctx context.Context, input model.CreateRecurringIncomeInput) (*model.RecurringIncome, error) {
+// CreateRecurringIncomeGroup is the resolver for the createRecurringIncomeGroup field.
+func (r *mutationResolver) CreateRecurringIncomeGroup(ctx context.Context, input model.CreateRecurringIncomeGroupInput) (*model.RecurringIncomeGroup, error) {
 	userID, ok := middleware.GetUserID(ctx)
 	if !ok {
 		return nil, utils.UnauthorizedError(ctx)
 	}
-	ri, err := r.Services.RecurringIncome.Create(userID, services.CreateRecurringIncomeInput{
-		CategoryID:   input.CategoryID,
-		SourceName:   input.SourceName,
-		Amount:       int64(input.Amount),
+	items := make([]services.CreateRecurringIncomeItemInput, len(input.Items))
+	for i, item := range input.Items {
+		items[i] = services.CreateRecurringIncomeItemInput{
+			CategoryID: item.CategoryID,
+			SourceName: item.SourceName,
+			Amount:     int64(item.Amount),
+		}
+	}
+	group, err := r.Services.RecurringIncome.Create(userID, services.CreateRecurringIncomeGroupInput{
+		Name:         input.Name,
 		RecurringDay: input.RecurringDay,
+		IsActive:     input.IsActive,
 		Notes:        input.Notes,
+		Items:        items,
 	})
 	if err != nil {
 		return nil, err
 	}
-	return recurringIncomeToModel(ri), nil
+	return recurringIncomeGroupToModel(group), nil
 }
 
-// UpdateRecurringIncome is the resolver for the updateRecurringIncome field.
-func (r *mutationResolver) UpdateRecurringIncome(ctx context.Context, id uuid.UUID, input model.UpdateRecurringIncomeInput) (*model.RecurringIncome, error) {
-	var amount *int64
-	if input.Amount != nil {
-		v := int64(*input.Amount)
-		amount = &v
-	}
-	ri, err := r.Services.RecurringIncome.Update(id, services.UpdateRecurringIncomeInput{
-		CategoryID:   input.CategoryID,
-		SourceName:   input.SourceName,
-		Amount:       amount,
+// UpdateRecurringIncomeGroup is the resolver for the updateRecurringIncomeGroup field.
+func (r *mutationResolver) UpdateRecurringIncomeGroup(ctx context.Context, id uuid.UUID, input model.UpdateRecurringIncomeGroupInput) (*model.RecurringIncomeGroup, error) {
+	group, err := r.Services.RecurringIncome.Update(id, services.UpdateRecurringIncomeGroupInput{
+		Name:         input.Name,
 		RecurringDay: input.RecurringDay,
 		IsActive:     input.IsActive,
 		Notes:        input.Notes,
@@ -707,26 +708,67 @@ func (r *mutationResolver) UpdateRecurringIncome(ctx context.Context, id uuid.UU
 	if err != nil {
 		return nil, err
 	}
-	return recurringIncomeToModel(ri), nil
+	return recurringIncomeGroupToModel(group), nil
 }
 
-// DeleteRecurringIncome is the resolver for the deleteRecurringIncome field.
-func (r *mutationResolver) DeleteRecurringIncome(ctx context.Context, id uuid.UUID) (bool, error) {
+// DeleteRecurringIncomeGroup is the resolver for the deleteRecurringIncomeGroup field.
+func (r *mutationResolver) DeleteRecurringIncomeGroup(ctx context.Context, id uuid.UUID) (bool, error) {
 	err := r.Services.RecurringIncome.Delete(id)
 	return err == nil, err
 }
 
-// CreateIncomeFromRecurring is the resolver for the createIncomeFromRecurring field.
-func (r *mutationResolver) CreateIncomeFromRecurring(ctx context.Context, recurringID uuid.UUID, incomeDate *time.Time) (*model.Income, error) {
+// AddRecurringIncomeItem is the resolver for the addRecurringIncomeItem field.
+func (r *mutationResolver) AddRecurringIncomeItem(ctx context.Context, groupID uuid.UUID, input model.CreateRecurringIncomeItemInput) (*model.RecurringIncomeGroup, error) {
+	group, err := r.Services.RecurringIncome.AddItem(groupID, services.CreateRecurringIncomeItemInput{
+		CategoryID: input.CategoryID,
+		SourceName: input.SourceName,
+		Amount:     int64(input.Amount),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return recurringIncomeGroupToModel(group), nil
+}
+
+// UpdateRecurringIncomeItem is the resolver for the updateRecurringIncomeItem field.
+func (r *mutationResolver) UpdateRecurringIncomeItem(ctx context.Context, itemID uuid.UUID, input model.UpdateRecurringIncomeItemInput) (*model.RecurringIncomeItem, error) {
+	var amount *int64
+	if input.Amount != nil {
+		v := int64(*input.Amount)
+		amount = &v
+	}
+	item, err := r.Services.RecurringIncome.UpdateItem(itemID, services.UpdateRecurringIncomeItemInput{
+		CategoryID: input.CategoryID,
+		SourceName: input.SourceName,
+		Amount:     amount,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return recurringIncomeItemToModel(item), nil
+}
+
+// DeleteRecurringIncomeItem is the resolver for the deleteRecurringIncomeItem field.
+func (r *mutationResolver) DeleteRecurringIncomeItem(ctx context.Context, itemID uuid.UUID) (bool, error) {
+	err := r.Services.RecurringIncome.DeleteItem(itemID)
+	return err == nil, err
+}
+
+// CreateIncomesFromRecurringGroup is the resolver for the createIncomesFromRecurringGroup field.
+func (r *mutationResolver) CreateIncomesFromRecurringGroup(ctx context.Context, groupID uuid.UUID, incomeDate *time.Time) ([]*model.Income, error) {
 	userID, ok := middleware.GetUserID(ctx)
 	if !ok {
 		return nil, utils.UnauthorizedError(ctx)
 	}
-	inc, err := r.Services.RecurringIncome.CreateIncomeFromRecurring(userID, recurringID, incomeDate)
+	incomes, err := r.Services.RecurringIncome.CreateIncomesFromGroup(userID, groupID, incomeDate)
 	if err != nil {
 		return nil, err
 	}
-	return incomeToModel(inc), nil
+	result := make([]*model.Income, len(incomes))
+	for i, inc := range incomes {
+		result[i] = incomeToModel(&inc)
+	}
+	return result, nil
 }
 
 // CreateSavingsGoal is the resolver for the createSavingsGoal field.
@@ -1169,30 +1211,30 @@ func (r *queryResolver) Income(ctx context.Context, id uuid.UUID) (*model.Income
 	return incomeToModel(inc), nil
 }
 
-// RecurringIncomes is the resolver for the recurringIncomes field.
-func (r *queryResolver) RecurringIncomes(ctx context.Context, isActive *bool) ([]*model.RecurringIncome, error) {
+// RecurringIncomeGroups is the resolver for the recurringIncomeGroups field.
+func (r *queryResolver) RecurringIncomeGroups(ctx context.Context, isActive *bool) ([]*model.RecurringIncomeGroup, error) {
 	userID, ok := middleware.GetUserID(ctx)
 	if !ok {
 		return nil, utils.UnauthorizedError(ctx)
 	}
-	ris, err := r.Services.RecurringIncome.GetByUserID(userID, isActive)
+	groups, err := r.Services.RecurringIncome.GetByUserID(userID, isActive)
 	if err != nil {
 		return nil, err
 	}
-	result := make([]*model.RecurringIncome, len(ris))
-	for i, ri := range ris {
-		result[i] = recurringIncomeToModel(&ri)
+	result := make([]*model.RecurringIncomeGroup, len(groups))
+	for i, g := range groups {
+		result[i] = recurringIncomeGroupToModel(&g)
 	}
 	return result, nil
 }
 
-// RecurringIncome is the resolver for the recurringIncome field.
-func (r *queryResolver) RecurringIncome(ctx context.Context, id uuid.UUID) (*model.RecurringIncome, error) {
-	ri, err := r.Services.RecurringIncome.GetByID(id)
+// RecurringIncomeGroup is the resolver for the recurringIncomeGroup field.
+func (r *queryResolver) RecurringIncomeGroup(ctx context.Context, id uuid.UUID) (*model.RecurringIncomeGroup, error) {
+	group, err := r.Services.RecurringIncome.GetByID(id)
 	if err != nil {
 		return nil, err
 	}
-	return recurringIncomeToModel(ri), nil
+	return recurringIncomeGroupToModel(group), nil
 }
 
 // Balance is the resolver for the balance field.

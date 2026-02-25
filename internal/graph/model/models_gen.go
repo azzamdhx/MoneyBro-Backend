@@ -198,12 +198,18 @@ type CreatePocketInput struct {
 	CardBgColor *string `json:"cardBgColor,omitempty"`
 }
 
-type CreateRecurringIncomeInput struct {
-	CategoryID   uuid.UUID `json:"categoryId"`
-	SourceName   string    `json:"sourceName"`
-	Amount       int       `json:"amount"`
-	RecurringDay int       `json:"recurringDay"`
-	Notes        *string   `json:"notes,omitempty"`
+type CreateRecurringIncomeGroupInput struct {
+	Name         string                            `json:"name"`
+	RecurringDay *int                              `json:"recurringDay,omitempty"`
+	IsActive     *bool                             `json:"isActive,omitempty"`
+	Notes        *string                           `json:"notes,omitempty"`
+	Items        []*CreateRecurringIncomeItemInput `json:"items"`
+}
+
+type CreateRecurringIncomeItemInput struct {
+	CategoryID uuid.UUID `json:"categoryId"`
+	SourceName string    `json:"sourceName"`
+	Amount     int       `json:"amount"`
 }
 
 type CreateSavingsGoalInput struct {
@@ -491,15 +497,23 @@ type RecordInstallmentPaymentInput struct {
 	PocketID      *uuid.UUID `json:"pocketId,omitempty"`
 }
 
-type RecurringIncome struct {
-	ID           uuid.UUID       `json:"id"`
-	SourceName   string          `json:"sourceName"`
-	Amount       int             `json:"amount"`
-	RecurringDay int             `json:"recurringDay"`
-	IsActive     bool            `json:"isActive"`
-	Notes        *string         `json:"notes,omitempty"`
-	CreatedAt    time.Time       `json:"createdAt"`
-	Category     *IncomeCategory `json:"category"`
+type RecurringIncomeGroup struct {
+	ID           uuid.UUID              `json:"id"`
+	Name         string                 `json:"name"`
+	RecurringDay *int                   `json:"recurringDay,omitempty"`
+	IsActive     bool                   `json:"isActive"`
+	Notes        *string                `json:"notes,omitempty"`
+	Total        int                    `json:"total"`
+	CreatedAt    time.Time              `json:"createdAt"`
+	Items        []*RecurringIncomeItem `json:"items"`
+}
+
+type RecurringIncomeItem struct {
+	ID         uuid.UUID       `json:"id"`
+	SourceName string          `json:"sourceName"`
+	Amount     int             `json:"amount"`
+	CreatedAt  time.Time       `json:"createdAt"`
+	Category   *IncomeCategory `json:"category"`
 }
 
 type RegisterInput struct {
@@ -702,13 +716,17 @@ type UpdateProfileInput struct {
 	Password        *string `json:"password,omitempty"`
 }
 
-type UpdateRecurringIncomeInput struct {
-	CategoryID   *uuid.UUID `json:"categoryId,omitempty"`
-	SourceName   *string    `json:"sourceName,omitempty"`
-	Amount       *int       `json:"amount,omitempty"`
-	RecurringDay *int       `json:"recurringDay,omitempty"`
-	IsActive     *bool      `json:"isActive,omitempty"`
-	Notes        *string    `json:"notes,omitempty"`
+type UpdateRecurringIncomeGroupInput struct {
+	Name         *string `json:"name,omitempty"`
+	RecurringDay *int    `json:"recurringDay,omitempty"`
+	IsActive     *bool   `json:"isActive,omitempty"`
+	Notes        *string `json:"notes,omitempty"`
+}
+
+type UpdateRecurringIncomeItemInput struct {
+	CategoryID *uuid.UUID `json:"categoryId,omitempty"`
+	SourceName *string    `json:"sourceName,omitempty"`
+	Amount     *int       `json:"amount,omitempty"`
 }
 
 type UpdateSavingsGoalInput struct {

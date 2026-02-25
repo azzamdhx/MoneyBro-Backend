@@ -204,20 +204,37 @@ func incomeToModel(i *models.Income) *model.Income {
 	return inc
 }
 
-func recurringIncomeToModel(r *models.RecurringIncome) *model.RecurringIncome {
-	ri := &model.RecurringIncome{
-		ID:           r.ID,
-		SourceName:   r.SourceName,
-		Amount:       int(r.Amount),
-		RecurringDay: r.RecurringDay,
-		IsActive:     r.IsActive,
-		Notes:        r.Notes,
-		CreatedAt:    r.CreatedAt,
+func recurringIncomeGroupToModel(g *models.RecurringIncomeGroup) *model.RecurringIncomeGroup {
+	group := &model.RecurringIncomeGroup{
+		ID:           g.ID,
+		Name:         g.Name,
+		RecurringDay: g.RecurringDay,
+		IsActive:     g.IsActive,
+		Notes:        g.Notes,
+		Total:        int(g.Total()),
+		CreatedAt:    g.CreatedAt,
 	}
-	if r.Category != nil {
-		ri.Category = incomeCategoryToModel(r.Category)
+	if len(g.Items) > 0 {
+		items := make([]*model.RecurringIncomeItem, len(g.Items))
+		for i, item := range g.Items {
+			items[i] = recurringIncomeItemToModel(&item)
+		}
+		group.Items = items
 	}
-	return ri
+	return group
+}
+
+func recurringIncomeItemToModel(i *models.RecurringIncomeItem) *model.RecurringIncomeItem {
+	item := &model.RecurringIncomeItem{
+		ID:         i.ID,
+		SourceName: i.SourceName,
+		Amount:     int(i.Amount),
+		CreatedAt:  i.CreatedAt,
+	}
+	if i.Category != nil {
+		item.Category = incomeCategoryToModel(i.Category)
+	}
+	return item
 }
 
 func balanceSummaryToModel(b *services.BalanceSummary) *model.BalanceSummary {

@@ -20,7 +20,7 @@ type Repositories struct {
 	NotificationLog      NotificationLogRepository
 	IncomeCategory       IncomeCategoryRepository
 	Income               IncomeRepository
-	RecurringIncome      RecurringIncomeRepository
+	RecurringIncomeGroup RecurringIncomeGroupRepository
 	PasswordResetToken   PasswordResetTokenRepository
 	TwoFACode            TwoFACodeRepository
 	Account              AccountRepository
@@ -45,7 +45,7 @@ func NewRepositories(db *gorm.DB) *Repositories {
 		NotificationLog:      NewNotificationLogRepository(db),
 		IncomeCategory:       NewIncomeCategoryRepository(db),
 		Income:               NewIncomeRepository(db),
-		RecurringIncome:      NewRecurringIncomeRepository(db),
+		RecurringIncomeGroup: NewRecurringIncomeGroupRepository(db),
 		PasswordResetToken:   NewPasswordResetTokenRepository(db),
 		TwoFACode:            NewTwoFACodeRepository(db),
 		Account:              NewAccountRepository(db),
@@ -167,13 +167,16 @@ type IncomeRepository interface {
 	Delete(id uuid.UUID) error
 }
 
-type RecurringIncomeRepository interface {
-	Create(recurringIncome *models.RecurringIncome) error
-	GetByID(id uuid.UUID) (*models.RecurringIncome, error)
-	GetByUserID(userID uuid.UUID, isActive *bool) ([]models.RecurringIncome, error)
-	GetByRecurringDay(day int, isActive bool) ([]models.RecurringIncome, error)
-	Update(recurringIncome *models.RecurringIncome) error
+type RecurringIncomeGroupRepository interface {
+	Create(group *models.RecurringIncomeGroup) error
+	GetByID(id uuid.UUID) (*models.RecurringIncomeGroup, error)
+	GetByUserID(userID uuid.UUID, isActive *bool) ([]models.RecurringIncomeGroup, error)
+	Update(group *models.RecurringIncomeGroup) error
 	Delete(id uuid.UUID) error
+	AddItem(item *models.RecurringIncomeItem) error
+	UpdateItem(item *models.RecurringIncomeItem) error
+	DeleteItem(itemID uuid.UUID) error
+	GetItemByID(itemID uuid.UUID) (*models.RecurringIncomeItem, error)
 }
 
 type PasswordResetTokenRepository interface {

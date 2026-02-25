@@ -24,8 +24,8 @@ type Query {
   incomeCategory(id: UUID!): IncomeCategory
   incomes(filter: IncomeFilter): IncomesWithSummary!
   income(id: UUID!): Income
-  recurringIncomes(isActive: Boolean): [RecurringIncome!]!
-  recurringIncome(id: UUID!): RecurringIncome
+  recurringIncomeGroups(isActive: Boolean): [RecurringIncomeGroup!]!
+  recurringIncomeGroup(id: UUID!): RecurringIncomeGroup
   
   balance(filter: BalanceFilterInput!): BalanceReport!
   upcomingPayments(filter: UpcomingPaymentsFilter!): UpcomingPaymentsReport!
@@ -101,10 +101,13 @@ type Mutation {
   updateIncome(id: UUID!, input: UpdateIncomeInput!): Income!
   deleteIncome(id: UUID!): Boolean!
   
-  createRecurringIncome(input: CreateRecurringIncomeInput!): RecurringIncome!
-  updateRecurringIncome(id: UUID!, input: UpdateRecurringIncomeInput!): RecurringIncome!
-  deleteRecurringIncome(id: UUID!): Boolean!
-  createIncomeFromRecurring(recurringId: UUID!, incomeDate: Date): Income!
+  createRecurringIncomeGroup(input: CreateRecurringIncomeGroupInput!): RecurringIncomeGroup!
+  updateRecurringIncomeGroup(id: UUID!, input: UpdateRecurringIncomeGroupInput!): RecurringIncomeGroup!
+  deleteRecurringIncomeGroup(id: UUID!): Boolean!
+  addRecurringIncomeItem(groupId: UUID!, input: CreateRecurringIncomeItemInput!): RecurringIncomeGroup!
+  updateRecurringIncomeItem(itemId: UUID!, input: UpdateRecurringIncomeItemInput!): RecurringIncomeItem!
+  deleteRecurringIncomeItem(itemId: UUID!): Boolean!
+  createIncomesFromRecurringGroup(groupId: UUID!, incomeDate: Date): [Income!]!
   
   createSavingsGoal(input: CreateSavingsGoalInput!): SavingsGoal!
   updateSavingsGoal(id: UUID!, input: UpdateSavingsGoalInput!): SavingsGoal!

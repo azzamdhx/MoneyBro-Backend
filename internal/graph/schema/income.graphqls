@@ -38,13 +38,22 @@ type IncomesWithSummary {
   summary: IncomeSummary!
 }
 
-type RecurringIncome {
+type RecurringIncomeGroup {
+  id: UUID!
+  name: String!
+  recurringDay: Int
+  isActive: Boolean!
+  notes: String
+  total: Int!
+  createdAt: Time!
+  
+  items: [RecurringIncomeItem!]!
+}
+
+type RecurringIncomeItem {
   id: UUID!
   sourceName: String!
   amount: Int!
-  recurringDay: Int!
-  isActive: Boolean!
-  notes: String
   createdAt: Time!
   
   category: IncomeCategory!
@@ -84,19 +93,29 @@ input UpdateIncomeInput {
   pocketId: UUID
 }
 
-input CreateRecurringIncomeInput {
-  categoryId: UUID!
-  sourceName: String!
-  amount: Int!
-  recurringDay: Int!
-  notes: String
-}
-
-input UpdateRecurringIncomeInput {
-  categoryId: UUID
-  sourceName: String
-  amount: Int
+input CreateRecurringIncomeGroupInput {
+  name: String!
   recurringDay: Int
   isActive: Boolean
   notes: String
+  items: [CreateRecurringIncomeItemInput!]!
+}
+
+input CreateRecurringIncomeItemInput {
+  categoryId: UUID!
+  sourceName: String!
+  amount: Int!
+}
+
+input UpdateRecurringIncomeGroupInput {
+  name: String
+  recurringDay: Int
+  isActive: Boolean
+  notes: String
+}
+
+input UpdateRecurringIncomeItemInput {
+  categoryId: UUID
+  sourceName: String
+  amount: Int
 }

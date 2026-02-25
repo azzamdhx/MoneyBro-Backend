@@ -336,6 +336,7 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		AddExpenseTemplateItem          func(childComplexity int, groupID uuid.UUID, input model.CreateExpenseTemplateItemInput) int
+		AddRecurringIncomeItem          func(childComplexity int, groupID uuid.UUID, input model.CreateRecurringIncomeItemInput) int
 		AddSavingsContribution          func(childComplexity int, input model.AddSavingsContributionInput) int
 		CreateCategory                  func(childComplexity int, input model.CreateCategoryInput) int
 		CreateDebt                      func(childComplexity int, input model.CreateDebtInput) int
@@ -344,10 +345,10 @@ type ComplexityRoot struct {
 		CreateExpensesFromTemplateGroup func(childComplexity int, groupID uuid.UUID, expenseDate *time.Time) int
 		CreateIncome                    func(childComplexity int, input model.CreateIncomeInput) int
 		CreateIncomeCategory            func(childComplexity int, input model.CreateIncomeCategoryInput) int
-		CreateIncomeFromRecurring       func(childComplexity int, recurringID uuid.UUID, incomeDate *time.Time) int
+		CreateIncomesFromRecurringGroup func(childComplexity int, groupID uuid.UUID, incomeDate *time.Time) int
 		CreateInstallment               func(childComplexity int, input model.CreateInstallmentInput) int
 		CreatePocket                    func(childComplexity int, input model.CreatePocketInput) int
-		CreateRecurringIncome           func(childComplexity int, input model.CreateRecurringIncomeInput) int
+		CreateRecurringIncomeGroup      func(childComplexity int, input model.CreateRecurringIncomeGroupInput) int
 		CreateSavingsGoal               func(childComplexity int, input model.CreateSavingsGoalInput) int
 		CreateWalletAccount             func(childComplexity int, input model.CreateAccountInput) int
 		DeleteAccount                   func(childComplexity int, input model.DeleteAccountInput) int
@@ -360,7 +361,8 @@ type ComplexityRoot struct {
 		DeleteIncomeCategory            func(childComplexity int, id uuid.UUID) int
 		DeleteInstallment               func(childComplexity int, id uuid.UUID) int
 		DeletePocket                    func(childComplexity int, id uuid.UUID) int
-		DeleteRecurringIncome           func(childComplexity int, id uuid.UUID) int
+		DeleteRecurringIncomeGroup      func(childComplexity int, id uuid.UUID) int
+		DeleteRecurringIncomeItem       func(childComplexity int, itemID uuid.UUID) int
 		DeleteSavingsGoal               func(childComplexity int, id uuid.UUID) int
 		DeleteWalletAccount             func(childComplexity int, id uuid.UUID) int
 		Disable2fa                      func(childComplexity int, password string) int
@@ -389,7 +391,8 @@ type ComplexityRoot struct {
 		UpdateNotificationSettings      func(childComplexity int, input model.UpdateNotificationSettingsInput) int
 		UpdatePocket                    func(childComplexity int, id uuid.UUID, input model.UpdatePocketInput) int
 		UpdateProfile                   func(childComplexity int, input model.UpdateProfileInput) int
-		UpdateRecurringIncome           func(childComplexity int, id uuid.UUID, input model.UpdateRecurringIncomeInput) int
+		UpdateRecurringIncomeGroup      func(childComplexity int, id uuid.UUID, input model.UpdateRecurringIncomeGroupInput) int
+		UpdateRecurringIncomeItem       func(childComplexity int, itemID uuid.UUID, input model.UpdateRecurringIncomeItemInput) int
 		UpdateSavingsGoal               func(childComplexity int, id uuid.UUID, input model.UpdateSavingsGoalInput) int
 		UpdateWalletAccount             func(childComplexity int, id uuid.UUID, input model.UpdateAccountInput) int
 		Verify2fa                       func(childComplexity int, input model.Verify2FAInput) int
@@ -444,8 +447,8 @@ type ComplexityRoot struct {
 		Pocket                 func(childComplexity int, id uuid.UUID) int
 		PocketEntries          func(childComplexity int, pocketID uuid.UUID) int
 		Pockets                func(childComplexity int) int
-		RecurringIncome        func(childComplexity int, id uuid.UUID) int
-		RecurringIncomes       func(childComplexity int, isActive *bool) int
+		RecurringIncomeGroup   func(childComplexity int, id uuid.UUID) int
+		RecurringIncomeGroups  func(childComplexity int, isActive *bool) int
 		SavingsGoal            func(childComplexity int, id uuid.UUID) int
 		SavingsGoals           func(childComplexity int, status *model.SavingsGoalStatus) int
 		Transaction            func(childComplexity int, id uuid.UUID) int
@@ -453,15 +456,23 @@ type ComplexityRoot struct {
 		UpcomingPayments       func(childComplexity int, filter model.UpcomingPaymentsFilter) int
 	}
 
-	RecurringIncome struct {
-		Amount       func(childComplexity int) int
-		Category     func(childComplexity int) int
+	RecurringIncomeGroup struct {
 		CreatedAt    func(childComplexity int) int
 		ID           func(childComplexity int) int
 		IsActive     func(childComplexity int) int
+		Items        func(childComplexity int) int
+		Name         func(childComplexity int) int
 		Notes        func(childComplexity int) int
 		RecurringDay func(childComplexity int) int
-		SourceName   func(childComplexity int) int
+		Total        func(childComplexity int) int
+	}
+
+	RecurringIncomeItem struct {
+		Amount     func(childComplexity int) int
+		Category   func(childComplexity int) int
+		CreatedAt  func(childComplexity int) int
+		ID         func(childComplexity int) int
+		SourceName func(childComplexity int) int
 	}
 
 	SavingsContribution struct {
@@ -600,10 +611,13 @@ type MutationResolver interface {
 	CreateIncome(ctx context.Context, input model.CreateIncomeInput) (*model.Income, error)
 	UpdateIncome(ctx context.Context, id uuid.UUID, input model.UpdateIncomeInput) (*model.Income, error)
 	DeleteIncome(ctx context.Context, id uuid.UUID) (bool, error)
-	CreateRecurringIncome(ctx context.Context, input model.CreateRecurringIncomeInput) (*model.RecurringIncome, error)
-	UpdateRecurringIncome(ctx context.Context, id uuid.UUID, input model.UpdateRecurringIncomeInput) (*model.RecurringIncome, error)
-	DeleteRecurringIncome(ctx context.Context, id uuid.UUID) (bool, error)
-	CreateIncomeFromRecurring(ctx context.Context, recurringID uuid.UUID, incomeDate *time.Time) (*model.Income, error)
+	CreateRecurringIncomeGroup(ctx context.Context, input model.CreateRecurringIncomeGroupInput) (*model.RecurringIncomeGroup, error)
+	UpdateRecurringIncomeGroup(ctx context.Context, id uuid.UUID, input model.UpdateRecurringIncomeGroupInput) (*model.RecurringIncomeGroup, error)
+	DeleteRecurringIncomeGroup(ctx context.Context, id uuid.UUID) (bool, error)
+	AddRecurringIncomeItem(ctx context.Context, groupID uuid.UUID, input model.CreateRecurringIncomeItemInput) (*model.RecurringIncomeGroup, error)
+	UpdateRecurringIncomeItem(ctx context.Context, itemID uuid.UUID, input model.UpdateRecurringIncomeItemInput) (*model.RecurringIncomeItem, error)
+	DeleteRecurringIncomeItem(ctx context.Context, itemID uuid.UUID) (bool, error)
+	CreateIncomesFromRecurringGroup(ctx context.Context, groupID uuid.UUID, incomeDate *time.Time) ([]*model.Income, error)
 	CreateSavingsGoal(ctx context.Context, input model.CreateSavingsGoalInput) (*model.SavingsGoal, error)
 	UpdateSavingsGoal(ctx context.Context, id uuid.UUID, input model.UpdateSavingsGoalInput) (*model.SavingsGoal, error)
 	DeleteSavingsGoal(ctx context.Context, id uuid.UUID) (bool, error)
@@ -635,8 +649,8 @@ type QueryResolver interface {
 	IncomeCategory(ctx context.Context, id uuid.UUID) (*model.IncomeCategory, error)
 	Incomes(ctx context.Context, filter *model.IncomeFilter) (*model.IncomesWithSummary, error)
 	Income(ctx context.Context, id uuid.UUID) (*model.Income, error)
-	RecurringIncomes(ctx context.Context, isActive *bool) ([]*model.RecurringIncome, error)
-	RecurringIncome(ctx context.Context, id uuid.UUID) (*model.RecurringIncome, error)
+	RecurringIncomeGroups(ctx context.Context, isActive *bool) ([]*model.RecurringIncomeGroup, error)
+	RecurringIncomeGroup(ctx context.Context, id uuid.UUID) (*model.RecurringIncomeGroup, error)
 	Balance(ctx context.Context, filter model.BalanceFilterInput) (*model.BalanceReport, error)
 	UpcomingPayments(ctx context.Context, filter model.UpcomingPaymentsFilter) (*model.UpcomingPaymentsReport, error)
 	ActualPayments(ctx context.Context, filter model.ActualPaymentsFilter) (*model.ActualPaymentsReport, error)
@@ -1913,6 +1927,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.AddExpenseTemplateItem(childComplexity, args["groupId"].(uuid.UUID), args["input"].(model.CreateExpenseTemplateItemInput)), true
+	case "Mutation.addRecurringIncomeItem":
+		if e.ComplexityRoot.Mutation.AddRecurringIncomeItem == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_addRecurringIncomeItem_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.AddRecurringIncomeItem(childComplexity, args["groupId"].(uuid.UUID), args["input"].(model.CreateRecurringIncomeItemInput)), true
 	case "Mutation.addSavingsContribution":
 		if e.ComplexityRoot.Mutation.AddSavingsContribution == nil {
 			break
@@ -2001,17 +2026,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.CreateIncomeCategory(childComplexity, args["input"].(model.CreateIncomeCategoryInput)), true
-	case "Mutation.createIncomeFromRecurring":
-		if e.ComplexityRoot.Mutation.CreateIncomeFromRecurring == nil {
+	case "Mutation.createIncomesFromRecurringGroup":
+		if e.ComplexityRoot.Mutation.CreateIncomesFromRecurringGroup == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_createIncomeFromRecurring_args(ctx, rawArgs)
+		args, err := ec.field_Mutation_createIncomesFromRecurringGroup_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.ComplexityRoot.Mutation.CreateIncomeFromRecurring(childComplexity, args["recurringId"].(uuid.UUID), args["incomeDate"].(*time.Time)), true
+		return e.ComplexityRoot.Mutation.CreateIncomesFromRecurringGroup(childComplexity, args["groupId"].(uuid.UUID), args["incomeDate"].(*time.Time)), true
 	case "Mutation.createInstallment":
 		if e.ComplexityRoot.Mutation.CreateInstallment == nil {
 			break
@@ -2034,17 +2059,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.CreatePocket(childComplexity, args["input"].(model.CreatePocketInput)), true
-	case "Mutation.createRecurringIncome":
-		if e.ComplexityRoot.Mutation.CreateRecurringIncome == nil {
+	case "Mutation.createRecurringIncomeGroup":
+		if e.ComplexityRoot.Mutation.CreateRecurringIncomeGroup == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_createRecurringIncome_args(ctx, rawArgs)
+		args, err := ec.field_Mutation_createRecurringIncomeGroup_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.ComplexityRoot.Mutation.CreateRecurringIncome(childComplexity, args["input"].(model.CreateRecurringIncomeInput)), true
+		return e.ComplexityRoot.Mutation.CreateRecurringIncomeGroup(childComplexity, args["input"].(model.CreateRecurringIncomeGroupInput)), true
 	case "Mutation.createSavingsGoal":
 		if e.ComplexityRoot.Mutation.CreateSavingsGoal == nil {
 			break
@@ -2177,17 +2202,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.DeletePocket(childComplexity, args["id"].(uuid.UUID)), true
-	case "Mutation.deleteRecurringIncome":
-		if e.ComplexityRoot.Mutation.DeleteRecurringIncome == nil {
+	case "Mutation.deleteRecurringIncomeGroup":
+		if e.ComplexityRoot.Mutation.DeleteRecurringIncomeGroup == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_deleteRecurringIncome_args(ctx, rawArgs)
+		args, err := ec.field_Mutation_deleteRecurringIncomeGroup_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.ComplexityRoot.Mutation.DeleteRecurringIncome(childComplexity, args["id"].(uuid.UUID)), true
+		return e.ComplexityRoot.Mutation.DeleteRecurringIncomeGroup(childComplexity, args["id"].(uuid.UUID)), true
+	case "Mutation.deleteRecurringIncomeItem":
+		if e.ComplexityRoot.Mutation.DeleteRecurringIncomeItem == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteRecurringIncomeItem_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.DeleteRecurringIncomeItem(childComplexity, args["itemId"].(uuid.UUID)), true
 	case "Mutation.deleteSavingsGoal":
 		if e.ComplexityRoot.Mutation.DeleteSavingsGoal == nil {
 			break
@@ -2496,17 +2532,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.UpdateProfile(childComplexity, args["input"].(model.UpdateProfileInput)), true
-	case "Mutation.updateRecurringIncome":
-		if e.ComplexityRoot.Mutation.UpdateRecurringIncome == nil {
+	case "Mutation.updateRecurringIncomeGroup":
+		if e.ComplexityRoot.Mutation.UpdateRecurringIncomeGroup == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_updateRecurringIncome_args(ctx, rawArgs)
+		args, err := ec.field_Mutation_updateRecurringIncomeGroup_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.ComplexityRoot.Mutation.UpdateRecurringIncome(childComplexity, args["id"].(uuid.UUID), args["input"].(model.UpdateRecurringIncomeInput)), true
+		return e.ComplexityRoot.Mutation.UpdateRecurringIncomeGroup(childComplexity, args["id"].(uuid.UUID), args["input"].(model.UpdateRecurringIncomeGroupInput)), true
+	case "Mutation.updateRecurringIncomeItem":
+		if e.ComplexityRoot.Mutation.UpdateRecurringIncomeItem == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateRecurringIncomeItem_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.UpdateRecurringIncomeItem(childComplexity, args["itemId"].(uuid.UUID), args["input"].(model.UpdateRecurringIncomeItemInput)), true
 	case "Mutation.updateSavingsGoal":
 		if e.ComplexityRoot.Mutation.UpdateSavingsGoal == nil {
 			break
@@ -2906,28 +2953,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.Pockets(childComplexity), true
-	case "Query.recurringIncome":
-		if e.ComplexityRoot.Query.RecurringIncome == nil {
+	case "Query.recurringIncomeGroup":
+		if e.ComplexityRoot.Query.RecurringIncomeGroup == nil {
 			break
 		}
 
-		args, err := ec.field_Query_recurringIncome_args(ctx, rawArgs)
+		args, err := ec.field_Query_recurringIncomeGroup_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.ComplexityRoot.Query.RecurringIncome(childComplexity, args["id"].(uuid.UUID)), true
-	case "Query.recurringIncomes":
-		if e.ComplexityRoot.Query.RecurringIncomes == nil {
+		return e.ComplexityRoot.Query.RecurringIncomeGroup(childComplexity, args["id"].(uuid.UUID)), true
+	case "Query.recurringIncomeGroups":
+		if e.ComplexityRoot.Query.RecurringIncomeGroups == nil {
 			break
 		}
 
-		args, err := ec.field_Query_recurringIncomes_args(ctx, rawArgs)
+		args, err := ec.field_Query_recurringIncomeGroups_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.ComplexityRoot.Query.RecurringIncomes(childComplexity, args["isActive"].(*bool)), true
+		return e.ComplexityRoot.Query.RecurringIncomeGroups(childComplexity, args["isActive"].(*bool)), true
 	case "Query.savingsGoal":
 		if e.ComplexityRoot.Query.SavingsGoal == nil {
 			break
@@ -2984,54 +3031,85 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.Query.UpcomingPayments(childComplexity, args["filter"].(model.UpcomingPaymentsFilter)), true
 
-	case "RecurringIncome.amount":
-		if e.ComplexityRoot.RecurringIncome.Amount == nil {
+	case "RecurringIncomeGroup.createdAt":
+		if e.ComplexityRoot.RecurringIncomeGroup.CreatedAt == nil {
 			break
 		}
 
-		return e.ComplexityRoot.RecurringIncome.Amount(childComplexity), true
-	case "RecurringIncome.category":
-		if e.ComplexityRoot.RecurringIncome.Category == nil {
+		return e.ComplexityRoot.RecurringIncomeGroup.CreatedAt(childComplexity), true
+	case "RecurringIncomeGroup.id":
+		if e.ComplexityRoot.RecurringIncomeGroup.ID == nil {
 			break
 		}
 
-		return e.ComplexityRoot.RecurringIncome.Category(childComplexity), true
-	case "RecurringIncome.createdAt":
-		if e.ComplexityRoot.RecurringIncome.CreatedAt == nil {
+		return e.ComplexityRoot.RecurringIncomeGroup.ID(childComplexity), true
+	case "RecurringIncomeGroup.isActive":
+		if e.ComplexityRoot.RecurringIncomeGroup.IsActive == nil {
 			break
 		}
 
-		return e.ComplexityRoot.RecurringIncome.CreatedAt(childComplexity), true
-	case "RecurringIncome.id":
-		if e.ComplexityRoot.RecurringIncome.ID == nil {
+		return e.ComplexityRoot.RecurringIncomeGroup.IsActive(childComplexity), true
+	case "RecurringIncomeGroup.items":
+		if e.ComplexityRoot.RecurringIncomeGroup.Items == nil {
 			break
 		}
 
-		return e.ComplexityRoot.RecurringIncome.ID(childComplexity), true
-	case "RecurringIncome.isActive":
-		if e.ComplexityRoot.RecurringIncome.IsActive == nil {
+		return e.ComplexityRoot.RecurringIncomeGroup.Items(childComplexity), true
+	case "RecurringIncomeGroup.name":
+		if e.ComplexityRoot.RecurringIncomeGroup.Name == nil {
 			break
 		}
 
-		return e.ComplexityRoot.RecurringIncome.IsActive(childComplexity), true
-	case "RecurringIncome.notes":
-		if e.ComplexityRoot.RecurringIncome.Notes == nil {
+		return e.ComplexityRoot.RecurringIncomeGroup.Name(childComplexity), true
+	case "RecurringIncomeGroup.notes":
+		if e.ComplexityRoot.RecurringIncomeGroup.Notes == nil {
 			break
 		}
 
-		return e.ComplexityRoot.RecurringIncome.Notes(childComplexity), true
-	case "RecurringIncome.recurringDay":
-		if e.ComplexityRoot.RecurringIncome.RecurringDay == nil {
+		return e.ComplexityRoot.RecurringIncomeGroup.Notes(childComplexity), true
+	case "RecurringIncomeGroup.recurringDay":
+		if e.ComplexityRoot.RecurringIncomeGroup.RecurringDay == nil {
 			break
 		}
 
-		return e.ComplexityRoot.RecurringIncome.RecurringDay(childComplexity), true
-	case "RecurringIncome.sourceName":
-		if e.ComplexityRoot.RecurringIncome.SourceName == nil {
+		return e.ComplexityRoot.RecurringIncomeGroup.RecurringDay(childComplexity), true
+	case "RecurringIncomeGroup.total":
+		if e.ComplexityRoot.RecurringIncomeGroup.Total == nil {
 			break
 		}
 
-		return e.ComplexityRoot.RecurringIncome.SourceName(childComplexity), true
+		return e.ComplexityRoot.RecurringIncomeGroup.Total(childComplexity), true
+
+	case "RecurringIncomeItem.amount":
+		if e.ComplexityRoot.RecurringIncomeItem.Amount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RecurringIncomeItem.Amount(childComplexity), true
+	case "RecurringIncomeItem.category":
+		if e.ComplexityRoot.RecurringIncomeItem.Category == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RecurringIncomeItem.Category(childComplexity), true
+	case "RecurringIncomeItem.createdAt":
+		if e.ComplexityRoot.RecurringIncomeItem.CreatedAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RecurringIncomeItem.CreatedAt(childComplexity), true
+	case "RecurringIncomeItem.id":
+		if e.ComplexityRoot.RecurringIncomeItem.ID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RecurringIncomeItem.ID(childComplexity), true
+	case "RecurringIncomeItem.sourceName":
+		if e.ComplexityRoot.RecurringIncomeItem.SourceName == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RecurringIncomeItem.SourceName(childComplexity), true
 
 	case "SavingsContribution.amount":
 		if e.ComplexityRoot.SavingsContribution.Amount == nil {
@@ -3447,7 +3525,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCreateIncomeInput,
 		ec.unmarshalInputCreateInstallmentInput,
 		ec.unmarshalInputCreatePocketInput,
-		ec.unmarshalInputCreateRecurringIncomeInput,
+		ec.unmarshalInputCreateRecurringIncomeGroupInput,
+		ec.unmarshalInputCreateRecurringIncomeItemInput,
 		ec.unmarshalInputCreateSavingsGoalInput,
 		ec.unmarshalInputDeleteAccountInput,
 		ec.unmarshalInputExpenseFilter,
@@ -3474,7 +3553,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputUpdateNotificationSettingsInput,
 		ec.unmarshalInputUpdatePocketInput,
 		ec.unmarshalInputUpdateProfileInput,
-		ec.unmarshalInputUpdateRecurringIncomeInput,
+		ec.unmarshalInputUpdateRecurringIncomeGroupInput,
+		ec.unmarshalInputUpdateRecurringIncomeItemInput,
 		ec.unmarshalInputUpdateSavingsGoalInput,
 		ec.unmarshalInputVerify2FAInput,
 	)
@@ -3602,6 +3682,22 @@ func (ec *executionContext) field_Mutation_addExpenseTemplateItem_args(ctx conte
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_addRecurringIncomeItem_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "groupId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
+	if err != nil {
+		return nil, err
+	}
+	args["groupId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateRecurringIncomeItemInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCreateRecurringIncomeItemInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_addSavingsContribution_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -3684,22 +3780,6 @@ func (ec *executionContext) field_Mutation_createIncomeCategory_args(ctx context
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_createIncomeFromRecurring_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "recurringId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
-	if err != nil {
-		return nil, err
-	}
-	args["recurringId"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "incomeDate", ec.unmarshalODate2ᚖtimeᚐTime)
-	if err != nil {
-		return nil, err
-	}
-	args["incomeDate"] = arg1
-	return args, nil
-}
-
 func (ec *executionContext) field_Mutation_createIncome_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -3708,6 +3788,22 @@ func (ec *executionContext) field_Mutation_createIncome_args(ctx context.Context
 		return nil, err
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createIncomesFromRecurringGroup_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "groupId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
+	if err != nil {
+		return nil, err
+	}
+	args["groupId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "incomeDate", ec.unmarshalODate2ᚖtimeᚐTime)
+	if err != nil {
+		return nil, err
+	}
+	args["incomeDate"] = arg1
 	return args, nil
 }
 
@@ -3733,10 +3829,10 @@ func (ec *executionContext) field_Mutation_createPocket_args(ctx context.Context
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_createRecurringIncome_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Mutation_createRecurringIncomeGroup_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateRecurringIncomeInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCreateRecurringIncomeInput)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateRecurringIncomeGroupInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCreateRecurringIncomeGroupInput)
 	if err != nil {
 		return nil, err
 	}
@@ -3876,7 +3972,7 @@ func (ec *executionContext) field_Mutation_deletePocket_args(ctx context.Context
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_deleteRecurringIncome_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Mutation_deleteRecurringIncomeGroup_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
@@ -3884,6 +3980,17 @@ func (ec *executionContext) field_Mutation_deleteRecurringIncome_args(ctx contex
 		return nil, err
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteRecurringIncomeItem_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "itemId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
+	if err != nil {
+		return nil, err
+	}
+	args["itemId"] = arg0
 	return args, nil
 }
 
@@ -4240,7 +4347,7 @@ func (ec *executionContext) field_Mutation_updateProfile_args(ctx context.Contex
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_updateRecurringIncome_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Mutation_updateRecurringIncomeGroup_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
@@ -4248,7 +4355,23 @@ func (ec *executionContext) field_Mutation_updateRecurringIncome_args(ctx contex
 		return nil, err
 	}
 	args["id"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateRecurringIncomeInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐUpdateRecurringIncomeInput)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateRecurringIncomeGroupInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐUpdateRecurringIncomeGroupInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateRecurringIncomeItem_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "itemId", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
+	if err != nil {
+		return nil, err
+	}
+	args["itemId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateRecurringIncomeItemInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐUpdateRecurringIncomeItemInput)
 	if err != nil {
 		return nil, err
 	}
@@ -4552,7 +4675,7 @@ func (ec *executionContext) field_Query_pocket_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_recurringIncome_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Query_recurringIncomeGroup_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID)
@@ -4563,7 +4686,7 @@ func (ec *executionContext) field_Query_recurringIncome_args(ctx context.Context
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_recurringIncomes_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Query_recurringIncomeGroups_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "isActive", ec.unmarshalOBoolean2ᚖbool)
@@ -13406,24 +13529,24 @@ func (ec *executionContext) fieldContext_Mutation_deleteIncome(ctx context.Conte
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_createRecurringIncome(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_createRecurringIncomeGroup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_createRecurringIncome,
+		ec.fieldContext_Mutation_createRecurringIncomeGroup,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Mutation().CreateRecurringIncome(ctx, fc.Args["input"].(model.CreateRecurringIncomeInput))
+			return ec.Resolvers.Mutation().CreateRecurringIncomeGroup(ctx, fc.Args["input"].(model.CreateRecurringIncomeGroupInput))
 		},
 		nil,
-		ec.marshalNRecurringIncome2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecurringIncome,
+		ec.marshalNRecurringIncomeGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecurringIncomeGroup,
 		true,
 		true,
 	)
 }
 
-func (ec *executionContext) fieldContext_Mutation_createRecurringIncome(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_createRecurringIncomeGroup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -13432,23 +13555,23 @@ func (ec *executionContext) fieldContext_Mutation_createRecurringIncome(ctx cont
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_RecurringIncome_id(ctx, field)
-			case "sourceName":
-				return ec.fieldContext_RecurringIncome_sourceName(ctx, field)
-			case "amount":
-				return ec.fieldContext_RecurringIncome_amount(ctx, field)
+				return ec.fieldContext_RecurringIncomeGroup_id(ctx, field)
+			case "name":
+				return ec.fieldContext_RecurringIncomeGroup_name(ctx, field)
 			case "recurringDay":
-				return ec.fieldContext_RecurringIncome_recurringDay(ctx, field)
+				return ec.fieldContext_RecurringIncomeGroup_recurringDay(ctx, field)
 			case "isActive":
-				return ec.fieldContext_RecurringIncome_isActive(ctx, field)
+				return ec.fieldContext_RecurringIncomeGroup_isActive(ctx, field)
 			case "notes":
-				return ec.fieldContext_RecurringIncome_notes(ctx, field)
+				return ec.fieldContext_RecurringIncomeGroup_notes(ctx, field)
+			case "total":
+				return ec.fieldContext_RecurringIncomeGroup_total(ctx, field)
 			case "createdAt":
-				return ec.fieldContext_RecurringIncome_createdAt(ctx, field)
-			case "category":
-				return ec.fieldContext_RecurringIncome_category(ctx, field)
+				return ec.fieldContext_RecurringIncomeGroup_createdAt(ctx, field)
+			case "items":
+				return ec.fieldContext_RecurringIncomeGroup_items(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type RecurringIncome", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type RecurringIncomeGroup", field.Name)
 		},
 	}
 	defer func() {
@@ -13458,31 +13581,31 @@ func (ec *executionContext) fieldContext_Mutation_createRecurringIncome(ctx cont
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createRecurringIncome_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_createRecurringIncomeGroup_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_updateRecurringIncome(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_updateRecurringIncomeGroup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_updateRecurringIncome,
+		ec.fieldContext_Mutation_updateRecurringIncomeGroup,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Mutation().UpdateRecurringIncome(ctx, fc.Args["id"].(uuid.UUID), fc.Args["input"].(model.UpdateRecurringIncomeInput))
+			return ec.Resolvers.Mutation().UpdateRecurringIncomeGroup(ctx, fc.Args["id"].(uuid.UUID), fc.Args["input"].(model.UpdateRecurringIncomeGroupInput))
 		},
 		nil,
-		ec.marshalNRecurringIncome2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecurringIncome,
+		ec.marshalNRecurringIncomeGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecurringIncomeGroup,
 		true,
 		true,
 	)
 }
 
-func (ec *executionContext) fieldContext_Mutation_updateRecurringIncome(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_updateRecurringIncomeGroup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -13491,23 +13614,23 @@ func (ec *executionContext) fieldContext_Mutation_updateRecurringIncome(ctx cont
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_RecurringIncome_id(ctx, field)
-			case "sourceName":
-				return ec.fieldContext_RecurringIncome_sourceName(ctx, field)
-			case "amount":
-				return ec.fieldContext_RecurringIncome_amount(ctx, field)
+				return ec.fieldContext_RecurringIncomeGroup_id(ctx, field)
+			case "name":
+				return ec.fieldContext_RecurringIncomeGroup_name(ctx, field)
 			case "recurringDay":
-				return ec.fieldContext_RecurringIncome_recurringDay(ctx, field)
+				return ec.fieldContext_RecurringIncomeGroup_recurringDay(ctx, field)
 			case "isActive":
-				return ec.fieldContext_RecurringIncome_isActive(ctx, field)
+				return ec.fieldContext_RecurringIncomeGroup_isActive(ctx, field)
 			case "notes":
-				return ec.fieldContext_RecurringIncome_notes(ctx, field)
+				return ec.fieldContext_RecurringIncomeGroup_notes(ctx, field)
+			case "total":
+				return ec.fieldContext_RecurringIncomeGroup_total(ctx, field)
 			case "createdAt":
-				return ec.fieldContext_RecurringIncome_createdAt(ctx, field)
-			case "category":
-				return ec.fieldContext_RecurringIncome_category(ctx, field)
+				return ec.fieldContext_RecurringIncomeGroup_createdAt(ctx, field)
+			case "items":
+				return ec.fieldContext_RecurringIncomeGroup_items(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type RecurringIncome", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type RecurringIncomeGroup", field.Name)
 		},
 	}
 	defer func() {
@@ -13517,22 +13640,22 @@ func (ec *executionContext) fieldContext_Mutation_updateRecurringIncome(ctx cont
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_updateRecurringIncome_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_updateRecurringIncomeGroup_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_deleteRecurringIncome(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_deleteRecurringIncomeGroup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_deleteRecurringIncome,
+		ec.fieldContext_Mutation_deleteRecurringIncomeGroup,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Mutation().DeleteRecurringIncome(ctx, fc.Args["id"].(uuid.UUID))
+			return ec.Resolvers.Mutation().DeleteRecurringIncomeGroup(ctx, fc.Args["id"].(uuid.UUID))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -13541,7 +13664,7 @@ func (ec *executionContext) _Mutation_deleteRecurringIncome(ctx context.Context,
 	)
 }
 
-func (ec *executionContext) fieldContext_Mutation_deleteRecurringIncome(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_deleteRecurringIncomeGroup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -13558,31 +13681,184 @@ func (ec *executionContext) fieldContext_Mutation_deleteRecurringIncome(ctx cont
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_deleteRecurringIncome_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_deleteRecurringIncomeGroup_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_createIncomeFromRecurring(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_addRecurringIncomeItem(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_createIncomeFromRecurring,
+		ec.fieldContext_Mutation_addRecurringIncomeItem,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Mutation().CreateIncomeFromRecurring(ctx, fc.Args["recurringId"].(uuid.UUID), fc.Args["incomeDate"].(*time.Time))
+			return ec.Resolvers.Mutation().AddRecurringIncomeItem(ctx, fc.Args["groupId"].(uuid.UUID), fc.Args["input"].(model.CreateRecurringIncomeItemInput))
 		},
 		nil,
-		ec.marshalNIncome2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncome,
+		ec.marshalNRecurringIncomeGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecurringIncomeGroup,
 		true,
 		true,
 	)
 }
 
-func (ec *executionContext) fieldContext_Mutation_createIncomeFromRecurring(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_addRecurringIncomeItem(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_RecurringIncomeGroup_id(ctx, field)
+			case "name":
+				return ec.fieldContext_RecurringIncomeGroup_name(ctx, field)
+			case "recurringDay":
+				return ec.fieldContext_RecurringIncomeGroup_recurringDay(ctx, field)
+			case "isActive":
+				return ec.fieldContext_RecurringIncomeGroup_isActive(ctx, field)
+			case "notes":
+				return ec.fieldContext_RecurringIncomeGroup_notes(ctx, field)
+			case "total":
+				return ec.fieldContext_RecurringIncomeGroup_total(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_RecurringIncomeGroup_createdAt(ctx, field)
+			case "items":
+				return ec.fieldContext_RecurringIncomeGroup_items(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RecurringIncomeGroup", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_addRecurringIncomeItem_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateRecurringIncomeItem(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_updateRecurringIncomeItem,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().UpdateRecurringIncomeItem(ctx, fc.Args["itemId"].(uuid.UUID), fc.Args["input"].(model.UpdateRecurringIncomeItemInput))
+		},
+		nil,
+		ec.marshalNRecurringIncomeItem2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecurringIncomeItem,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateRecurringIncomeItem(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_RecurringIncomeItem_id(ctx, field)
+			case "sourceName":
+				return ec.fieldContext_RecurringIncomeItem_sourceName(ctx, field)
+			case "amount":
+				return ec.fieldContext_RecurringIncomeItem_amount(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_RecurringIncomeItem_createdAt(ctx, field)
+			case "category":
+				return ec.fieldContext_RecurringIncomeItem_category(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RecurringIncomeItem", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateRecurringIncomeItem_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteRecurringIncomeItem(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_deleteRecurringIncomeItem,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().DeleteRecurringIncomeItem(ctx, fc.Args["itemId"].(uuid.UUID))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteRecurringIncomeItem(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteRecurringIncomeItem_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createIncomesFromRecurringGroup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_createIncomesFromRecurringGroup,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().CreateIncomesFromRecurringGroup(ctx, fc.Args["groupId"].(uuid.UUID), fc.Args["incomeDate"].(*time.Time))
+		},
+		nil,
+		ec.marshalNIncome2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐIncomeᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createIncomesFromRecurringGroup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -13619,7 +13895,7 @@ func (ec *executionContext) fieldContext_Mutation_createIncomeFromRecurring(ctx 
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createIncomeFromRecurring_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_createIncomesFromRecurringGroup_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -15651,24 +15927,24 @@ func (ec *executionContext) fieldContext_Query_income(ctx context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_recurringIncomes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_recurringIncomeGroups(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_recurringIncomes,
+		ec.fieldContext_Query_recurringIncomeGroups,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Query().RecurringIncomes(ctx, fc.Args["isActive"].(*bool))
+			return ec.Resolvers.Query().RecurringIncomeGroups(ctx, fc.Args["isActive"].(*bool))
 		},
 		nil,
-		ec.marshalNRecurringIncome2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecurringIncomeᚄ,
+		ec.marshalNRecurringIncomeGroup2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecurringIncomeGroupᚄ,
 		true,
 		true,
 	)
 }
 
-func (ec *executionContext) fieldContext_Query_recurringIncomes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_recurringIncomeGroups(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -15677,23 +15953,23 @@ func (ec *executionContext) fieldContext_Query_recurringIncomes(ctx context.Cont
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_RecurringIncome_id(ctx, field)
-			case "sourceName":
-				return ec.fieldContext_RecurringIncome_sourceName(ctx, field)
-			case "amount":
-				return ec.fieldContext_RecurringIncome_amount(ctx, field)
+				return ec.fieldContext_RecurringIncomeGroup_id(ctx, field)
+			case "name":
+				return ec.fieldContext_RecurringIncomeGroup_name(ctx, field)
 			case "recurringDay":
-				return ec.fieldContext_RecurringIncome_recurringDay(ctx, field)
+				return ec.fieldContext_RecurringIncomeGroup_recurringDay(ctx, field)
 			case "isActive":
-				return ec.fieldContext_RecurringIncome_isActive(ctx, field)
+				return ec.fieldContext_RecurringIncomeGroup_isActive(ctx, field)
 			case "notes":
-				return ec.fieldContext_RecurringIncome_notes(ctx, field)
+				return ec.fieldContext_RecurringIncomeGroup_notes(ctx, field)
+			case "total":
+				return ec.fieldContext_RecurringIncomeGroup_total(ctx, field)
 			case "createdAt":
-				return ec.fieldContext_RecurringIncome_createdAt(ctx, field)
-			case "category":
-				return ec.fieldContext_RecurringIncome_category(ctx, field)
+				return ec.fieldContext_RecurringIncomeGroup_createdAt(ctx, field)
+			case "items":
+				return ec.fieldContext_RecurringIncomeGroup_items(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type RecurringIncome", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type RecurringIncomeGroup", field.Name)
 		},
 	}
 	defer func() {
@@ -15703,31 +15979,31 @@ func (ec *executionContext) fieldContext_Query_recurringIncomes(ctx context.Cont
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_recurringIncomes_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_recurringIncomeGroups_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_recurringIncome(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_recurringIncomeGroup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_recurringIncome,
+		ec.fieldContext_Query_recurringIncomeGroup,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Query().RecurringIncome(ctx, fc.Args["id"].(uuid.UUID))
+			return ec.Resolvers.Query().RecurringIncomeGroup(ctx, fc.Args["id"].(uuid.UUID))
 		},
 		nil,
-		ec.marshalORecurringIncome2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecurringIncome,
+		ec.marshalORecurringIncomeGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecurringIncomeGroup,
 		true,
 		false,
 	)
 }
 
-func (ec *executionContext) fieldContext_Query_recurringIncome(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_recurringIncomeGroup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -15736,23 +16012,23 @@ func (ec *executionContext) fieldContext_Query_recurringIncome(ctx context.Conte
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_RecurringIncome_id(ctx, field)
-			case "sourceName":
-				return ec.fieldContext_RecurringIncome_sourceName(ctx, field)
-			case "amount":
-				return ec.fieldContext_RecurringIncome_amount(ctx, field)
+				return ec.fieldContext_RecurringIncomeGroup_id(ctx, field)
+			case "name":
+				return ec.fieldContext_RecurringIncomeGroup_name(ctx, field)
 			case "recurringDay":
-				return ec.fieldContext_RecurringIncome_recurringDay(ctx, field)
+				return ec.fieldContext_RecurringIncomeGroup_recurringDay(ctx, field)
 			case "isActive":
-				return ec.fieldContext_RecurringIncome_isActive(ctx, field)
+				return ec.fieldContext_RecurringIncomeGroup_isActive(ctx, field)
 			case "notes":
-				return ec.fieldContext_RecurringIncome_notes(ctx, field)
+				return ec.fieldContext_RecurringIncomeGroup_notes(ctx, field)
+			case "total":
+				return ec.fieldContext_RecurringIncomeGroup_total(ctx, field)
 			case "createdAt":
-				return ec.fieldContext_RecurringIncome_createdAt(ctx, field)
-			case "category":
-				return ec.fieldContext_RecurringIncome_category(ctx, field)
+				return ec.fieldContext_RecurringIncomeGroup_createdAt(ctx, field)
+			case "items":
+				return ec.fieldContext_RecurringIncomeGroup_items(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type RecurringIncome", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type RecurringIncomeGroup", field.Name)
 		},
 	}
 	defer func() {
@@ -15762,7 +16038,7 @@ func (ec *executionContext) fieldContext_Query_recurringIncome(ctx context.Conte
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_recurringIncome_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_recurringIncomeGroup_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -16868,12 +17144,12 @@ func (ec *executionContext) fieldContext_Query___schema(_ context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _RecurringIncome_id(ctx context.Context, field graphql.CollectedField, obj *model.RecurringIncome) (ret graphql.Marshaler) {
+func (ec *executionContext) _RecurringIncomeGroup_id(ctx context.Context, field graphql.CollectedField, obj *model.RecurringIncomeGroup) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_RecurringIncome_id,
+		ec.fieldContext_RecurringIncomeGroup_id,
 		func(ctx context.Context) (any, error) {
 			return obj.ID, nil
 		},
@@ -16884,9 +17160,9 @@ func (ec *executionContext) _RecurringIncome_id(ctx context.Context, field graph
 	)
 }
 
-func (ec *executionContext) fieldContext_RecurringIncome_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_RecurringIncomeGroup_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "RecurringIncome",
+		Object:     "RecurringIncomeGroup",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -16897,14 +17173,14 @@ func (ec *executionContext) fieldContext_RecurringIncome_id(_ context.Context, f
 	return fc, nil
 }
 
-func (ec *executionContext) _RecurringIncome_sourceName(ctx context.Context, field graphql.CollectedField, obj *model.RecurringIncome) (ret graphql.Marshaler) {
+func (ec *executionContext) _RecurringIncomeGroup_name(ctx context.Context, field graphql.CollectedField, obj *model.RecurringIncomeGroup) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_RecurringIncome_sourceName,
+		ec.fieldContext_RecurringIncomeGroup_name,
 		func(ctx context.Context) (any, error) {
-			return obj.SourceName, nil
+			return obj.Name, nil
 		},
 		nil,
 		ec.marshalNString2string,
@@ -16913,9 +17189,9 @@ func (ec *executionContext) _RecurringIncome_sourceName(ctx context.Context, fie
 	)
 }
 
-func (ec *executionContext) fieldContext_RecurringIncome_sourceName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_RecurringIncomeGroup_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "RecurringIncome",
+		Object:     "RecurringIncomeGroup",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -16926,54 +17202,25 @@ func (ec *executionContext) fieldContext_RecurringIncome_sourceName(_ context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _RecurringIncome_amount(ctx context.Context, field graphql.CollectedField, obj *model.RecurringIncome) (ret graphql.Marshaler) {
+func (ec *executionContext) _RecurringIncomeGroup_recurringDay(ctx context.Context, field graphql.CollectedField, obj *model.RecurringIncomeGroup) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_RecurringIncome_amount,
-		func(ctx context.Context) (any, error) {
-			return obj.Amount, nil
-		},
-		nil,
-		ec.marshalNInt2int,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_RecurringIncome_amount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "RecurringIncome",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _RecurringIncome_recurringDay(ctx context.Context, field graphql.CollectedField, obj *model.RecurringIncome) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_RecurringIncome_recurringDay,
+		ec.fieldContext_RecurringIncomeGroup_recurringDay,
 		func(ctx context.Context) (any, error) {
 			return obj.RecurringDay, nil
 		},
 		nil,
-		ec.marshalNInt2int,
+		ec.marshalOInt2ᚖint,
 		true,
-		true,
+		false,
 	)
 }
 
-func (ec *executionContext) fieldContext_RecurringIncome_recurringDay(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_RecurringIncomeGroup_recurringDay(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "RecurringIncome",
+		Object:     "RecurringIncomeGroup",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -16984,12 +17231,12 @@ func (ec *executionContext) fieldContext_RecurringIncome_recurringDay(_ context.
 	return fc, nil
 }
 
-func (ec *executionContext) _RecurringIncome_isActive(ctx context.Context, field graphql.CollectedField, obj *model.RecurringIncome) (ret graphql.Marshaler) {
+func (ec *executionContext) _RecurringIncomeGroup_isActive(ctx context.Context, field graphql.CollectedField, obj *model.RecurringIncomeGroup) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_RecurringIncome_isActive,
+		ec.fieldContext_RecurringIncomeGroup_isActive,
 		func(ctx context.Context) (any, error) {
 			return obj.IsActive, nil
 		},
@@ -17000,9 +17247,9 @@ func (ec *executionContext) _RecurringIncome_isActive(ctx context.Context, field
 	)
 }
 
-func (ec *executionContext) fieldContext_RecurringIncome_isActive(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_RecurringIncomeGroup_isActive(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "RecurringIncome",
+		Object:     "RecurringIncomeGroup",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -17013,12 +17260,12 @@ func (ec *executionContext) fieldContext_RecurringIncome_isActive(_ context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _RecurringIncome_notes(ctx context.Context, field graphql.CollectedField, obj *model.RecurringIncome) (ret graphql.Marshaler) {
+func (ec *executionContext) _RecurringIncomeGroup_notes(ctx context.Context, field graphql.CollectedField, obj *model.RecurringIncomeGroup) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_RecurringIncome_notes,
+		ec.fieldContext_RecurringIncomeGroup_notes,
 		func(ctx context.Context) (any, error) {
 			return obj.Notes, nil
 		},
@@ -17029,9 +17276,9 @@ func (ec *executionContext) _RecurringIncome_notes(ctx context.Context, field gr
 	)
 }
 
-func (ec *executionContext) fieldContext_RecurringIncome_notes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_RecurringIncomeGroup_notes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "RecurringIncome",
+		Object:     "RecurringIncomeGroup",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -17042,12 +17289,41 @@ func (ec *executionContext) fieldContext_RecurringIncome_notes(_ context.Context
 	return fc, nil
 }
 
-func (ec *executionContext) _RecurringIncome_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.RecurringIncome) (ret graphql.Marshaler) {
+func (ec *executionContext) _RecurringIncomeGroup_total(ctx context.Context, field graphql.CollectedField, obj *model.RecurringIncomeGroup) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_RecurringIncome_createdAt,
+		ec.fieldContext_RecurringIncomeGroup_total,
+		func(ctx context.Context) (any, error) {
+			return obj.Total, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RecurringIncomeGroup_total(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RecurringIncomeGroup",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RecurringIncomeGroup_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.RecurringIncomeGroup) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RecurringIncomeGroup_createdAt,
 		func(ctx context.Context) (any, error) {
 			return obj.CreatedAt, nil
 		},
@@ -17058,9 +17334,9 @@ func (ec *executionContext) _RecurringIncome_createdAt(ctx context.Context, fiel
 	)
 }
 
-func (ec *executionContext) fieldContext_RecurringIncome_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_RecurringIncomeGroup_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "RecurringIncome",
+		Object:     "RecurringIncomeGroup",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -17071,12 +17347,169 @@ func (ec *executionContext) fieldContext_RecurringIncome_createdAt(_ context.Con
 	return fc, nil
 }
 
-func (ec *executionContext) _RecurringIncome_category(ctx context.Context, field graphql.CollectedField, obj *model.RecurringIncome) (ret graphql.Marshaler) {
+func (ec *executionContext) _RecurringIncomeGroup_items(ctx context.Context, field graphql.CollectedField, obj *model.RecurringIncomeGroup) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_RecurringIncome_category,
+		ec.fieldContext_RecurringIncomeGroup_items,
+		func(ctx context.Context) (any, error) {
+			return obj.Items, nil
+		},
+		nil,
+		ec.marshalNRecurringIncomeItem2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecurringIncomeItemᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RecurringIncomeGroup_items(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RecurringIncomeGroup",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_RecurringIncomeItem_id(ctx, field)
+			case "sourceName":
+				return ec.fieldContext_RecurringIncomeItem_sourceName(ctx, field)
+			case "amount":
+				return ec.fieldContext_RecurringIncomeItem_amount(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_RecurringIncomeItem_createdAt(ctx, field)
+			case "category":
+				return ec.fieldContext_RecurringIncomeItem_category(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RecurringIncomeItem", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RecurringIncomeItem_id(ctx context.Context, field graphql.CollectedField, obj *model.RecurringIncomeItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RecurringIncomeItem_id,
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RecurringIncomeItem_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RecurringIncomeItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type UUID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RecurringIncomeItem_sourceName(ctx context.Context, field graphql.CollectedField, obj *model.RecurringIncomeItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RecurringIncomeItem_sourceName,
+		func(ctx context.Context) (any, error) {
+			return obj.SourceName, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RecurringIncomeItem_sourceName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RecurringIncomeItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RecurringIncomeItem_amount(ctx context.Context, field graphql.CollectedField, obj *model.RecurringIncomeItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RecurringIncomeItem_amount,
+		func(ctx context.Context) (any, error) {
+			return obj.Amount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RecurringIncomeItem_amount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RecurringIncomeItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RecurringIncomeItem_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.RecurringIncomeItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RecurringIncomeItem_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RecurringIncomeItem_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RecurringIncomeItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RecurringIncomeItem_category(ctx context.Context, field graphql.CollectedField, obj *model.RecurringIncomeItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RecurringIncomeItem_category,
 		func(ctx context.Context) (any, error) {
 			return obj.Category, nil
 		},
@@ -17087,9 +17520,9 @@ func (ec *executionContext) _RecurringIncome_category(ctx context.Context, field
 	)
 }
 
-func (ec *executionContext) fieldContext_RecurringIncome_category(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_RecurringIncomeItem_category(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "RecurringIncome",
+		Object:     "RecurringIncomeItem",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -21212,14 +21645,68 @@ func (ec *executionContext) unmarshalInputCreatePocketInput(ctx context.Context,
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputCreateRecurringIncomeInput(ctx context.Context, obj any) (model.CreateRecurringIncomeInput, error) {
-	var it model.CreateRecurringIncomeInput
+func (ec *executionContext) unmarshalInputCreateRecurringIncomeGroupInput(ctx context.Context, obj any) (model.CreateRecurringIncomeGroupInput, error) {
+	var it model.CreateRecurringIncomeGroupInput
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"categoryId", "sourceName", "amount", "recurringDay", "notes"}
+	fieldsInOrder := [...]string{"name", "recurringDay", "isActive", "notes", "items"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "recurringDay":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("recurringDay"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RecurringDay = data
+		case "isActive":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isActive"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IsActive = data
+		case "notes":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Notes = data
+		case "items":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("items"))
+			data, err := ec.unmarshalNCreateRecurringIncomeItemInput2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCreateRecurringIncomeItemInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Items = data
+		}
+	}
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputCreateRecurringIncomeItemInput(ctx context.Context, obj any) (model.CreateRecurringIncomeItemInput, error) {
+	var it model.CreateRecurringIncomeItemInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"categoryId", "sourceName", "amount"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -21247,20 +21734,6 @@ func (ec *executionContext) unmarshalInputCreateRecurringIncomeInput(ctx context
 				return it, err
 			}
 			it.Amount = data
-		case "recurringDay":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("recurringDay"))
-			data, err := ec.unmarshalNInt2int(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.RecurringDay = data
-		case "notes":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Notes = data
 		}
 	}
 	return it, nil
@@ -22446,14 +22919,61 @@ func (ec *executionContext) unmarshalInputUpdateProfileInput(ctx context.Context
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputUpdateRecurringIncomeInput(ctx context.Context, obj any) (model.UpdateRecurringIncomeInput, error) {
-	var it model.UpdateRecurringIncomeInput
+func (ec *executionContext) unmarshalInputUpdateRecurringIncomeGroupInput(ctx context.Context, obj any) (model.UpdateRecurringIncomeGroupInput, error) {
+	var it model.UpdateRecurringIncomeGroupInput
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"categoryId", "sourceName", "amount", "recurringDay", "isActive", "notes"}
+	fieldsInOrder := [...]string{"name", "recurringDay", "isActive", "notes"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "recurringDay":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("recurringDay"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RecurringDay = data
+		case "isActive":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isActive"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IsActive = data
+		case "notes":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Notes = data
+		}
+	}
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpdateRecurringIncomeItemInput(ctx context.Context, obj any) (model.UpdateRecurringIncomeItemInput, error) {
+	var it model.UpdateRecurringIncomeItemInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"categoryId", "sourceName", "amount"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -22481,27 +23001,6 @@ func (ec *executionContext) unmarshalInputUpdateRecurringIncomeInput(ctx context
 				return it, err
 			}
 			it.Amount = data
-		case "recurringDay":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("recurringDay"))
-			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.RecurringDay = data
-		case "isActive":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isActive"))
-			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.IsActive = data
-		case "notes":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Notes = data
 		}
 	}
 	return it, nil
@@ -24937,30 +25436,51 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "createRecurringIncome":
+		case "createRecurringIncomeGroup":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createRecurringIncome(ctx, field)
+				return ec._Mutation_createRecurringIncomeGroup(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "updateRecurringIncome":
+		case "updateRecurringIncomeGroup":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updateRecurringIncome(ctx, field)
+				return ec._Mutation_updateRecurringIncomeGroup(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "deleteRecurringIncome":
+		case "deleteRecurringIncomeGroup":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_deleteRecurringIncome(ctx, field)
+				return ec._Mutation_deleteRecurringIncomeGroup(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "createIncomeFromRecurring":
+		case "addRecurringIncomeItem":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createIncomeFromRecurring(ctx, field)
+				return ec._Mutation_addRecurringIncomeItem(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updateRecurringIncomeItem":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateRecurringIncomeItem(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deleteRecurringIncomeItem":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteRecurringIncomeItem(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createIncomesFromRecurringGroup":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createIncomesFromRecurringGroup(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -25551,7 +26071,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "recurringIncomes":
+		case "recurringIncomeGroups":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -25560,7 +26080,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_recurringIncomes(ctx, field)
+				res = ec._Query_recurringIncomeGroups(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -25573,7 +26093,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "recurringIncome":
+		case "recurringIncomeGroup":
 			field := field
 
 			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
@@ -25582,7 +26102,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_recurringIncome(ctx, field)
+				res = ec._Query_recurringIncomeGroup(ctx, field)
 				return res
 			}
 
@@ -25985,51 +26505,107 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 	return out
 }
 
-var recurringIncomeImplementors = []string{"RecurringIncome"}
+var recurringIncomeGroupImplementors = []string{"RecurringIncomeGroup"}
 
-func (ec *executionContext) _RecurringIncome(ctx context.Context, sel ast.SelectionSet, obj *model.RecurringIncome) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, recurringIncomeImplementors)
+func (ec *executionContext) _RecurringIncomeGroup(ctx context.Context, sel ast.SelectionSet, obj *model.RecurringIncomeGroup) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, recurringIncomeGroupImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("RecurringIncome")
+			out.Values[i] = graphql.MarshalString("RecurringIncomeGroup")
 		case "id":
-			out.Values[i] = ec._RecurringIncome_id(ctx, field, obj)
+			out.Values[i] = ec._RecurringIncomeGroup_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "sourceName":
-			out.Values[i] = ec._RecurringIncome_sourceName(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "amount":
-			out.Values[i] = ec._RecurringIncome_amount(ctx, field, obj)
+		case "name":
+			out.Values[i] = ec._RecurringIncomeGroup_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "recurringDay":
-			out.Values[i] = ec._RecurringIncome_recurringDay(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
+			out.Values[i] = ec._RecurringIncomeGroup_recurringDay(ctx, field, obj)
 		case "isActive":
-			out.Values[i] = ec._RecurringIncome_isActive(ctx, field, obj)
+			out.Values[i] = ec._RecurringIncomeGroup_isActive(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "notes":
-			out.Values[i] = ec._RecurringIncome_notes(ctx, field, obj)
+			out.Values[i] = ec._RecurringIncomeGroup_notes(ctx, field, obj)
+		case "total":
+			out.Values[i] = ec._RecurringIncomeGroup_total(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "createdAt":
-			out.Values[i] = ec._RecurringIncome_createdAt(ctx, field, obj)
+			out.Values[i] = ec._RecurringIncomeGroup_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "items":
+			out.Values[i] = ec._RecurringIncomeGroup_items(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var recurringIncomeItemImplementors = []string{"RecurringIncomeItem"}
+
+func (ec *executionContext) _RecurringIncomeItem(ctx context.Context, sel ast.SelectionSet, obj *model.RecurringIncomeItem) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, recurringIncomeItemImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("RecurringIncomeItem")
+		case "id":
+			out.Values[i] = ec._RecurringIncomeItem_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "sourceName":
+			out.Values[i] = ec._RecurringIncomeItem_sourceName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "amount":
+			out.Values[i] = ec._RecurringIncomeItem_amount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._RecurringIncomeItem_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "category":
-			out.Values[i] = ec._RecurringIncome_category(ctx, field, obj)
+			out.Values[i] = ec._RecurringIncomeItem_category(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -27324,9 +27900,34 @@ func (ec *executionContext) unmarshalNCreatePocketInput2githubᚗcomᚋazzamdhx�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNCreateRecurringIncomeInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCreateRecurringIncomeInput(ctx context.Context, v any) (model.CreateRecurringIncomeInput, error) {
-	res, err := ec.unmarshalInputCreateRecurringIncomeInput(ctx, v)
+func (ec *executionContext) unmarshalNCreateRecurringIncomeGroupInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCreateRecurringIncomeGroupInput(ctx context.Context, v any) (model.CreateRecurringIncomeGroupInput, error) {
+	res, err := ec.unmarshalInputCreateRecurringIncomeGroupInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNCreateRecurringIncomeItemInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCreateRecurringIncomeItemInput(ctx context.Context, v any) (model.CreateRecurringIncomeItemInput, error) {
+	res, err := ec.unmarshalInputCreateRecurringIncomeItemInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNCreateRecurringIncomeItemInput2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCreateRecurringIncomeItemInputᚄ(ctx context.Context, v any) ([]*model.CreateRecurringIncomeItemInput, error) {
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]*model.CreateRecurringIncomeItemInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNCreateRecurringIncomeItemInput2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCreateRecurringIncomeItemInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalNCreateRecurringIncomeItemInput2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCreateRecurringIncomeItemInput(ctx context.Context, v any) (*model.CreateRecurringIncomeItemInput, error) {
+	res, err := ec.unmarshalInputCreateRecurringIncomeItemInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNCreateSavingsGoalInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐCreateSavingsGoalInput(ctx context.Context, v any) (model.CreateSavingsGoalInput, error) {
@@ -27963,15 +28564,15 @@ func (ec *executionContext) unmarshalNRecordInstallmentPaymentInput2githubᚗcom
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNRecurringIncome2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecurringIncome(ctx context.Context, sel ast.SelectionSet, v model.RecurringIncome) graphql.Marshaler {
-	return ec._RecurringIncome(ctx, sel, &v)
+func (ec *executionContext) marshalNRecurringIncomeGroup2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecurringIncomeGroup(ctx context.Context, sel ast.SelectionSet, v model.RecurringIncomeGroup) graphql.Marshaler {
+	return ec._RecurringIncomeGroup(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNRecurringIncome2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecurringIncomeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.RecurringIncome) graphql.Marshaler {
+func (ec *executionContext) marshalNRecurringIncomeGroup2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecurringIncomeGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.RecurringIncomeGroup) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNRecurringIncome2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecurringIncome(ctx, sel, v[i])
+		return ec.marshalNRecurringIncomeGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecurringIncomeGroup(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -27983,14 +28584,44 @@ func (ec *executionContext) marshalNRecurringIncome2ᚕᚖgithubᚗcomᚋazzamdh
 	return ret
 }
 
-func (ec *executionContext) marshalNRecurringIncome2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecurringIncome(ctx context.Context, sel ast.SelectionSet, v *model.RecurringIncome) graphql.Marshaler {
+func (ec *executionContext) marshalNRecurringIncomeGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecurringIncomeGroup(ctx context.Context, sel ast.SelectionSet, v *model.RecurringIncomeGroup) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
-	return ec._RecurringIncome(ctx, sel, v)
+	return ec._RecurringIncomeGroup(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNRecurringIncomeItem2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecurringIncomeItem(ctx context.Context, sel ast.SelectionSet, v model.RecurringIncomeItem) graphql.Marshaler {
+	return ec._RecurringIncomeItem(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNRecurringIncomeItem2ᚕᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecurringIncomeItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.RecurringIncomeItem) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNRecurringIncomeItem2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecurringIncomeItem(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNRecurringIncomeItem2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecurringIncomeItem(ctx context.Context, sel ast.SelectionSet, v *model.RecurringIncomeItem) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._RecurringIncomeItem(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNRegisterInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRegisterInput(ctx context.Context, v any) (model.RegisterInput, error) {
@@ -28353,8 +28984,13 @@ func (ec *executionContext) unmarshalNUpdateProfileInput2githubᚗcomᚋazzamdhx
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNUpdateRecurringIncomeInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐUpdateRecurringIncomeInput(ctx context.Context, v any) (model.UpdateRecurringIncomeInput, error) {
-	res, err := ec.unmarshalInputUpdateRecurringIncomeInput(ctx, v)
+func (ec *executionContext) unmarshalNUpdateRecurringIncomeGroupInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐUpdateRecurringIncomeGroupInput(ctx context.Context, v any) (model.UpdateRecurringIncomeGroupInput, error) {
+	res, err := ec.unmarshalInputUpdateRecurringIncomeGroupInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpdateRecurringIncomeItemInput2githubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐUpdateRecurringIncomeItemInput(ctx context.Context, v any) (model.UpdateRecurringIncomeItemInput, error) {
+	res, err := ec.unmarshalInputUpdateRecurringIncomeItemInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -28752,11 +29388,11 @@ func (ec *executionContext) unmarshalOMonthYearInput2ᚖgithubᚗcomᚋazzamdhx�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalORecurringIncome2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecurringIncome(ctx context.Context, sel ast.SelectionSet, v *model.RecurringIncome) graphql.Marshaler {
+func (ec *executionContext) marshalORecurringIncomeGroup2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐRecurringIncomeGroup(ctx context.Context, sel ast.SelectionSet, v *model.RecurringIncomeGroup) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	return ec._RecurringIncome(ctx, sel, v)
+	return ec._RecurringIncomeGroup(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOSavingsGoal2ᚖgithubᚗcomᚋazzamdhxᚋmoneybroᚋbackendᚋinternalᚋgraphᚋmodelᚐSavingsGoal(ctx context.Context, sel ast.SelectionSet, v *model.SavingsGoal) graphql.Marshaler {
