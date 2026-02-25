@@ -76,11 +76,23 @@ func (r *userRepository) DeleteAllUserData(userID uuid.UUID) error {
 			return err
 		}
 
+		// Delete savings contributions (references savings_goals)
+		if err := tx.Exec("DELETE FROM savings_contributions WHERE savings_goal_id IN (SELECT id FROM savings_goals WHERE user_id = ?)", userID).Error; err != nil {
+			return err
+		}
+		if err := tx.Exec("DELETE FROM savings_goals WHERE user_id = ?", userID).Error; err != nil {
+			return err
+		}
+
 		// Delete main records
 		if err := tx.Exec("DELETE FROM expenses WHERE user_id = ?", userID).Error; err != nil {
 			return err
 		}
-		if err := tx.Exec("DELETE FROM expense_templates WHERE user_id = ?", userID).Error; err != nil {
+		// Delete expense template items then groups
+		if err := tx.Exec("DELETE FROM expense_template_items WHERE group_id IN (SELECT id FROM expense_template_groups WHERE user_id = ?)", userID).Error; err != nil {
+			return err
+		}
+		if err := tx.Exec("DELETE FROM expense_template_groups WHERE user_id = ?", userID).Error; err != nil {
 			return err
 		}
 		if err := tx.Exec("DELETE FROM installments WHERE user_id = ?", userID).Error; err != nil {
@@ -92,7 +104,11 @@ func (r *userRepository) DeleteAllUserData(userID uuid.UUID) error {
 		if err := tx.Exec("DELETE FROM incomes WHERE user_id = ?", userID).Error; err != nil {
 			return err
 		}
-		if err := tx.Exec("DELETE FROM recurring_incomes WHERE user_id = ?", userID).Error; err != nil {
+		// Delete recurring income items then groups
+		if err := tx.Exec("DELETE FROM recurring_income_items WHERE group_id IN (SELECT id FROM recurring_income_groups WHERE user_id = ?)", userID).Error; err != nil {
+			return err
+		}
+		if err := tx.Exec("DELETE FROM recurring_income_groups WHERE user_id = ?", userID).Error; err != nil {
 			return err
 		}
 		if err := tx.Exec("DELETE FROM notification_logs WHERE user_id = ?", userID).Error; err != nil {
